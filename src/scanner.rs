@@ -1,4 +1,4 @@
-use super::token::Token;
+use crate::token::{Token, TokenKind};
 
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -9,11 +9,13 @@ pub struct Scanner {
 }
 
 impl Scanner {
-    pub fn new(source: String) -> Self {
+    pub fn new(source: &'static str) -> Self {
+        let source = source.graphemes(true).collect::<Vec<&'static str>>();
+
         Self {
             position: 0,
             // Split our source string into UTF-8 lexemes.
-            source: source.graphemes(true).collect::<Vec<&str>>(),
+            source,
         }
     }
 
@@ -21,50 +23,47 @@ impl Scanner {
     pub fn parse(&mut self) -> Vec<Token> {
         let mut tokens = vec![];
 
-        while !self.eof() {
-            let token = match self.source[self.position] {
-                ":" => Token::Colon,
-                "," => Token::Comma,
-                "." => Token::Dot,
-                "=" => self.match_next("=", Token::EqualEqual, Token::Equal),
-                ">" => self.match_next("=", Token::GreaterEqual, Token::Greater),
-                "<" => self.match_next("=", Token::SmallerEqual, Token::Smaller),
-                "[" => Token::LeftBracket,
-                "(" => Token::LeftParen,
-                "-" => Token::Minus,
-                "-" => self.match_next("=", Token::MinusEqual, Token::Minus),
-                "%" => Token::Percent,
-                "+" => self.match_next("=", Token::PlusEqual, Token::Plus),
-                "?" => Token::QuestionMark,
-                ")" => Token::RightParen,
-                "]" => Token::RightBracket,
-                "/" => {
-                    let next_char = self.peek();
+        let start_pos = self.position;
 
-                    if next_char == "=" {
-                        Token::SlashEqual
-                    } else if next_char == '/' {
-                        self.parse_comment()
-                    } else {
-                        Token::Slash
-                    }
-                },
-                "(" => Token::LeftParen,
-                "(" => Token::LeftParen,
-                "(" => Token::LeftParen,
+        while !self.eof() {
+            let kind = match self.source[self.position] {
+                ":" => TokenKind::Colon,
+                "," => TokenKind::Comma,
+                "." => TokenKind::Dot,
+                "[" => TokenKind::LeftBracket,
+                "(" => TokenKind::LeftParen,
+                "%" => TokenKind::Percent,
+                "?" => TokenKind::QuestionMark,
+                ")" => TokenKind::RightParen,
+                "]" => TokenKind::RightBracket,
+                "+" => self.match_next("=", TokenKind::PlusEqual, TokenKind::Plus),
+                "*" => self.match_next("=", TokenKind::StarEqual, TokenKind::Star),
+                "-" => self.match_next("=", TokenKind::MinusEqual, TokenKind::Minus),
+                "=" => self.match_next("=", TokenKind::EqualEqual, TokenKind::Equal),
+                ">" => self.match_next("=", TokenKind::GreaterEqual, TokenKind::Greater),
+                "<" => self.match_next("=", TokenKind::SmallerEqual, TokenKind::Smaller),
+                "/" => self.match_next("=", TokenKind::SlashEqual, TokenKind::Slash),
                 
                 
-                _ => {},
+                _ => TokenKind::QuestionMark,
             };
 
             self.advance();
+
+            let end_pos = self.position;
+
+            tokens.push(Token {
+                kind,
+                start_pos,
+                end_pos
+            });
         }
 
         tokens
     }
 
-    fn parse_comment(&self) -> Token {
-
+    fn parse_comment(&self) -> TokenKind {
+        TokenKind::Comment("hi".to_string())
     }
 
     fn advance(&mut self) {
@@ -73,13 +72,17 @@ impl Scanner {
         }
     }
 
-    fn match_next(&mut self, character: &'static str, then: Token, otherwise: Token) -> Token {
+    fn match_next(&mut self, character: &'static str, then: TokenKind, otherwise: TokenKind) -> TokenKind {
         if self.peek() == character {
             then
         } else {
             self.advance();
             otherwise
         }
+    }
+    
+    fn peek(&self) -> &'static str {
+        self.source[self.position + 1]
     }
 
     fn eof(&self) -> bool {
@@ -90,7 +93,7 @@ impl Scanner {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn it_works() {
+    fn scan_colon() {
         assert_eq!(2 + 2, 4);
     }
 }
