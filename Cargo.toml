@@ -7,4 +7,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+colored = "2.0.0"
+linefeed = "0.6.0"
 unicode-segmentation = "1.9.0"
