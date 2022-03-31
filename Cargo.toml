@@ -1,6 +1,6 @@
 [package]
-name = "magpiec"
-description = "The Magpie Language Compiler"
+name = "magc"
+description = "The Mag Language Compiler"
 version = "0.1.0"
 edition = "2021"
 
