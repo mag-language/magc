@@ -1,4 +1,6 @@
-use crate::token::{Literal, Type};
+use crate::token::{Literal};
+
+use std::collections::BTreeMap;
 
 type VariablePatternName = Option<String>;
 type VariablePatternType = Option<String>;
@@ -10,8 +12,8 @@ pub enum Expression<'a> {
 }
 
 pub enum Pattern<'a> {
-    Value(&'a Pattern),
-    Tuple(Vec<Pattern>),
-    Record(BTreeMap<String, Expression>),
+    Value(&'a Pattern<'a>),
+    Tuple(Vec<Pattern<'a>>),
+    Record(BTreeMap<String, Expression<'a>>),
     Variable(VariablePatternName, VariablePatternType),
 }
