@@ -36,13 +36,23 @@ impl Scanner {
                 "?" => TokenKind::QuestionMark,
                 ")" => TokenKind::RightParen,
                 "]" => TokenKind::RightBracket,
+
                 "+" => self.match_next("=", TokenKind::PlusEqual, TokenKind::Plus),
                 "*" => self.match_next("=", TokenKind::StarEqual, TokenKind::Star),
                 "-" => self.match_next("=", TokenKind::MinusEqual, TokenKind::Minus),
                 "=" => self.match_next("=", TokenKind::EqualEqual, TokenKind::Equal),
                 ">" => self.match_next("=", TokenKind::GreaterEqual, TokenKind::Greater),
                 "<" => self.match_next("=", TokenKind::SmallerEqual, TokenKind::Smaller),
-                "/" => self.match_next("=", TokenKind::SlashEqual, TokenKind::Slash),
+                
+                "/" => {
+                    if self.peek() == "/" {
+                        self.parse_comment()
+                    } else if self.peek() == "=" {
+                        TokenKind::SlashEqual
+                    } else {
+                        TokenKind::Slash
+                    }
+                },
                 
                 
                 _ => TokenKind::QuestionMark,
@@ -62,8 +72,23 @@ impl Scanner {
         tokens
     }
 
-    fn parse_comment(&self) -> TokenKind {
-        TokenKind::Comment("hi".to_string())
+    fn parse_comment(&mut self) -> TokenKind {
+        let mut comment = String::from("");
+
+        // Skip the second slash.
+        self.advance();
+
+        // Start parsing the comment.
+        while !self.eof() {
+            let character =  self.source[self.position];
+
+            match character {
+                "\n" => break,
+                _ => comment.push_str(character),
+            }
+        }
+
+        TokenKind::Comment(comment)
     }
 
     fn advance(&mut self) {
