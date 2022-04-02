@@ -1,4 +1,4 @@
-use crate::token::{Token, TokenKind};
+use crate::token::{Token, TokenKind, Literal};
 
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -55,6 +55,17 @@ impl Scanner {
                         TokenKind::Slash
                     }
                 },
+
+                "0" 
+                | "1"
+                | "2"
+                | "3"
+                | "4"
+                | "5"
+                | "6"
+                | "7"
+                | "8"
+                | "9" => self.parse_number(),
                 
                 
                 _ => TokenKind::QuestionMark,
@@ -93,6 +104,46 @@ impl Scanner {
         TokenKind::Comment(comment)
     }
 
+    fn parse_number(&mut self) -> TokenKind {
+        let mut number_string = String::from("");
+
+        // Start parsing the number.
+        while !self.eof() {
+            let character =  self.source[self.position];
+
+            match character {
+                "0" 
+                | "1"
+                | "2"
+                | "3"
+                | "4"
+                | "5"
+                | "6"
+                | "7"
+                | "8"
+                | "9"
+                | "." => {
+                    self.advance();
+                    number_string.push_str(character);
+                },
+
+                _ => {
+                    break
+                },
+            }
+        }
+
+        if number_string.contains(".") {
+            TokenKind::Literal(
+                Literal::Float(number_string.parse::<f64>().unwrap())
+            )
+        } else {
+            TokenKind::Literal(
+                Literal::Int(number_string.parse::<i64>().unwrap())
+            )
+        }
+    }
+
     /// Advance the pointer by one if we're not at the end.
     fn advance(&mut self) {
         if !self.eof() {
@@ -120,7 +171,7 @@ impl Scanner {
 
 #[cfg(test)]
 mod tests {
-    use super::{Scanner, Token, TokenKind};
+    use super::{Scanner, Token, TokenKind, Literal};
 
     #[test]
     fn scan_comment() {
@@ -132,6 +183,34 @@ mod tests {
                 kind: TokenKind::Comment(" This is a single line comment.".to_string()),
                 start_pos: 0,
                 end_pos: 33,
+            }]
+        );
+    }
+
+    #[test]
+    fn scan_integer() {
+        let mut scanner = Scanner::new("1453");
+
+        assert_eq!(
+            scanner.parse(),
+            vec![Token {
+                kind: TokenKind::Literal(Literal::Int(1453)),
+                start_pos: 0,
+                end_pos: 4,
+            }]
+        );
+    }
+
+    #[test]
+    fn scan_float() {
+        let mut scanner = Scanner::new("12.38475");
+
+        assert_eq!(
+            scanner.parse(),
+            vec![Token {
+                kind: TokenKind::Literal(Literal::Float(12.38475)),
+                start_pos: 0,
+                end_pos: 8,
             }]
         );
     }
