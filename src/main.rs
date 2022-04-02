@@ -7,12 +7,12 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    /// A file containing Mag code.
-    input: String,
+    /// A path to a file that contains Mag code.
+    path: String,
 }
 
 fn main() {
     let args = Args::parse();
 
-    println!("Hello {}!", args.input)
+    println!("Hello {}!", args.path)
 }
