@@ -27,6 +27,7 @@ impl Scanner {
 
         while !self.eof() {
             let kind = match self.source[self.position] {
+                "!" => TokenKind::Bang,
                 ":" => TokenKind::Colon,
                 "," => TokenKind::Comma,
                 "." => TokenKind::Dot,

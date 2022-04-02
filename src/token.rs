@@ -3,6 +3,7 @@ use self::TokenKind::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
+	Bang,
 	Colon,
 	Comma,
 	Dot,
