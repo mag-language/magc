@@ -1,6 +1,7 @@
 pub mod token;
 pub mod scanner;
 pub mod console;
+pub mod expression;
 
 use clap::Parser;
 
