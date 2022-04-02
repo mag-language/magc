@@ -10,11 +10,11 @@ pub struct Scanner {
 
 impl Scanner {
     pub fn new(source: &'static str) -> Self {
+        // Split our source string into UTF-8 graphemes.
         let source = source.graphemes(true).collect::<Vec<&'static str>>();
 
         Self {
             position: 0,
-            // Split our source string into UTF-8 lexemes.
             source,
         }
     }
@@ -84,13 +84,17 @@ impl Scanner {
 
             match character {
                 "\n" => break,
-                _ => comment.push_str(character),
+                _ => {
+                    self.advance();
+                    comment.push_str(character)
+                },
             }
         }
 
         TokenKind::Comment(comment)
     }
 
+    /// Advance the pointer by one if we're not at the end.
     fn advance(&mut self) {
         if !self.eof() {
             self.position += 1;
@@ -117,8 +121,19 @@ impl Scanner {
 
 #[cfg(test)]
 mod tests {
+    use super::{Scanner, Token, TokenKind};
+
     #[test]
-    fn scan_colon() {
-        assert_eq!(2 + 2, 4);
+    fn scan_comment() {
+        let mut scanner = Scanner::new("// This is a single line comment.");
+
+        assert_eq!(
+            scanner.parse(),
+            vec![Token {
+                kind: TokenKind::Comment(" This is a single line comment.".to_string()),
+                start_pos: 0,
+                end_pos: 31,
+            }]
+        );
     }
 }
