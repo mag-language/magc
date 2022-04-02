@@ -46,6 +46,8 @@ impl Scanner {
                 
                 "/" => {
                     if self.peek() == "/" {
+                        self.advance();
+                        self.advance();
                         self.parse_comment()
                     } else if self.peek() == "=" {
                         TokenKind::SlashEqual
@@ -74,9 +76,6 @@ impl Scanner {
 
     fn parse_comment(&mut self) -> TokenKind {
         let mut comment = String::from("");
-
-        // Skip the second slash.
-        self.advance();
 
         // Start parsing the comment.
         while !self.eof() {
@@ -132,7 +131,7 @@ mod tests {
             vec![Token {
                 kind: TokenKind::Comment(" This is a single line comment.".to_string()),
                 start_pos: 0,
-                end_pos: 31,
+                end_pos: 33,
             }]
         );
     }
