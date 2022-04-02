@@ -66,6 +66,13 @@ impl Scanner {
                 | "7"
                 | "8"
                 | "9" => self.parse_number(),
+
+                "A" | "B" | "C" | "D" | "E"
+                | "F" | "G" | "H" | "I" | "J" 
+                | "K" | "L" | "M" | "N" | "O"
+                | "P" | "Q" | "R" | "S" | "T"
+                | "V" | "W" | "X" | "Y" | "Z"
+                    => self.parse_type(),
                 
                 
                 _ => TokenKind::QuestionMark,
@@ -102,6 +109,38 @@ impl Scanner {
         }
 
         TokenKind::Comment(comment)
+    }
+
+    fn parse_type(&mut self) -> TokenKind {
+        let mut type_string = String::from("");
+
+        // Start parsing the comment.
+        while !self.eof() {
+            let character =  self.source[self.position];
+
+            match character {
+                "A" | "B" | "C" | "D" | "E"
+                | "F" | "G" | "H" | "I" | "J" 
+                | "K" | "L" | "M" | "N" | "O"
+                | "P" | "Q" | "R" | "S" | "T"
+                | "V" | "W" | "X" | "Y" | "Z"
+                | "a" | "b" | "c" | "d" | "e"
+                | "f" | "g" | "h" | "i" | "j" 
+                | "k" | "l" | "m" | "n" | "o"
+                | "p" | "q" | "r" | "s" | "t"
+                | "v" | "w" | "x" | "y" | "z"
+                | "0" | "1" | "2" | "3" | "4"
+                | "5" | "6" | "7" | "8" | "9"
+                 => {
+                    self.advance();
+                    type_string.push_str(character)
+                },
+
+                _ => break,
+            }
+        }
+
+        TokenKind::Type(type_string)
     }
 
     fn parse_number(&mut self) -> TokenKind {
@@ -211,6 +250,20 @@ mod tests {
                 kind: TokenKind::Literal(Literal::Float(12.38475)),
                 start_pos: 0,
                 end_pos: 8,
+            }]
+        );
+    }
+
+    #[test]
+    fn scan_type() {
+        let mut scanner = Scanner::new("Int32");
+
+        assert_eq!(
+            scanner.parse(),
+            vec![Token {
+                kind: TokenKind::Type("Int32".to_string()),
+                start_pos: 0,
+                end_pos: 5,
             }]
         );
     }
