@@ -72,7 +72,7 @@ impl Scanner {
                 | "F" | "G" | "H" | "I" | "J" 
                 | "K" | "L" | "M" | "N" | "O"
                 | "P" | "Q" | "R" | "S" | "T"
-                | "V" | "W" | "X" | "Y" | "Z"
+                | "U" | "V" | "W" | "X" | "Y" | "Z"
                     => self.parse_type(),
                 
                 
