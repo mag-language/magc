@@ -45,6 +45,7 @@ pub struct Token {
 impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		let string = match &self.kind {
+			Bang 		 => "!".to_string(),
 			Colon 		 => ":".to_string(),
 			Comma		 => ",".to_string(),
 			Dot 		 => ".".to_string(),
