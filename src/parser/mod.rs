@@ -1,4 +1,5 @@
 use crate::token::{Token, TokenKind};
+use crate::expression::Expression;
 use parselets::PrefixParselet;
 
 use std::collections::HashMap;
@@ -6,20 +7,28 @@ use std::collections::HashMap;
 pub mod parselets;
 
 /// A parser which turns a linear token stream into a tree of Mag expressions.
-pub struct Parser<'a> {
+pub struct Parser {
     position: usize,
     source: Vec<Token>,
-    prefix_parselets: HashMap<TokenKind, &'a dyn PrefixParselet>,
 }
 
-impl<'a> Parser<'a> {
+impl Parser {
     pub fn new(source: Vec<Token>) -> Self {
-        let prefix_parselets = HashMap::new();
-
         Self {
             position: 0,
             source,
-            prefix_parselets,
+        }
+    }
+
+    pub fn parse_expression<'a>(&mut self, mut prefix_parselets: HashMap<&'a TokenKind, &'a mut dyn PrefixParselet>) -> Result<Expression, ParserError> {
+        let token = self.source[self.position].clone();
+
+        {
+            if let Some(prefix) = prefix_parselets.get_mut(&token.kind) {
+                Ok(prefix.parse(self, token.clone()))
+            } else {
+                Err(ParserError::MissingPrefixParselet)
+            }
         }
     }
 
@@ -37,4 +46,14 @@ impl<'a> Parser<'a> {
     fn eof(&self) -> bool {
         self.position >= self.source.len()
     }
+}
+
+pub enum ParserError {
+    MissingPrefixParselet,
+}
+
+pub struct ParserBuffer {
+    items: Vec<Token>,
+    lexeme: Option<String>,
+    position: usize,
 }
