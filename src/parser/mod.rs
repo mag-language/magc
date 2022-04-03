@@ -22,4 +22,19 @@ impl<'a> Parser<'a> {
             prefix_parselets,
         }
     }
+
+    /// Advance the pointer by one if we're not at the end.
+    fn advance(&mut self) {
+        if !self.eof() {
+            self.position += 1;
+        }
+    }
+
+    fn peek(&self) -> &'static str {
+        self.source[self.position + 1]
+    }
+
+    fn eof(&self) -> bool {
+        self.position >= self.source.len()
+    }
 }
