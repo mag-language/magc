@@ -11,3 +11,15 @@ pub struct Parser<'a> {
     source: Vec<Token>,
     prefix_parselets: HashMap<TokenKind, &'a dyn PrefixParselet>,
 }
+
+impl<'a> Parser<'a> {
+    pub fn new(source: Vec<Token>) -> Self {
+        let prefix_parselets = HashMap::new();
+
+        Self {
+            position: 0,
+            source,
+            prefix_parselets,
+        }
+    }
+}
