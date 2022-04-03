@@ -30,8 +30,8 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn peek(&self) -> &'static str {
-        self.source[self.position + 1]
+    fn peek(&self) -> &Token {
+        &self.source[self.position + 1]
     }
 
     fn eof(&self) -> bool {
