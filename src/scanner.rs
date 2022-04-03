@@ -5,6 +5,9 @@ use unicode_segmentation::UnicodeSegmentation;
 /// A scanner which turns Magpie source code into a sequence of tokens.
 pub struct Scanner {
     position: usize,
+    // This variable is used to accumulate the parsed characters of the current
+    // structure into a string containing the entire lexeme.
+    current_lexeme: String,
     source: Vec<&'static str>,
 }
 
@@ -15,18 +18,26 @@ impl Scanner {
 
         Self {
             position: 0,
+            current_lexeme: String::from(""),
             source,
         }
     }
 
     /// Convert the source string into a linear collection of tokens.
     pub fn parse(&mut self) -> Vec<Token> {
+        // Start with a blank slate for our new lexeme.
+        self.current_lexeme = String::from("");
+
+        // Collect all parsed tokens in a Vec.
         let mut tokens = vec![];
 
         let start_pos = self.position;
+        let character = self.source[self.position];
+
+        self.current_lexeme.push_str(&character);
 
         while !self.eof() {
-            let kind = match self.source[self.position] {
+            let kind = match character {
                 "!" => TokenKind::Bang,
                 ":" => TokenKind::Colon,
                 "," => TokenKind::Comma,
@@ -85,6 +96,7 @@ impl Scanner {
 
             tokens.push(Token {
                 kind,
+                lexeme: self.current_lexeme.clone(),
                 start_pos,
                 end_pos
             });
@@ -99,6 +111,7 @@ impl Scanner {
         // Start parsing the comment.
         while !self.eof() {
             let character =  self.source[self.position];
+            self.current_lexeme.push_str(&character);
 
             match character {
                 "\n" => break,
@@ -109,7 +122,7 @@ impl Scanner {
             }
         }
 
-        TokenKind::Comment(comment)
+        TokenKind::Comment
     }
 
     fn parse_type(&mut self) -> TokenKind {
@@ -118,6 +131,7 @@ impl Scanner {
         // Start parsing the comment.
         while !self.eof() {
             let character =  self.source[self.position];
+            self.current_lexeme.push_str(&character);
 
             match character {
                 "A" | "B" | "C" | "D" | "E"
@@ -141,7 +155,7 @@ impl Scanner {
             }
         }
 
-        TokenKind::Type(type_string)
+        TokenKind::Type
     }
 
     fn parse_number(&mut self) -> TokenKind {
@@ -150,6 +164,7 @@ impl Scanner {
         // Start parsing the number.
         while !self.eof() {
             let character =  self.source[self.position];
+            self.current_lexeme.push_str(&character);
 
             match character {
                 "0" 
@@ -175,11 +190,11 @@ impl Scanner {
 
         if number_string.contains(".") {
             TokenKind::Literal(
-                Literal::Float(number_string.parse::<f64>().unwrap())
+                Literal::Float
             )
         } else {
             TokenKind::Literal(
-                Literal::Int(number_string.parse::<i64>().unwrap())
+                Literal::Int
             )
         }
     }
