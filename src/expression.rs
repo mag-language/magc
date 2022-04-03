@@ -14,6 +14,7 @@ pub enum Expression<'a> {
     Type(String),
     /// An expression with a prefix operator.
     Unary(UnaryExpression<'a>),
+    Identifier(String),
 }
 
 /// An expression with a prefix operator.
