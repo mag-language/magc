@@ -1,4 +1,3 @@
-use self::Keyword::*;
 use self::TokenKind::*;
 
 /// A single textual entity of a program like `(` or `if`.
@@ -28,12 +27,13 @@ pub enum TokenKind {
 	Colon,
 	Comma,
 	Dot,
+	DoubleQuote,
 	Equal,
 	EqualEqual,
 	Greater,
 	GreaterEqual,
 	Identifier,
-	Keyword,
+	Keyword(Keyword),
 	LeftBracket,
 	LeftParen,
 	Literal(Literal),
@@ -45,6 +45,7 @@ pub enum TokenKind {
 	QuestionMark,
 	RightBracket,
 	RightParen,
+	SingleQuote,
 	Slash,
 	SlashEqual,
 	SlashSlash,
