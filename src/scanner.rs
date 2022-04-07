@@ -108,6 +108,8 @@ impl<'a> Scanner<'a> {
     fn parse_identifier_or_keyword(&mut self) -> TokenKind {
         let mut string = String::from("");
 
+        self.advance();
+
         while !self.eof() {
             let character =  self.source[self.position];
             self.current_lexeme.push_str(&character);
@@ -156,7 +158,7 @@ impl<'a> Scanner<'a> {
             "with"   => TokenKind::Keyword(Keyword::With),
             "while"  => TokenKind::Keyword(Keyword::While),
 
-            _ => TokenKind::Comment,
+            _ => TokenKind::Identifier,
         }
     }
 
