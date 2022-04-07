@@ -4,7 +4,7 @@ pub mod console;
 pub mod expression;
 pub mod parser;
 
-use clap::Parser;
+/*use clap::Parser;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -18,4 +18,4 @@ fn main() {
     let args = Args::parse();
 
     println!("Hello {}!", args.path)
-}
+}*/
