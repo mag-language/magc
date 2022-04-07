@@ -1,4 +1,4 @@
-use crate::token::{Token, TokenKind, Literal};
+use crate::token::{Token, TokenKind, Keyword, Literal};
 
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -132,7 +132,7 @@ impl Scanner {
             }
         }
 
-        match self.current_lexeme {
+        match self.current_lexeme.as_str() {
             "and"    => TokenKind::Keyword(Keyword::And),
             "as"     => TokenKind::Keyword(Keyword::As),
             "catch"  => TokenKind::Keyword(Keyword::Catch),
