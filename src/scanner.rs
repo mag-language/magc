@@ -3,18 +3,18 @@ use crate::token::{Token, TokenKind, Keyword, Literal};
 use unicode_segmentation::UnicodeSegmentation;
 
 /// A scanner which turns Magpie source code into a sequence of tokens.
-pub struct Scanner {
+pub struct Scanner<'a> {
     position: usize,
     // This variable is used to accumulate the parsed characters of the current
     // structure into a string containing the entire lexeme.
     current_lexeme: String,
-    source: Vec<&'static str>,
+    source: Vec<&'a str>,
 }
 
-impl Scanner {
-    pub fn new(source: &'static str) -> Self {
+impl<'a> Scanner<'a> {
+    pub fn new(source: &'a str) -> Self {
         // Split our source string into UTF-8 graphemes.
-        let source = source.graphemes(true).collect::<Vec<&'static str>>();
+        let source = source.graphemes(true).collect::<Vec<&'a str>>();
 
         Self {
             position: 0,
@@ -270,7 +270,7 @@ impl Scanner {
         }
     }
     
-    fn peek(&self) -> &'static str {
+    fn peek(&self) -> &'a str {
         self.source[self.position + 1]
     }
 
