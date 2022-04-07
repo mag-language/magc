@@ -87,7 +87,7 @@ impl Scanner {
                     => self.parse_type(),
                 
                 
-                _ => TokenKind::QuestionMark,
+                _ => self.parse_identifier_or_keyword(),
             };
 
             self.advance();
@@ -103,6 +103,61 @@ impl Scanner {
         }
 
         tokens
+    }
+
+    fn parse_identifier_or_keyword(&mut self) -> TokenKind {
+        let mut string = String::from("");
+
+        while !self.eof() {
+            let character =  self.source[self.position];
+            self.current_lexeme.push_str(&character);
+
+            match character {
+                "!" | ":" | "," | "." | "[" | "(" |
+                "%" | "?" | ")" | "]" | "*" | "/" |
+                "+" | "-" | "=" | "<" | ">" | "\"" | "'" |
+                "0" | "1" | "2" | "3" | "4" | "5" |
+                "6"| "7" | "8" | "9" |
+                "A" | "B" | "C" | "D" | "E"
+                | "F" | "G" | "H" | "I" | "J" 
+                | "K" | "L" | "M" | "N" | "O"
+                | "P" | "Q" | "R" | "S" | "T"
+                | "U" | "V" | "W" | "X" | "Y" | "Z"
+                | "\n" | "\r" | "\t" | " "  => break,
+
+                _ => {
+                    self.advance();
+                    string.push_str(character);
+                },
+            }
+        }
+
+        match self.current_lexeme {
+            "and"    => TokenKind::Keyword(Keyword::And),
+            "as"     => TokenKind::Keyword(Keyword::As),
+            "catch"  => TokenKind::Keyword(Keyword::Catch),
+            "case"   => TokenKind::Keyword(Keyword::Case),
+            "const"  => TokenKind::Keyword(Keyword::Const),
+            "def"    => TokenKind::Keyword(Keyword::Def),
+            "do"     => TokenKind::Keyword(Keyword::Do),
+            "else"   => TokenKind::Keyword(Keyword::Else),
+            "end"    => TokenKind::Keyword(Keyword::End),
+            "enum"   => TokenKind::Keyword(Keyword::Enum),
+            "if"     => TokenKind::Keyword(Keyword::If),
+            "import" => TokenKind::Keyword(Keyword::Import),
+            "it"     => TokenKind::Keyword(Keyword::It),
+            "for"    => TokenKind::Keyword(Keyword::For),
+            "match"  => TokenKind::Keyword(Keyword::Match),
+            "or"     => TokenKind::Keyword(Keyword::Or),
+            "return" => TokenKind::Keyword(Keyword::Return),
+            "then"   => TokenKind::Keyword(Keyword::Then),
+            "this"   => TokenKind::Keyword(Keyword::This),
+            "var"    => TokenKind::Keyword(Keyword::Var),
+            "with"   => TokenKind::Keyword(Keyword::With),
+            "while"  => TokenKind::Keyword(Keyword::While),
+
+            _ => TokenKind::Comment,
+        }
     }
 
     fn parse_comment(&mut self) -> TokenKind {
