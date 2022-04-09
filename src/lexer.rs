@@ -223,14 +223,13 @@ impl<'a> Lexer<'a> {
     }
 
     fn parse_number(&mut self) -> TokenKind {
-        let mut number_string = String::from("");
+        let mut number_string = String::from(self.source[self.position]);
 
         self.advance();
 
         // Start parsing the number.
         while !self.eof() {
             let character =  self.source[self.position];
-            self.current_lexeme.push_str(&character);
 
             match character {
                 "0" 
@@ -245,6 +244,7 @@ impl<'a> Lexer<'a> {
                 | "9"
                 | "." => {
                     self.advance();
+                    self.current_lexeme.push_str(&character);
                     number_string.push_str(character);
                 },
 
