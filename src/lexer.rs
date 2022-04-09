@@ -190,6 +190,8 @@ impl<'a> Lexer<'a> {
     fn parse_type(&mut self) -> TokenKind {
         let mut type_string = String::from("");
 
+        self.advance();
+
         // Start parsing the comment.
         while !self.eof() {
             let character =  self.source[self.position];
@@ -222,6 +224,8 @@ impl<'a> Lexer<'a> {
 
     fn parse_number(&mut self) -> TokenKind {
         let mut number_string = String::from("");
+
+        self.advance();
 
         // Start parsing the number.
         while !self.eof() {
@@ -297,7 +301,8 @@ mod tests {
         assert_eq!(
             Lexer.parse(),
             vec![Token {
-                kind: TokenKind::Comment(" This is a single line comment.".to_string()),
+                kind: TokenKind::Comment,
+                lexeme: "// This is a single line comment.".to_string(),
                 start_pos: 0,
                 end_pos: 33,
             }]
@@ -311,7 +316,8 @@ mod tests {
         assert_eq!(
             Lexer.parse(),
             vec![Token {
-                kind: TokenKind::Literal(Literal::Int(1453)),
+                kind: TokenKind::Literal(Literal::Int),
+                lexeme: "1453".to_string(),
                 start_pos: 0,
                 end_pos: 4,
             }]
@@ -325,7 +331,8 @@ mod tests {
         assert_eq!(
             Lexer.parse(),
             vec![Token {
-                kind: TokenKind::Literal(Literal::Float(12.38475)),
+                kind: TokenKind::Literal(Literal::Float),
+                lexeme: "12.38475".to_string(),
                 start_pos: 0,
                 end_pos: 8,
             }]
@@ -339,7 +346,8 @@ mod tests {
         assert_eq!(
             Lexer.parse(),
             vec![Token {
-                kind: TokenKind::Type("Int32".to_string()),
+                kind: TokenKind::Type,
+                lexeme: "Int32".to_string(),
                 start_pos: 0,
                 end_pos: 5,
             }]
