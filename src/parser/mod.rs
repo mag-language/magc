@@ -20,7 +20,10 @@ impl Parser {
         }
     }
 
-    pub fn parse_expression<'a>(&mut self, mut prefix_parselets: HashMap<&'a TokenKind, &'a mut dyn PrefixParselet>) -> Result<Expression, ParserError> {
+    pub fn parse_expression<'a>(
+        &mut self, 
+        mut prefix_parselets: HashMap<&'a TokenKind, &'a mut dyn PrefixParselet>
+    ) -> Result<Expression, ParserError> {
         let token = self.source[self.position].clone();
 
         {
