@@ -28,7 +28,7 @@ impl Parser {
 
         {
             if let Some(prefix) = prefix_parselets.get_mut(&token.kind) {
-                Ok(prefix.parse(self, token.clone()))
+                Ok(prefix.parse(self, token))
             } else {
                 Err(ParserError::MissingPrefixParselet)
             }
