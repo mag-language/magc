@@ -25,29 +25,30 @@ impl<'a> Scanner<'a> {
 
     /// Convert the source string into a linear collection of tokens.
     pub fn parse(&mut self) -> Vec<Token> {
-        // Start with a blank slate for our new lexeme.
-        self.current_lexeme = String::from("");
-
-        // Collect all parsed tokens in a Vec.
         let mut tokens = vec![];
 
-        let start_pos = self.position;
-        let character = self.source[self.position];
-
-        self.current_lexeme.push_str(&character);
-
         while !self.eof() {
+            // We are starting a new lexeme, so we start over from a blank slate.
+            self.current_lexeme = String::from("");
+
+            // Fetch our character and set the starting point of the lexeme.
+            let character = self.source[self.position];
+            let start_pos = self.position;
+
+            // Add the current character to our lexeme string.
+            self.current_lexeme.push_str(&character);
+
             let kind = match character {
-                "!" => TokenKind::Bang,
-                ":" => TokenKind::Colon,
-                "," => TokenKind::Comma,
-                "." => TokenKind::Dot,
-                "[" => TokenKind::LeftBracket,
-                "(" => TokenKind::LeftParen,
-                "%" => TokenKind::Percent,
-                "?" => TokenKind::QuestionMark,
-                ")" => TokenKind::RightParen,
-                "]" => TokenKind::RightBracket,
+                "!" => self.single_token(TokenKind::Bang),
+                ":" => self.single_token(TokenKind::Colon),
+                "," => self.single_token(TokenKind::Comma),
+                "." => self.single_token(TokenKind::Dot),
+                "[" => self.single_token(TokenKind::LeftBracket),
+                "(" => self.single_token(TokenKind::LeftParen),
+                "%" => self.single_token(TokenKind::Percent),
+                "?" => self.single_token(TokenKind::QuestionMark),
+                ")" => self.single_token(TokenKind::RightParen),
+                "]" => self.single_token(TokenKind::RightBracket),
 
                 "+" => self.match_next("=", TokenKind::PlusEqual, TokenKind::Plus),
                 "*" => self.match_next("=", TokenKind::StarEqual, TokenKind::Star),
@@ -64,6 +65,12 @@ impl<'a> Scanner<'a> {
                     } else {
                         TokenKind::Slash
                     }
+                },
+
+                // Skip meaningless whitespace
+                " " | "\t" | "\r" | "\n" => {
+                    self.advance();
+                    continue
                 },
 
                 "0" 
@@ -85,10 +92,8 @@ impl<'a> Scanner<'a> {
                     => self.parse_type(),
                 
                 
-                _ => self.parse_identifier_or_keyword(),
+                _ => self.parse_identifier_or_keyword(&character),
             };
-
-            self.advance();
 
             let end_pos = self.position;
 
@@ -103,35 +108,30 @@ impl<'a> Scanner<'a> {
         tokens
     }
 
-    fn parse_identifier_or_keyword(&mut self) -> TokenKind {
-        let mut string = String::from("");
+    // A utility function that allows us to call the advance 
+    // method when returning a single character token.
+    fn single_token(&mut self, kind: TokenKind) -> TokenKind {
+        self.advance();
+        kind
+    }
+
+    fn parse_identifier_or_keyword(&mut self, character: &'a str) -> TokenKind {
+        let mut string = String::from(character);
 
         self.advance();
 
         while !self.eof() {
             let character =  self.source[self.position];
-            self.current_lexeme.push_str(&character);
 
             match character {
                 "!" | ":" | "," | "." | "[" | "(" |
                 "%" | "?" | ")" | "]" | "*" | "/" |
-                "+" | "-" | "=" | "<" | ">" | "\"" | "'" |
-                "0" | "1" | "2" | "3" | "4" | "5" |
-                "6"| "7" | "8" | "9" |
-                "A" | "B" | "C" | "D" | "E"
-                | "F" | "G" | "H" | "I" | "J" 
-                | "K" | "L" | "M" | "N" | "O"
-                | "P" | "Q" | "R" | "S" | "T"
-                | "U" | "V" | "W" | "X" | "Y" | "Z"
-                | "a" | "b" | "c" | "d" | "e"
-                | "f" | "g" | "h" | "i" | "j" 
-                | "k" | "l" | "m" | "n" | "o"
-                | "p" | "q" | "r" | "s" | "t"
-                | "u" | "v" | "w" | "x" | "y" | "z"
-                | "\n" | "\r" | "\t" | " "  => break,
+                "+" | "-" | "=" | "<" | ">" | "\"" | 
+                "'" | "\n" | "\r" | "\t" | " "  => break,
 
                 _ => {
                     self.advance();
+                    self.current_lexeme.push_str(&character);
                     string.push_str(character);
                 },
             }
@@ -166,7 +166,9 @@ impl<'a> Scanner<'a> {
     }
 
     fn parse_comment(&mut self) -> TokenKind {
-        let mut comment = String::from("");
+        let mut comment = String::from(self.source[self.position]);
+
+        self.advance();
 
         // Start parsing the comment.
         while !self.eof() {
