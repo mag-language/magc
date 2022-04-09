@@ -2,8 +2,8 @@ use crate::token::{Token, TokenKind, Keyword, Literal};
 
 use unicode_segmentation::UnicodeSegmentation;
 
-/// A scanner which turns Magpie source code into a sequence of tokens.
-pub struct Scanner<'a> {
+/// An object which turns Magpie source code into a sequence of tokens.
+pub struct Lexer<'a> {
     position: usize,
     // This variable is used to accumulate the parsed characters of the current
     // structure into a string containing the entire lexeme.
@@ -11,7 +11,7 @@ pub struct Scanner<'a> {
     source: Vec<&'a str>,
 }
 
-impl<'a> Scanner<'a> {
+impl<'a> Lexer<'a> {
     pub fn new(source: &'a str) -> Self {
         // Split our source string into UTF-8 graphemes.
         let source = source.graphemes(true).collect::<Vec<&'a str>>();
@@ -288,14 +288,14 @@ impl<'a> Scanner<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Scanner, Token, TokenKind, Literal};
+    use super::{Lexer, Token, TokenKind, Literal};
 
     #[test]
     fn scan_comment() {
-        let mut scanner = Scanner::new("// This is a single line comment.");
+        let mut Lexer = Lexer::new("// This is a single line comment.");
 
         assert_eq!(
-            scanner.parse(),
+            Lexer.parse(),
             vec![Token {
                 kind: TokenKind::Comment(" This is a single line comment.".to_string()),
                 start_pos: 0,
@@ -306,10 +306,10 @@ mod tests {
 
     #[test]
     fn scan_integer() {
-        let mut scanner = Scanner::new("1453");
+        let mut Lexer = Lexer::new("1453");
 
         assert_eq!(
-            scanner.parse(),
+            Lexer.parse(),
             vec![Token {
                 kind: TokenKind::Literal(Literal::Int(1453)),
                 start_pos: 0,
@@ -320,10 +320,10 @@ mod tests {
 
     #[test]
     fn scan_float() {
-        let mut scanner = Scanner::new("12.38475");
+        let mut Lexer = Lexer::new("12.38475");
 
         assert_eq!(
-            scanner.parse(),
+            Lexer.parse(),
             vec![Token {
                 kind: TokenKind::Literal(Literal::Float(12.38475)),
                 start_pos: 0,
@@ -334,10 +334,10 @@ mod tests {
 
     #[test]
     fn scan_type() {
-        let mut scanner = Scanner::new("Int32");
+        let mut Lexer = Lexer::new("Int32");
 
         assert_eq!(
-            scanner.parse(),
+            Lexer.parse(),
             vec![Token {
                 kind: TokenKind::Type("Int32".to_string()),
                 start_pos: 0,

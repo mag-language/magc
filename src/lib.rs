@@ -1,5 +1,5 @@
 pub mod token;
-pub mod scanner;
+pub mod lexer;
 pub mod expression;
 pub mod parser;
 
