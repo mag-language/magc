@@ -8,6 +8,7 @@ type VariablePatternType = Option<String>;
 #[derive(Debug, Clone)]
 pub struct Expression<'a> {
     pub kind: ExpressionKind<'a>,
+    pub lexeme: String,
     pub start_pos: usize,
     pub end_pos: usize,
 }
@@ -19,10 +20,10 @@ pub enum ExpressionKind<'a> {
     /// A value, tuple, record or variable pattern.
     Pattern(Pattern<'a>),
     /// A reference to a type like `Int32`.
-    Type(String),
+    Type,
     /// An expression with a prefix operator.
     Unary(UnaryExpression<'a>),
-    Identifier(String),
+    Identifier,
 }
 
 /// An expression with a prefix operator.
