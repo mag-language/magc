@@ -1,9 +1,10 @@
-use crate::token::{Token, TokenKind};
+use crate::token::{Token, TokenKind, Literal};
 use crate::expression::{Expression, ExpressionKind};
 
 use parselets::{
     PrefixParselet,
     IdentifierParselet,
+    LiteralParselet,
 };
 
 use std::collections::HashMap;
@@ -22,6 +23,11 @@ impl Parser {
         let mut prefix_parselets = HashMap::new();
 
         prefix_parselets.insert(TokenKind::Identifier, &IdentifierParselet as &dyn PrefixParselet);
+
+        prefix_parselets.insert(TokenKind::Literal(Literal::Int),     &LiteralParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(TokenKind::Literal(Literal::Float),   &LiteralParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(TokenKind::Literal(Literal::Boolean), &LiteralParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(TokenKind::Literal(Literal::String),  &LiteralParselet as &dyn PrefixParselet);
 
         Self {
             position: 0,
@@ -60,20 +66,12 @@ impl Parser {
         mut buffer: &'a mut TokenBuffer,
     ) -> Result<Expression<'a>, ParserError> {
         let token = self.source[self.position].clone();
-        let start_pos = self.position;
 
         {
             println!("searching prefix parselet for token: {:?}", &token.kind);
 
             if let Some(parselet) = self.prefix_parselets.get(&token.kind) {
-                let kind = parselet.parse(buffer, token);
-                let end_pos = self.position;
-
-                Ok(Expression {
-                    kind,
-                    start_pos,
-                    end_pos,
-                })
+                Ok(parselet.parse(buffer, token))
             } else {
                 Err(ParserError::MissingPrefixParselet)
             }
