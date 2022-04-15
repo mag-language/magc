@@ -3,6 +3,7 @@ use crate::expression::{Expression, ExpressionKind};
 
 use parselets::{
     PrefixParselet,
+    IdentifierParselet,
 };
 
 use std::collections::HashMap;
@@ -12,7 +13,7 @@ pub mod parselets;
 /// A parser which turns a linear token stream into a tree of Mag expressions.
 pub struct Parser {
     position: usize,
-    prefix_parselets: HashMap<TokenKind, PrefixParselet>,
+    prefix_parselets: HashMap<TokenKind, &'static dyn PrefixParselet>,
     source: Vec<Token>,
 }
 
@@ -20,7 +21,7 @@ impl Parser {
     pub fn new(source: Vec<Token>) -> Self {
         let mut prefix_parselets = HashMap::new();
 
-        prefix_parselets.insert(TokenKind::Identifier, PrefixParselet::IdentifierParselet);
+        prefix_parselets.insert(TokenKind::Identifier, &IdentifierParselet as &dyn PrefixParselet);
 
         Self {
             position: 0,
