@@ -22,15 +22,15 @@ pub enum ExpressionKind<'a> {
     /// A reference to a type like `Int32`.
     Type,
     /// An expression with a prefix operator.
-    Unary(UnaryExpression<'a>),
+    Prefix(PrefixExpression<'a>),
     Identifier,
 }
 
 /// An expression with a prefix operator.
 #[derive(Debug, Clone)]
-pub struct UnaryExpression<'a> {
+pub struct PrefixExpression<'a> {
     pub operator: Token,
-    pub expr:     &'a Expression<'a>,
+    pub operand:  &'a Expression<'a>,
 }
 
 /// An expression with two child expressions and an operator in between.
