@@ -3,6 +3,7 @@ use crate::expression::{Expression, ExpressionKind};
 
 use parselets::{
     PrefixParselet,
+    PrefixOperatorParselet,
     IdentifierParselet,
     LiteralParselet,
 };
@@ -28,6 +29,8 @@ impl Parser {
         prefix_parselets.insert(TokenKind::Literal(Literal::Float),   &LiteralParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Literal(Literal::Boolean), &LiteralParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Literal(Literal::String),  &LiteralParselet as &dyn PrefixParselet);
+
+        prefix_parselets.insert(TokenKind::Bang, &PrefixOperatorParselet as &dyn PrefixParselet);
 
         Self {
             position: 0,
@@ -64,7 +67,7 @@ impl Parser {
     pub fn parse_expression<'a>(
         &'a mut self,
     ) -> Result<Expression<'a>, ParserError> {
-        let token = self.source[self.position].clone();
+        let token = self.consume();
 
         {
             println!("searching prefix parselet for token: {:?}", &token.kind);
@@ -75,6 +78,14 @@ impl Parser {
                 Err(ParserError::MissingPrefixParselet)
             }
         }
+    }
+
+    /// Consume a token and advance the pointer.
+    fn consume(&mut self) -> Token {
+        let token = self.source[self.position].clone();
+        self.advance();
+
+        token
     }
 
     /// Advance the pointer by one if we're not at the end.
