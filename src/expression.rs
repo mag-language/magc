@@ -30,7 +30,7 @@ pub enum ExpressionKind<'a> {
 #[derive(Debug, Clone)]
 pub struct PrefixExpression<'a> {
     pub operator: Token,
-    pub operand:  &'a Expression<'a>,
+    pub operand:  Box<Expression<'a>>,
 }
 
 /// An expression with two child expressions and an operator in between.
