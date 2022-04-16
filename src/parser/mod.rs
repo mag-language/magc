@@ -62,8 +62,7 @@ impl Parser {
     }*/
 
     pub fn parse_expression<'a>(
-        &mut self,
-        mut buffer: &'a mut TokenBuffer,
+        &'a mut self,
     ) -> Result<Expression<'a>, ParserError> {
         let token = self.source[self.position].clone();
 
@@ -71,7 +70,7 @@ impl Parser {
             println!("searching prefix parselet for token: {:?}", &token.kind);
 
             if let Some(parselet) = self.prefix_parselets.get(&token.kind) {
-                Ok(parselet.parse(buffer, token))
+                Ok(parselet.parse(self, token))
             } else {
                 Err(ParserError::MissingPrefixParselet)
             }
@@ -97,45 +96,4 @@ impl Parser {
 #[derive(Debug, Clone)]
 pub enum ParserError {
     MissingPrefixParselet,
-}
-
-pub struct ParserBuffer {
-    items: Vec<Token>,
-    lexeme: Option<String>,
-    position: usize,
-}
-
-/// A parser-specific buffer structure that can be passed around so
-/// we don't need to reference the parser instance in the parselets.
-pub struct TokenBuffer {
-    pub source: Vec<Token>,
-    pub position: usize,
-}
-
-impl TokenBuffer {
-    pub fn new(source: Vec<Token>) -> Self {
-        Self {
-            source,
-            position: 0,
-        }
-    }
-
-    /// Advance the pointer by one if we're not at the end.
-    fn advance(&mut self) {
-        if !self.eof() {
-            self.position += 1;
-        }
-    }
-
-    fn current(&self) -> Token {
-        self.source[self.position].clone()
-    }
-
-    fn peek(&self) -> Token {
-        self.source[self.position + 1].clone()
-    }
-
-    fn eof(&self) -> bool {
-        self.position >= self.source.len()
-    }
 }
