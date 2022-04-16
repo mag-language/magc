@@ -1,16 +1,21 @@
-use crate::parser::{Parser, TokenBuffer};
-use crate::expression::{Expression, ExpressionKind};
+use crate::parser::{Parser};
 use crate::token::{Token, TokenKind};
 
+use crate::expression::{
+    Expression,
+    ExpressionKind,
+    PrefixExpression,
+};
+
 pub trait PrefixParselet {
-    fn parse<'a>(&self, buffer: &'a mut TokenBuffer, token: Token) -> Expression<'a>;
+    fn parse<'a>(&self, parser: &'a mut Parser, token: Token) -> Expression<'a>;
 }
 
 /// A parselet which converts an identifier token into an expression.
 pub struct IdentifierParselet;
 
 impl PrefixParselet for IdentifierParselet {
-    fn parse<'a>(&self, buffer: &'a mut TokenBuffer, token: Token) -> Expression<'a> {
+    fn parse<'a>(&self, parser: &'a mut Parser, token: Token) -> Expression<'a> {
         Expression {
             kind:      ExpressionKind::Identifier,
             lexeme:    token.lexeme,
@@ -23,7 +28,7 @@ impl PrefixParselet for IdentifierParselet {
 pub struct LiteralParselet;
 
 impl PrefixParselet for LiteralParselet {
-    fn parse<'a>(&self, buffer: &'a mut TokenBuffer, token: Token) -> Expression<'a> {
+    fn parse<'a>(&self, parser: &'a mut Parser, token: Token) -> Expression<'a> {
         let kind = match token.kind {
             TokenKind::Literal(literal) => ExpressionKind::Literal(literal),
             _ => unreachable!(),
@@ -38,11 +43,23 @@ impl PrefixParselet for LiteralParselet {
     }
 }
 
-// /// A parselet which converts a token and the following expression into a prefix expression.
-/*pub struct PrefixOperatorParselet;
+/// A parselet which converts a token and the following expression into a prefix expression.
+pub struct PrefixOperatorParselet;
 
 impl PrefixParselet for PrefixOperatorParselet {
-    fn parse<'a>(&mut self, parser: &'a mut Parser, token: Token) -> ExpressionKind<'a> {
-        ExpressionKind::Identifier(format!("{}", token))
+    fn parse<'a>(&self, parser: &'a mut Parser, token: Token) -> Expression<'a> {
+        let operator = token.clone();
+        // TODO: temporary unwrap until we have proper error handling here
+        let expr     = parser.parse_expression().unwrap();
+
+        Expression {
+            kind: ExpressionKind::Prefix(PrefixExpression {
+                operator,
+                operand: Box::new(expr),
+            }),
+            start_pos: 0,
+            end_pos: 0,
+            lexeme: format!("{}", token.lexeme),
+        }
     }
-}*/
+}
