@@ -15,6 +15,8 @@ use std::rc::Rc;
 
 pub mod parselets;
 
+pub type ParserResult = Result<Expression, ParserError>;
+
 pub static PREC_ASSIGNMENT: usize = 1000;
 pub static PREC_CONDITIONAL: usize = 200;
 pub static PREC_SUM: usize = 300;
@@ -77,7 +79,7 @@ impl Parser {
         let token = self.consume();
 
         if let Some(prefix) = self.prefix_parselets.get(&token.kind) {
-            let mut left = prefix.parse(self, token.clone());
+            let mut left = prefix.parse(self, token.clone())?;
 
             if self.eof() {
                 return Ok(left)
@@ -87,7 +89,7 @@ impl Parser {
                 let token = self.peek();
 
                 if let Some(infix) = self.infix_parselets.get(&token.kind).cloned() {
-                    left = infix.parse(self, Box::new(left.clone()), token);
+                    left = infix.parse(self, Box::new(left.clone()), token)?;
                 }
             }
 
