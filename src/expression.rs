@@ -15,6 +15,7 @@ pub struct Expression {
 
 #[derive(Debug, Clone)]
 pub enum ExpressionKind {
+    Conditional(ConditionalExpression),
     /// A literal value like `23.4` or `"hello"`.
     Literal(Literal),
     /// A value, tuple, record or variable pattern.
@@ -32,6 +33,13 @@ pub enum ExpressionKind {
 pub struct PrefixExpression {
     pub operator: Token,
     pub operand:  Box<Expression>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ConditionalExpression {
+    pub condition: Box<Expression>,
+    pub then_arm:  Box<Expression>,
+    pub else_arm:  Option<Box<Expression>>,
 }
 
 /// An expression with a infix operator.
