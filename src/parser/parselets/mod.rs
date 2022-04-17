@@ -1,11 +1,12 @@
-use crate::parser::{Parser, ParserResult, PREC_SUM, PREC_PREFIX};
-use crate::token::{Token, TokenKind};
+use crate::parser::{Parser, ParserResult, PREC_SUM, PREC_PREFIX, PREC_CONDITIONAL};
+use crate::token::{Token, TokenKind, Keyword};
 
 use crate::expression::{
     Expression,
     ExpressionKind,
     PrefixExpression,
     InfixExpression,
+    ConditionalExpression,
 };
 
 pub trait PrefixParselet {
@@ -95,5 +96,73 @@ impl InfixParselet for InfixOperatorParselet {
 
     fn get_precedence(&self) -> usize {
         self.precedence
+    }
+}
+
+#[derive(Debug, Clone)]
+/// A parselet which parses an expression enclosed in parentheses.
+pub struct GroupParselet;
+
+impl PrefixParselet for GroupParselet {
+    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
+        let expression = parser.parse_expression(0)?;
+        parser.consume_expect(TokenKind::RightParen);
+
+        Ok(expression)
+    }
+}
+
+#[derive(Debug, Clone)]
+/// A parselet which parses a conditional expression like `if condition then {expression} else {expression}`
+pub struct ConditionalParselet;
+
+impl PrefixParselet for ConditionalParselet {
+    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
+        println!("[P] parsing conditional");
+        let condition = Box::new(parser.parse_expression(0)?);
+        parser.consume_expect(TokenKind::Keyword(Keyword::Then));
+
+        let then_arm = Box::new(parser.parse_expression(0)?);
+
+        if parser.eof() {
+            return Ok(Expression {
+                kind: ExpressionKind::Conditional(ConditionalExpression {
+                    condition,
+                    then_arm,
+                    else_arm: None,
+                }),
+                start_pos: 0,
+                end_pos: 0,
+                lexeme: format!("{}", token.lexeme),
+            })
+        }
+
+        if let TokenKind::Keyword(Keyword::Else) = parser.peek().kind {
+            parser.advance();
+
+            let else_arm = Box::new(parser.parse_expression(0)?);
+
+            Ok(Expression {
+                kind: ExpressionKind::Conditional(ConditionalExpression {
+                    condition,
+                    then_arm,
+                    else_arm: Some(else_arm),
+                }),
+                start_pos: 0,
+                end_pos: 0,
+                lexeme: format!("{}", token.lexeme),
+            })
+        } else {
+            Ok(Expression {
+                kind: ExpressionKind::Conditional(ConditionalExpression {
+                    condition,
+                    then_arm,
+                    else_arm: None,
+                }),
+                start_pos: 0,
+                end_pos: 0,
+                lexeme: format!("{}", token.lexeme),
+            })
+        }
     }
 }
