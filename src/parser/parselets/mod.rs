@@ -78,8 +78,8 @@ pub struct InfixOperatorParselet {
 impl InfixParselet for InfixOperatorParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
         parser.advance();
-        // TODO: temporary unwrap until we have proper error handling here
-        let right = parser.parse_expression(self.precedence).unwrap();
+
+        let right = parser.parse_expression(self.precedence)?;
 
         Ok(Expression {
             kind: ExpressionKind::Infix(InfixExpression {
