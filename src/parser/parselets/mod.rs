@@ -77,12 +77,9 @@ pub struct InfixOperatorParselet {
 
 impl InfixParselet for InfixOperatorParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> Expression {
-        println!("[P] infix parselet, left: {:?}, token: {:?}", left, token.clone());
         parser.advance();
         // TODO: temporary unwrap until we have proper error handling here
         let right = parser.parse_expression(self.precedence).unwrap();
-
-        println!("[P] infix parselet, right: {:?}", right);
 
         Expression {
             kind: ExpressionKind::Infix(InfixExpression {
