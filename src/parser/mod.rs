@@ -1,4 +1,4 @@
-use crate::token::{Token, TokenKind, Literal};
+use crate::token::{Token, TokenKind, Literal, Keyword};
 use crate::expression::{Expression, ExpressionKind};
 
 use parselets::{
@@ -8,6 +8,8 @@ use parselets::{
     InfixOperatorParselet,
     IdentifierParselet,
     LiteralParselet,
+    GroupParselet,
+    ConditionalParselet,
 };
 
 use std::collections::HashMap;
@@ -40,11 +42,14 @@ impl Parser {
         let mut infix_parselets  = HashMap::new();
 
         prefix_parselets.insert(TokenKind::Identifier, &IdentifierParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(TokenKind::LeftParen,  &GroupParselet      as &dyn PrefixParselet);
 
         prefix_parselets.insert(TokenKind::Literal(Literal::Int),     &LiteralParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Literal(Literal::Float),   &LiteralParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Literal(Literal::Boolean), &LiteralParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Literal(Literal::String),  &LiteralParselet as &dyn PrefixParselet);
+
+        prefix_parselets.insert(TokenKind::Keyword(Keyword::If), &ConditionalParselet as &dyn PrefixParselet);
 
         prefix_parselets.insert(TokenKind::Bang,  &PrefixOperatorParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Plus,  &PrefixOperatorParselet as &dyn PrefixParselet);
@@ -52,6 +57,14 @@ impl Parser {
 
         infix_parselets.insert(TokenKind::Plus,  Rc::new(InfixOperatorParselet {
             precedence: PREC_SUM,
+        }) as Rc<dyn InfixParselet>);
+
+        infix_parselets.insert(TokenKind::Identifier,  Rc::new(InfixOperatorParselet {
+            precedence: PREC_SUM,
+        }) as Rc<dyn InfixParselet>);
+
+        infix_parselets.insert(TokenKind::EqualEqual,  Rc::new(InfixOperatorParselet {
+            precedence: 0,
         }) as Rc<dyn InfixParselet>);
 
         Self {
@@ -95,7 +108,7 @@ impl Parser {
 
             Ok(left)
         } else {
-            return Err(ParserError::MissingPrefixParselet)
+            return Err(ParserError::MissingPrefixParselet(token.clone().kind))
         }
     }
 
@@ -113,6 +126,22 @@ impl Parser {
         self.advance();
 
         token
+    }
+
+    /// Consume a token with the given TokenKind, or return error.
+    fn consume_expect(&mut self, kind: TokenKind) -> Result<Token, ParserError> {
+        let token = self.source[self.position].clone();
+
+        if token.kind == kind {
+            self.advance();
+
+            Ok(token)
+        } else {
+            Err(ParserError::UnexpectedToken {
+                expected: kind,
+                found: token,
+            })
+        }
     }
 
     /// Advance the pointer by one if we're not at the end.
@@ -133,6 +162,10 @@ impl Parser {
 
 #[derive(Debug, Clone)]
 pub enum ParserError {
-    MissingPrefixParselet,
+    MissingPrefixParselet(TokenKind),
+    UnexpectedToken {
+        expected: TokenKind,
+        found:    Token,
+    },
     UnexpectedEOF,
 }
