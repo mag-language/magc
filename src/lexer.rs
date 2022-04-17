@@ -273,12 +273,18 @@ impl<'a> Lexer<'a> {
     }
 
     fn match_next(&mut self, character: &'static str, then: TokenKind, otherwise: TokenKind) -> TokenKind {
-        if self.peek() == character {
+        self.advance();
+
+        if self.current() == character {
+            self.advance();
             then
         } else {
-            self.advance();
             otherwise
         }
+    }
+
+    fn current(&self) -> &'a str {
+        self.source[self.position]
     }
     
     fn peek(&self) -> &'a str {
