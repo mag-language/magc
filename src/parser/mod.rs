@@ -11,14 +11,24 @@ use parselets::{
 };
 
 use std::collections::HashMap;
+use std::rc::Rc;
 
 pub mod parselets;
+
+pub static PREC_ASSIGNMENT: usize = 1000;
+pub static PREC_CONDITIONAL: usize = 200;
+pub static PREC_SUM: usize = 300;
+pub static PREC_PRODUCT: usize = 400;
+pub static PREC_EXPONENT: usize = 500;
+pub static PREC_PREFIX: usize = 600;
+pub static PREC_POSTFIX: usize = 700;
+pub static PREC_CALL: usize = 800;
 
 /// A parser which turns a linear token stream into a tree of Mag expressions.
 pub struct Parser {
     position: usize,
     prefix_parselets: HashMap<TokenKind, &'static dyn PrefixParselet>,
-    infix_parselets:  HashMap<TokenKind, &'static dyn InfixParselet>,
+    infix_parselets:  HashMap<TokenKind, Rc<dyn InfixParselet>>,
     source: Vec<Token>,
 }
 
@@ -38,7 +48,9 @@ impl Parser {
         //prefix_parselets.insert(TokenKind::Plus,  &PrefixOperatorParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Minus, &PrefixOperatorParselet as &dyn PrefixParselet);
 
-        infix_parselets.insert(TokenKind::Plus,  &InfixOperatorParselet as &dyn InfixParselet);
+        infix_parselets.insert(TokenKind::Plus,  Rc::new(InfixOperatorParselet {
+            precedence: PREC_SUM,
+        }) as Rc<dyn InfixParselet>);
 
         Self {
             position: 0,
@@ -52,7 +64,7 @@ impl Parser {
         let mut expressions = vec![];
 
         while !self.eof() {
-            expressions.push(self.parse_expression()?);
+            expressions.push(self.parse_expression(0)?);
         }
 
         Ok(expressions)
@@ -60,27 +72,36 @@ impl Parser {
 
     pub fn parse_expression(
         &mut self,
+        precedence: usize,
     ) -> Result<Expression, ParserError> {
         let token = self.consume();
 
         if let Some(prefix) = self.prefix_parselets.get(&token.kind) {
-            let left = prefix.parse(self, token.clone());
+            let mut left = prefix.parse(self, token.clone());
 
-            if (self.eof()) {
+            if self.eof() {
                 return Ok(left)
             }
 
-            let token = self.peek();
+            while !self.eof() && precedence < self.get_precedence() {
+                let token = self.peek();
 
-            if let Some(infix) = self.infix_parselets.get(&token.kind) {
-                // Return the infix expression created by the parselet.
-                Ok(infix.parse(self, Box::new(left), token))
-            } else {
-                // We're just parsing a prefix expression, so we're done here.
-                Ok(left)
+                if let Some(infix) = self.infix_parselets.get(&token.kind).cloned() {
+                    left = infix.parse(self, Box::new(left.clone()), token);
+                }
             }
+
+            Ok(left)
         } else {
-            Err(ParserError::MissingPrefixParselet)
+            return Err(ParserError::MissingPrefixParselet)
+        }
+    }
+
+    fn get_precedence(&self) -> usize {
+        if let Some(infix) = self.infix_parselets.get(&self.peek().kind) {
+            infix.get_precedence()
+        } else {
+            0
         }
     }
 
@@ -100,7 +121,6 @@ impl Parser {
     }
 
     fn peek(&self) -> Token {
-        println!("peeking at position {}, token {}", self.position, self.source[self.position].clone());
         self.source[self.position].clone()
     }
 
@@ -112,4 +132,5 @@ impl Parser {
 #[derive(Debug, Clone)]
 pub enum ParserError {
     MissingPrefixParselet,
+    UnexpectedEOF,
 }

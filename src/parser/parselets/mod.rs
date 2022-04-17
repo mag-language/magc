@@ -1,4 +1,4 @@
-use crate::parser::{Parser};
+use crate::parser::{Parser, PREC_SUM, PREC_PREFIX};
 use crate::token::{Token, TokenKind};
 
 use crate::expression::{
@@ -14,6 +14,7 @@ pub trait PrefixParselet {
 
 pub trait InfixParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> Expression;
+    fn get_precedence(&self) -> usize;
 }
 
 /// A parselet which converts an identifier token into an expression.
@@ -55,7 +56,7 @@ impl PrefixParselet for PrefixOperatorParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> Expression {
         let operator = token.clone();
         // TODO: temporary unwrap until we have proper error handling here
-        let expr     = parser.parse_expression().unwrap();
+        let expr     = parser.parse_expression(PREC_PREFIX).unwrap();
 
         Expression {
             kind: ExpressionKind::Prefix(PrefixExpression {
@@ -69,14 +70,17 @@ impl PrefixParselet for PrefixOperatorParselet {
     }
 }
 
-pub struct InfixOperatorParselet;
+#[derive(Debug, Clone)]
+pub struct InfixOperatorParselet {
+    pub precedence: usize,
+}
 
 impl InfixParselet for InfixOperatorParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> Expression {
         println!("[P] infix parselet, left: {:?}, token: {:?}", left, token.clone());
         parser.advance();
         // TODO: temporary unwrap until we have proper error handling here
-        let right = parser.parse_expression().unwrap();
+        let right = parser.parse_expression(self.precedence).unwrap();
 
         println!("[P] infix parselet, right: {:?}", right);
 
@@ -90,5 +94,9 @@ impl InfixParselet for InfixOperatorParselet {
             start_pos: token.start_pos,
             end_pos:   token.end_pos,
         }
+    }
+
+    fn get_precedence(&self) -> usize {
+        self.precedence
     }
 }
