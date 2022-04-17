@@ -6,49 +6,58 @@ type VariablePatternName = Option<String>;
 type VariablePatternType = Option<String>;
 
 #[derive(Debug, Clone)]
-pub struct Expression<'a> {
-    pub kind: ExpressionKind<'a>,
+pub struct Expression {
+    pub kind: ExpressionKind,
     pub lexeme: String,
     pub start_pos: usize,
     pub end_pos: usize,
 }
 
 #[derive(Debug, Clone)]
-pub enum ExpressionKind<'a> {
+pub enum ExpressionKind {
     /// A literal value like `23.4` or `"hello"`.
     Literal(Literal),
     /// A value, tuple, record or variable pattern.
-    Pattern(Pattern<'a>),
+    Pattern(Pattern),
     /// A reference to a type like `Int32`.
     Type,
     /// An expression with a prefix operator.
-    Prefix(PrefixExpression<'a>),
+    Prefix(PrefixExpression),
+    Infix(InfixExpression),
     Identifier,
 }
 
 /// An expression with a prefix operator.
 #[derive(Debug, Clone)]
-pub struct PrefixExpression<'a> {
+pub struct PrefixExpression {
     pub operator: Token,
-    pub operand:  Box<Expression<'a>>,
+    pub operand:  Box<Expression>,
+}
+
+/// An expression with a infix operator.
+#[derive(Debug, Clone)]
+pub struct InfixExpression {
+    pub left:  Box<Expression>,
+    pub operator: Token,
+    pub right: Box<Expression>,
 }
 
 /// An expression with two child expressions and an operator in between.
 #[derive(Debug, Clone)]
-pub struct BinaryExpression<'a> {
+pub struct BinaryExpression {
     pub operator: Token,
-    pub left:     &'a Expression<'a>,
-    pub right:    &'a Expression<'a>,
+    pub left:     Box<Expression>,
+    pub right:    Box<Expression>,
 }
 
 #[derive(Debug, Clone)]
-pub enum Pattern<'a> {
+pub enum Pattern {
     /// An expression that evaluates to a value.
-    Value(&'a Expression<'a>),
+    Value(Box<Expression>),
     /// A series of patterns separated by commas.
-    Tuple(Vec<Pattern<'a>>),
+    Tuple(Vec<Pattern>),
     /// A named series of patterns separated by commas.
-    Record(BTreeMap<String, Pattern<'a>>),
+    Record(BTreeMap<String, Pattern>),
     /// A variable identifier with optional name and type.
     Variable(VariablePatternName, VariablePatternType),
 }
