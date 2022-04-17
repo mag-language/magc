@@ -3,7 +3,9 @@ use crate::expression::{Expression, ExpressionKind};
 
 use parselets::{
     PrefixParselet,
+    InfixParselet,
     PrefixOperatorParselet,
+    InfixOperatorParselet,
     IdentifierParselet,
     LiteralParselet,
 };
@@ -16,12 +18,14 @@ pub mod parselets;
 pub struct Parser {
     position: usize,
     prefix_parselets: HashMap<TokenKind, &'static dyn PrefixParselet>,
+    infix_parselets:  HashMap<TokenKind, &'static dyn InfixParselet>,
     source: Vec<Token>,
 }
 
 impl Parser {
     pub fn new(source: Vec<Token>) -> Self {
         let mut prefix_parselets = HashMap::new();
+        let mut infix_parselets  = HashMap::new();
 
         prefix_parselets.insert(TokenKind::Identifier, &IdentifierParselet as &dyn PrefixParselet);
 
@@ -31,54 +35,52 @@ impl Parser {
         prefix_parselets.insert(TokenKind::Literal(Literal::String),  &LiteralParselet as &dyn PrefixParselet);
 
         prefix_parselets.insert(TokenKind::Bang,  &PrefixOperatorParselet as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::Plus,  &PrefixOperatorParselet as &dyn PrefixParselet);
+        //prefix_parselets.insert(TokenKind::Plus,  &PrefixOperatorParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Minus, &PrefixOperatorParselet as &dyn PrefixParselet);
+
+        infix_parselets.insert(TokenKind::Plus,  &InfixOperatorParselet as &dyn InfixParselet);
 
         Self {
             position: 0,
             prefix_parselets,
+            infix_parselets,
             source,
         }
     }
 
-    /*pub fn parse(&mut self) -> Result<Vec<Expression<'a>>, ParserError> {
+    pub fn parse(&mut self) -> Result<Vec<Expression>, ParserError> {
         let mut expressions = vec![];
-        let mut buffer = TokenBuffer::new(self.source.clone());
-
-        let mut prefix_p = self.prefix_parselets.borrow_mut();
-
-        prefix_p.insert(TokenKind::Identifier, &IdentifierParselet);
 
         while !self.eof() {
-            {
-                let start_pos = self.position;
-                let kind = self.parse_expression(&mut buffer)?;
-                let end_pos = self.position;
-
-                expressions.push(Expression {
-                    kind,
-                    start_pos,
-                    end_pos,
-                })
-            }
+            expressions.push(self.parse_expression()?);
         }
 
         Ok(expressions)
-    }*/
+    }
 
-    pub fn parse_expression<'a>(
-        &'a mut self,
-    ) -> Result<Expression<'a>, ParserError> {
+    pub fn parse_expression(
+        &mut self,
+    ) -> Result<Expression, ParserError> {
         let token = self.consume();
 
-        {
-            println!("searching prefix parselet for token: {:?}", &token.kind);
+        if let Some(prefix) = self.prefix_parselets.get(&token.kind) {
+            let left = prefix.parse(self, token.clone());
 
-            if let Some(parselet) = self.prefix_parselets.get(&token.kind) {
-                Ok(parselet.parse(self, token))
-            } else {
-                Err(ParserError::MissingPrefixParselet)
+            if (self.eof()) {
+                return Ok(left)
             }
+
+            let token = self.peek();
+
+            if let Some(infix) = self.infix_parselets.get(&token.kind) {
+                // Return the infix expression created by the parselet.
+                Ok(infix.parse(self, Box::new(left), token))
+            } else {
+                // We're just parsing a prefix expression, so we're done here.
+                Ok(left)
+            }
+        } else {
+            Err(ParserError::MissingPrefixParselet)
         }
     }
 
@@ -97,12 +99,13 @@ impl Parser {
         }
     }
 
-    fn peek(&self) -> &Token {
-        &self.source[self.position + 1]
+    fn peek(&self) -> Token {
+        println!("peeking at position {}, token {}", self.position, self.source[self.position].clone());
+        self.source[self.position].clone()
     }
 
     fn eof(&self) -> bool {
-        self.position >= self.source.len()
+        self.position == self.source.len()
     }
 }
 
