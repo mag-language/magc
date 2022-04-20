@@ -1,8 +1,10 @@
+//! An object which translates a Magpie source string into a linear sequence of tokens.
+
 use crate::token::{Token, TokenKind, Keyword, Literal};
 
 use unicode_segmentation::UnicodeSegmentation;
 
-/// An object which turns Magpie source code into a sequence of tokens.
+/// An object which translates a Magpie source string into a linear sequence of tokens.
 pub struct Lexer<'a> {
     position: usize,
     // This variable is used to accumulate the parsed characters of the current
