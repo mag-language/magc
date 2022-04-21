@@ -10,6 +10,7 @@ use crate::types::{
 use parselets::{
     PrefixParselet,
     InfixParselet,
+    CallParselet,
     PrefixOperatorParselet,
     InfixOperatorParselet,
     IdentifierParselet,
@@ -72,6 +73,8 @@ impl Parser {
         infix_parselets.insert(TokenKind::EqualEqual,  Rc::new(InfixOperatorParselet {
             precedence: 0,
         }) as Rc<dyn InfixParselet>);
+
+        infix_parselets.insert(TokenKind::LeftParen,  Rc::new(CallParselet) as Rc<dyn InfixParselet>);
 
         Self {
             position: 0,

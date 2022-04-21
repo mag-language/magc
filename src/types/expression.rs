@@ -1,6 +1,6 @@
 use crate::types::{Token, Literal};
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 type VariablePatternName = Option<String>;
 type VariablePatternType = Option<String>;
@@ -25,6 +25,7 @@ pub enum ExpressionKind {
     /// An expression with a prefix operator.
     Prefix(PrefixExpression),
     Infix(InfixExpression),
+    Call(CallExpression),
     Identifier,
 }
 
@@ -33,6 +34,14 @@ pub enum ExpressionKind {
 pub struct PrefixExpression {
     pub operator: Token,
     pub operand:  Box<Expression>,
+}
+
+/// An expression with a prefix operator.
+#[derive(Debug, Clone)]
+pub struct CallExpression {
+    pub method: Box<Expression>,
+    // The [`Record`] which contains the values of the arguments of the method call.
+    //pub signature:  Box<Expression>,
 }
 
 #[derive(Debug, Clone)]
@@ -61,11 +70,20 @@ pub struct BinaryExpression {
 #[derive(Debug, Clone)]
 pub enum Pattern {
     /// An expression that evaluates to a value.
-    Value(Box<Expression>),
-    /// A series of patterns separated by commas.
-    Tuple(Vec<Pattern>),
+    Value {
+        expr: Box<Expression>
+    },
+    /// An unnamed series of patterns separated by commas.
+    Tuple {
+        children: Vec<Pattern>,
+    },
     /// A named series of patterns separated by commas.
-    Record(BTreeMap<String, Pattern>),
+    Record {
+        children: HashMap<String, Pattern>,
+    },
     /// A variable identifier with optional name and type.
-    Variable(VariablePatternName, VariablePatternType),
+    Variable {
+        name: Option<String>,
+        type_id: Option<String>,
+    },
 }

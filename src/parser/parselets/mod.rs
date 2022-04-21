@@ -6,10 +6,13 @@ use crate::types::{
     Keyword,
     Expression,
     ExpressionKind,
+    CallExpression,
     PrefixExpression,
     InfixExpression,
     ConditionalExpression,
 };
+
+pub mod pattern;
 
 pub trait PrefixParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult;
@@ -18,20 +21,6 @@ pub trait PrefixParselet {
 pub trait InfixParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult;
     fn get_precedence(&self) -> usize;
-}
-
-/// A parselet which converts an identifier token into an expression.
-pub struct IdentifierParselet;
-
-impl PrefixParselet for IdentifierParselet {
-    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
-        Ok(Expression {
-            kind:      ExpressionKind::Identifier,
-            lexeme:    token.lexeme,
-            start_pos: token.start_pos,
-            end_pos:   token.end_pos,
-        })
-    }
 }
 
 pub struct LiteralParselet;
@@ -166,5 +155,44 @@ impl PrefixParselet for ConditionalParselet {
                 lexeme: format!("{}", token.lexeme),
             })
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+/// A parselet which parses a call expression like `method()`
+pub struct CallParselet;
+
+impl InfixParselet for CallParselet {
+    fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
+        parser.advance();
+        parser.consume_expect(TokenKind::RightParen)?;
+
+        Ok(Expression {
+            kind: ExpressionKind::Call(CallExpression {
+                method: left,
+
+            }),
+            lexeme:    token.lexeme,
+            start_pos: token.start_pos,
+            end_pos:   token.end_pos,
+        })
+    }
+
+    fn get_precedence(&self) -> usize {
+        100
+    }
+}
+
+/// A parselet which converts an identifier token into an expression.
+pub struct IdentifierParselet;
+
+impl PrefixParselet for IdentifierParselet {
+    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
+        Ok(Expression {
+            kind:      ExpressionKind::Identifier,
+            lexeme:    token.lexeme,
+            start_pos: token.start_pos,
+            end_pos:   token.end_pos,
+        })
     }
 }
