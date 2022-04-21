@@ -1,4 +1,4 @@
-use crate::token::{Token, Literal};
+use crate::types::{Token, Literal};
 
 use std::collections::BTreeMap;
 

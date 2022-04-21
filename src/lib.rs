@@ -22,11 +22,6 @@
 //! This tree of expressions can then be executed on an interpreter or compiled to some binary format like
 //! Strontium bytecode. There is no code generation or interpreter code yet.
 
-pub mod token;
 pub mod lexer;
-pub mod expression;
 pub mod parser;
-
-pub use self::token::Token;
-pub use self::lexer::Lexer;
-pub use self::expression::Expression;
+pub mod types;

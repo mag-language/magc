@@ -1,6 +1,6 @@
 //! An object which translates a Magpie source string into a linear sequence of tokens.
 
-use crate::token::{Token, TokenKind, Keyword, Literal};
+use crate::types::{Token, TokenKind, Keyword, Literal};
 
 use unicode_segmentation::UnicodeSegmentation;
 
