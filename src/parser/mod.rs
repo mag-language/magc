@@ -72,6 +72,10 @@ impl Parser {
             precedence: PREC_SUM,
         }) as Rc<dyn InfixParselet>);
 
+        infix_parselets.insert(TokenKind::Star,  Rc::new(InfixOperatorParselet {
+            precedence: PREC_PRODUCT,
+        }) as Rc<dyn InfixParselet>);
+
         infix_parselets.insert(TokenKind::EqualEqual,  Rc::new(InfixOperatorParselet {
             precedence: 0,
         }) as Rc<dyn InfixParselet>);
