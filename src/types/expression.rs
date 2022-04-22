@@ -79,7 +79,13 @@ pub enum Pattern {
     },
     /// A named series of patterns separated by commas.
     Record {
-        children: HashMap<String, Expression>,
+        children: Vec<Expression>,
+    },
+
+    /// The smallest possible unit of a record, like `repeats: 4`.
+    Field {
+        name: String,
+        value: Box<Expression>,
     },
     /// A variable identifier with optional name and type.
     Variable {

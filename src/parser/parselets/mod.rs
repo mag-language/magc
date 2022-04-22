@@ -151,9 +151,9 @@ impl InfixParselet for RecordPatternParselet {
 }
 
 #[derive(Debug, Clone)]
-pub struct RecordItemParselet;
+pub struct FieldParselet;
 
-impl InfixParselet for RecordItemParselet {
+impl InfixParselet for FieldParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
         parser.consume_expect(TokenKind::Colon);
 
@@ -162,7 +162,7 @@ impl InfixParselet for RecordItemParselet {
         if let ExpressionKind::Pattern(Pattern::Variable { name, type_id }) = left.kind {
             if let Some(name) = name {
                 Ok(Expression {
-                    kind: ExpressionKind::Pattern(Pattern::RecordItem {
+                    kind: ExpressionKind::Pattern(Pattern::Field {
                         name,
                         value,
                     }),

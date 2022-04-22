@@ -16,7 +16,7 @@ use parselets::{
     VariablePatternParselet,
     LiteralParselet,
     RecordPatternParselet,
-    RecordItemParselet,
+    FieldParselet,
     TuplePatternParselet,
     ConditionalParselet,
 };
@@ -78,7 +78,7 @@ impl Parser {
 
         infix_parselets.insert(TokenKind::LeftParen,  Rc::new(CallParselet) as Rc<dyn InfixParselet>);
         infix_parselets.insert(TokenKind::Comma,  Rc::new(RecordPatternParselet) as Rc<dyn InfixParselet>);
-        infix_parselets.insert(TokenKind::Colon,  Rc::new(RecordItemParselet) as Rc<dyn InfixParselet>);
+        infix_parselets.insert(TokenKind::Colon,  Rc::new(FieldParselet) as Rc<dyn InfixParselet>);
 
         Self {
             position: 0,
