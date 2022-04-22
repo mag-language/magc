@@ -14,8 +14,12 @@ use crate::types::{
 };
 
 pub use self::pattern::VariablePatternParselet;
+use std::collections::HashMap;
 
 pub mod pattern;
+pub mod literal;
+
+pub use self::literal::*;
 
 pub trait PrefixParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult;
@@ -24,24 +28,6 @@ pub trait PrefixParselet {
 pub trait InfixParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult;
     fn get_precedence(&self) -> usize;
-}
-
-pub struct LiteralParselet;
-
-impl PrefixParselet for LiteralParselet {
-    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
-        let kind = match token.kind {
-            TokenKind::Literal(literal) => ExpressionKind::Literal(literal),
-            _ => unreachable!(),
-        };
-
-        Ok(Expression {
-            kind,
-            lexeme:    token.lexeme,
-            start_pos: token.start_pos,
-            end_pos:   token.end_pos,
-        })
-    }
 }
 
 /// A parselet which converts a token and the following expression into a prefix expression.
@@ -137,6 +123,66 @@ impl PrefixParselet for TuplePatternParselet {
             end_pos: 0,
             lexeme: format!("{}", token.lexeme),
         })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RecordPatternParselet;
+
+impl InfixParselet for RecordPatternParselet {
+    fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
+        parser.consume_expect(TokenKind::Comma);
+
+        let record_item = parser.parse_expression(8)?;
+
+        Ok(Expression {
+            kind: ExpressionKind::Pattern(Pattern::Record {
+                children: vec![record_item],
+            }),
+            lexeme:    token.lexeme,
+            start_pos: token.start_pos,
+            end_pos:   token.end_pos,
+        })
+    }
+
+    fn get_precedence(&self) -> usize {
+        8
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RecordItemParselet;
+
+impl InfixParselet for RecordItemParselet {
+    fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
+        parser.consume_expect(TokenKind::Colon);
+
+        let value = Box::new(parser.parse_expression(8)?);
+
+        if let ExpressionKind::Pattern(Pattern::Variable { name, type_id }) = left.kind {
+            if let Some(name) = name {
+                Ok(Expression {
+                    kind: ExpressionKind::Pattern(Pattern::RecordItem {
+                        name,
+                        value,
+                    }),
+                    lexeme:    token.lexeme,
+                    start_pos: token.start_pos,
+                    end_pos:   token.end_pos,
+                })
+            } else {
+                panic!("")
+            }
+        } else {
+            Err(ParserError::UnexpectedExpression {
+                expected: ExpressionKind::Pattern(Pattern::Variable {name: None, type_id: None}),
+                found: *left,
+            })
+        }
+    }
+
+    fn get_precedence(&self) -> usize {
+        8
     }
 }
 
