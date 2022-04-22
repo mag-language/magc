@@ -68,11 +68,19 @@ impl Parser {
             precedence: PREC_SUM,
         }) as Rc<dyn InfixParselet>);
 
+        infix_parselets.insert(TokenKind::Minus,  Rc::new(InfixOperatorParselet {
+            precedence: PREC_SUM,
+        }) as Rc<dyn InfixParselet>);
+
         infix_parselets.insert(TokenKind::Identifier,  Rc::new(InfixOperatorParselet {
             precedence: PREC_SUM,
         }) as Rc<dyn InfixParselet>);
 
         infix_parselets.insert(TokenKind::Star,  Rc::new(InfixOperatorParselet {
+            precedence: PREC_PRODUCT,
+        }) as Rc<dyn InfixParselet>);
+
+        infix_parselets.insert(TokenKind::Slash,  Rc::new(InfixOperatorParselet {
             precedence: PREC_PRODUCT,
         }) as Rc<dyn InfixParselet>);
 
