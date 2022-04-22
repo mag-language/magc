@@ -45,6 +45,12 @@ pub struct Parser {
     source: Vec<Token>,
 }
 
+fn infix_operator(precedence: usize) -> Rc<dyn InfixParselet> {
+    Rc::new(InfixOperatorParselet {
+        precedence,
+    }) as Rc<dyn InfixParselet>
+}
+
 impl Parser {
     pub fn new(source: Vec<Token>) -> Self {
         let mut prefix_parselets = HashMap::new();
@@ -64,29 +70,12 @@ impl Parser {
         prefix_parselets.insert(TokenKind::Plus,  &PrefixOperatorParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Minus, &PrefixOperatorParselet as &dyn PrefixParselet);
 
-        infix_parselets.insert(TokenKind::Plus,  Rc::new(InfixOperatorParselet {
-            precedence: PREC_SUM,
-        }) as Rc<dyn InfixParselet>);
-
-        infix_parselets.insert(TokenKind::Minus,  Rc::new(InfixOperatorParselet {
-            precedence: PREC_SUM,
-        }) as Rc<dyn InfixParselet>);
-
-        infix_parselets.insert(TokenKind::Identifier,  Rc::new(InfixOperatorParselet {
-            precedence: PREC_SUM,
-        }) as Rc<dyn InfixParselet>);
-
-        infix_parselets.insert(TokenKind::Star,  Rc::new(InfixOperatorParselet {
-            precedence: PREC_PRODUCT,
-        }) as Rc<dyn InfixParselet>);
-
-        infix_parselets.insert(TokenKind::Slash,  Rc::new(InfixOperatorParselet {
-            precedence: PREC_PRODUCT,
-        }) as Rc<dyn InfixParselet>);
-
-        infix_parselets.insert(TokenKind::EqualEqual,  Rc::new(InfixOperatorParselet {
-            precedence: 0,
-        }) as Rc<dyn InfixParselet>);
+        infix_parselets.insert(TokenKind::Plus,       infix_operator(PREC_SUM));
+        infix_parselets.insert(TokenKind::Minus,      infix_operator(PREC_SUM));
+        infix_parselets.insert(TokenKind::Identifier, infix_operator(PREC_SUM));
+        infix_parselets.insert(TokenKind::Star,       infix_operator(PREC_PRODUCT));
+        infix_parselets.insert(TokenKind::Slash,      infix_operator(PREC_PRODUCT));
+        infix_parselets.insert(TokenKind::EqualEqual, infix_operator(0));
 
         infix_parselets.insert(TokenKind::LeftParen,  Rc::new(CallParselet) as Rc<dyn InfixParselet>);
         infix_parselets.insert(TokenKind::Comma,  Rc::new(RecordPatternParselet) as Rc<dyn InfixParselet>);
