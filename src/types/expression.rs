@@ -75,11 +75,11 @@ pub enum Pattern {
     },
     /// An unnamed series of patterns separated by commas.
     Tuple {
-        children: Vec<Pattern>,
+        children: Vec<Expression>,
     },
     /// A named series of patterns separated by commas.
     Record {
-        children: HashMap<String, Pattern>,
+        children: HashMap<String, Expression>,
     },
     /// A variable identifier with optional name and type.
     Variable {
