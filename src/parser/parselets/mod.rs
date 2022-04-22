@@ -133,11 +133,36 @@ impl InfixParselet for RecordPatternParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
         parser.consume_expect(TokenKind::Comma);
 
-        let record_item = parser.parse_expression(8)?;
+        let mut fields = HashMap::new();
+
+        if let ExpressionKind::Pattern(Pattern::Field { name, value}) = left.kind {
+            fields.insert(name, value);
+        } else {
+            return Err(ParserError::UnexpectedExpression {
+                expected: ExpressionKind::Pattern(Pattern::Variable { name: None, type_id: None}),
+                found:    *left,
+            })
+        }
+
+        while !parser.eof() {
+            let next_token = parser.peek();
+
+            match next_token.kind {
+                TokenKind::Identifier => {
+                    parser.consume_expect(TokenKind::Identifier)?;
+                    parser.consume_expect(TokenKind::Colon)?;
+                    fields.insert(next_token.lexeme, Box::new(parser.parse_expression(8)?));
+                },
+
+                _ => {
+                    break
+                }
+            }
+        }
 
         Ok(Expression {
             kind: ExpressionKind::Pattern(Pattern::Record {
-                children: vec![record_item],
+                fields,
             }),
             lexeme:    token.lexeme,
             start_pos: token.start_pos,
@@ -264,19 +289,5 @@ impl InfixParselet for CallParselet {
 
     fn get_precedence(&self) -> usize {
         100
-    }
-}
-
-/// A parselet which converts an identifier token into an expression.
-pub struct IdentifierParselet;
-
-impl PrefixParselet for IdentifierParselet {
-    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
-        Ok(Expression {
-            kind:      ExpressionKind::Identifier,
-            lexeme:    token.lexeme,
-            start_pos: token.start_pos,
-            end_pos:   token.end_pos,
-        })
     }
 }
