@@ -79,7 +79,7 @@ pub enum Pattern {
     },
     /// A named series of patterns separated by commas.
     Record {
-        children: Vec<Expression>,
+        fields: HashMap<String, Box<Expression>>,
     },
 
     /// The smallest possible unit of a record, like `repeats: 4`.
