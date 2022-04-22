@@ -15,6 +15,8 @@ use parselets::{
     InfixOperatorParselet,
     VariablePatternParselet,
     LiteralParselet,
+    RecordPatternParselet,
+    RecordItemParselet,
     TuplePatternParselet,
     ConditionalParselet,
 };
@@ -75,6 +77,8 @@ impl Parser {
         }) as Rc<dyn InfixParselet>);
 
         infix_parselets.insert(TokenKind::LeftParen,  Rc::new(CallParselet) as Rc<dyn InfixParselet>);
+        infix_parselets.insert(TokenKind::Comma,  Rc::new(RecordPatternParselet) as Rc<dyn InfixParselet>);
+        infix_parselets.insert(TokenKind::Colon,  Rc::new(RecordItemParselet) as Rc<dyn InfixParselet>);
 
         Self {
             position: 0,
@@ -160,6 +164,14 @@ impl Parser {
         }
     }
 
+    fn match_current(&self, kind: TokenKind) -> Result<bool, ParserError> {
+        if !self.eof() {
+            Ok(self.peek().kind == kind)
+        } else {
+            Err(ParserError::UnexpectedEOF)
+        }
+    }
+
     fn peek(&self) -> Token {
         self.source[self.position].clone()
     }
@@ -177,4 +189,8 @@ pub enum ParserError {
         found:    Token,
     },
     UnexpectedEOF,
+    UnexpectedExpression {
+        expected: ExpressionKind,
+        found:    Expression,
+    },
 }
