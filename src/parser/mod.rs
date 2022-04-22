@@ -13,7 +13,7 @@ use parselets::{
     CallParselet,
     PrefixOperatorParselet,
     InfixOperatorParselet,
-    IdentifierParselet,
+    VariablePatternParselet,
     LiteralParselet,
     GroupParselet,
     ConditionalParselet,
@@ -48,7 +48,7 @@ impl Parser {
         let mut prefix_parselets = HashMap::new();
         let mut infix_parselets  = HashMap::new();
 
-        prefix_parselets.insert(TokenKind::Identifier, &IdentifierParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(TokenKind::Identifier, &VariablePatternParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::LeftParen,  &GroupParselet      as &dyn PrefixParselet);
 
         prefix_parselets.insert(TokenKind::Literal(Literal::Int),     &LiteralParselet as &dyn PrefixParselet);

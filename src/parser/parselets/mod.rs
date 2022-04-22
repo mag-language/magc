@@ -10,7 +10,10 @@ use crate::types::{
     PrefixExpression,
     InfixExpression,
     ConditionalExpression,
+    Pattern,
 };
+
+pub use self::pattern::VariablePatternParselet;
 
 pub mod pattern;
 
@@ -164,6 +167,7 @@ pub struct CallParselet;
 
 impl InfixParselet for CallParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
+        // We can just skip the next character since there must be an opening brace here.
         parser.advance();
         parser.consume_expect(TokenKind::RightParen)?;
 
