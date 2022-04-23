@@ -21,7 +21,7 @@ impl InfixParselet for CallParselet {
                 return Ok(Expression {
                     kind: ExpressionKind::Call(CallExpression {
                         method: left,
-                        signature: None,
+                        signature: Some(Box::new(expr)),
                     }),
                     lexeme:    token.lexeme,
                     start_pos: token.start_pos,
