@@ -1,4 +1,4 @@
-use crate::parser::{Parser, ParserResult, ParserError, PREC_SUM, PREC_PREFIX, PREC_CONDITIONAL};
+use crate::parser::{Parser, ParserResult, ParserError, PREC_PREFIX};
 
 use crate::types::{
     Token,
@@ -131,7 +131,7 @@ pub struct RecordPatternParselet;
 
 impl InfixParselet for RecordPatternParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
-        parser.consume_expect(TokenKind::Comma);
+        parser.consume_expect(TokenKind::Comma)?;
 
         let mut fields = HashMap::new();
 
@@ -180,11 +180,11 @@ pub struct FieldParselet;
 
 impl InfixParselet for FieldParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
-        parser.consume_expect(TokenKind::Colon);
+        parser.consume_expect(TokenKind::Colon)?;
 
         let value = Box::new(parser.parse_expression(8)?);
 
-        if let ExpressionKind::Pattern(Pattern::Variable { name, type_id }) = left.kind {
+        if let ExpressionKind::Pattern(Pattern::Variable { name, type_id: _ }) = left.kind {
             if let Some(name) = name {
                 Ok(Expression {
                     kind: ExpressionKind::Pattern(Pattern::Field {
@@ -219,7 +219,7 @@ impl PrefixParselet for ConditionalParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
         println!("[P] parsing conditional");
         let condition = Box::new(parser.parse_expression(0)?);
-        parser.consume_expect(TokenKind::Keyword(Keyword::Then));
+        parser.consume_expect(TokenKind::Keyword(Keyword::Then))?;
 
         let then_arm = Box::new(parser.parse_expression(0)?);
 

@@ -2,9 +2,6 @@ use crate::types::{Token, Literal};
 
 use std::collections::HashMap;
 
-type VariablePatternName = Option<String>;
-type VariablePatternType = Option<String>;
-
 #[derive(Debug, Clone)]
 pub struct Expression {
     pub kind: ExpressionKind,

@@ -1,5 +1,3 @@
-use self::TokenKind::*;
-
 /// A single textual entity of a program like `(` or `if`.
 ///
 /// The literal values contained in tokens are not parsed

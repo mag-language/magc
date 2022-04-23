@@ -10,7 +10,7 @@ use crate::types::{
 pub struct LiteralParselet;
 
 impl PrefixParselet for LiteralParselet {
-    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
+    fn parse(&self, _parser: &mut Parser, token: Token) -> ParserResult {
         let kind = match token.kind {
             TokenKind::Literal(literal) => ExpressionKind::Literal(literal),
             _ => unreachable!(),

@@ -7,8 +7,6 @@ use super::{
     Expression,
     ExpressionKind,
     Pattern,
-    InfixExpression,
-    PREC_PREFIX,
 };
 
 #[derive(Debug, Clone)]

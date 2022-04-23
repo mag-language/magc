@@ -165,14 +165,6 @@ impl Parser {
         }
     }
 
-    fn match_current(&self, kind: TokenKind) -> Result<bool, ParserError> {
-        if !self.eof() {
-            Ok(self.peek().kind == kind)
-        } else {
-            Err(ParserError::UnexpectedEOF)
-        }
-    }
-
     fn peek(&self) -> Token {
         self.source[self.position].clone()
     }
