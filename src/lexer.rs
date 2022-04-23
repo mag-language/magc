@@ -304,10 +304,10 @@ mod tests {
 
     #[test]
     fn scan_comment() {
-        let mut Lexer = Lexer::new("// This is a single line comment.");
+        let mut lexer = Lexer::new("// This is a single line comment.");
 
         assert_eq!(
-            Lexer.parse(),
+            lexer.parse(),
             vec![Token {
                 kind: TokenKind::Comment,
                 lexeme: "// This is a single line comment.".to_string(),
@@ -319,10 +319,10 @@ mod tests {
 
     #[test]
     fn scan_integer() {
-        let mut Lexer = Lexer::new("1453");
+        let mut lexer = Lexer::new("1453");
 
         assert_eq!(
-            Lexer.parse(),
+            lexer.parse(),
             vec![Token {
                 kind: TokenKind::Literal(Literal::Int),
                 lexeme: "1453".to_string(),
@@ -334,10 +334,10 @@ mod tests {
 
     #[test]
     fn scan_float() {
-        let mut Lexer = Lexer::new("12.38475");
+        let mut lexer = Lexer::new("12.38475");
 
         assert_eq!(
-            Lexer.parse(),
+            lexer.parse(),
             vec![Token {
                 kind: TokenKind::Literal(Literal::Float),
                 lexeme: "12.38475".to_string(),
@@ -349,10 +349,10 @@ mod tests {
 
     #[test]
     fn scan_type() {
-        let mut Lexer = Lexer::new("Int32");
+        let mut lexer = Lexer::new("Int32");
 
         assert_eq!(
-            Lexer.parse(),
+            lexer.parse(),
             vec![Token {
                 kind: TokenKind::Type,
                 lexeme: "Int32".to_string(),
