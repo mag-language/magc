@@ -6,7 +6,7 @@ This repository contains a compiler library, `magc`, which converts Mag source c
 
 This is what a simple (and very inefficient) fibonacci function looks like in Mag:
 
-```
+```python
 def fib(0) 0
 def fib(1) 1
 def fib(n Int) fib(n - 2) + fib(n - 1)
