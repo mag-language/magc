@@ -2,7 +2,7 @@ use crate::types::{Token, Literal};
 
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Expression {
     pub kind: ExpressionKind,
     pub lexeme: String,
@@ -10,7 +10,7 @@ pub struct Expression {
     pub end_pos: usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ExpressionKind {
     Conditional(ConditionalExpression),
     /// A literal value like `23.4` or `"hello"`.
@@ -27,21 +27,21 @@ pub enum ExpressionKind {
 }
 
 /// An expression with a prefix operator.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PrefixExpression {
     pub operator: Token,
     pub operand:  Box<Expression>,
 }
 
 /// An expression with a prefix operator.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CallExpression {
     pub method: Box<Expression>,
     // The [`Record`] which contains the values of the arguments of the method call.
-    //pub signature:  Box<Expression>,
+    pub signature:  Option<Box<Expression>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ConditionalExpression {
     pub condition: Box<Expression>,
     pub then_arm:  Box<Expression>,
@@ -49,7 +49,7 @@ pub struct ConditionalExpression {
 }
 
 /// An expression with a infix operator.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct InfixExpression {
     pub left:  Box<Expression>,
     pub operator: Token,
@@ -57,14 +57,14 @@ pub struct InfixExpression {
 }
 
 /// An expression with two child expressions and an operator in between.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BinaryExpression {
     pub operator: Token,
     pub left:     Box<Expression>,
     pub right:    Box<Expression>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Pattern {
     /// An expression that evaluates to a value.
     Value {
