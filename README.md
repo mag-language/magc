@@ -9,7 +9,7 @@ This is what a simple (and very inefficient) fibonacci function looks like in Ma
 ```
 def fib(0) 0
 def fib(1) 1
-def fib(n is Int) fib(n - 2) + fib(n - 1)
+def fib(n Int) fib(n - 2) + fib(n - 1)
 ```
 
 The three definitions generate a selection of methods with the same name, but different arguments.
