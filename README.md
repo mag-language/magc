@@ -4,6 +4,16 @@
 
 This repository contains a compiler library, `magc`, which converts Mag source code to executable binaries for various hardware architectures. The main compilation target will be the [Strontium](https://gitlab.com/strontium-environment/vm) architecture, but the roadmap includes ahead-of-time compilation to fast and efficient native code using the [`cranelift`](https://docs.rs/cranelift/latest/cranelift/) crate in the future.
 
+This is what a simple (and very inefficient) fibonacci function looks like in Mag:
+
+```
+def fib(0) 0
+def fib(1) 1
+def fib(n is Int) fib(n - 2) + fib(n - 1)
+```
+
+The three definitions generate a selection of methods with the same name, but different arguments.
+
 ## Credits
 
 Mag is based on the Magpie language by [Robert Nystrom](http://stuffwithstuff.com/), who is a language engineer at Google with [a blog and a lot of amazing ideas](http://journal.stuffwithstuff.com/category/magpie/). His various blog posts are what started and inspired this project, and I plan on continuing his legacy even if the original codebase ceases further development.
