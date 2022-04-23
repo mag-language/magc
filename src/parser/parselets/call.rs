@@ -7,14 +7,33 @@ pub struct CallParselet;
 
 impl InfixParselet for CallParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
-        // We can just skip the next character since there must be an opening brace here.
-        parser.advance();
-        parser.consume_expect(TokenKind::RightParen)?;
+        parser.consume_expect(TokenKind::LeftParen)?;
+
+        let t = parser.peek();
+
+        match t.kind {
+            TokenKind::RightParen => parser.consume_expect(TokenKind::RightParen)?,
+            _ => {
+                let expr = parser.parse_expression(0)?;
+
+                parser.consume_expect(TokenKind::RightParen)?;
+
+                return Ok(Expression {
+                    kind: ExpressionKind::Call(CallExpression {
+                        method: left,
+                        signature: None,
+                    }),
+                    lexeme:    token.lexeme,
+                    start_pos: token.start_pos,
+                    end_pos:   token.end_pos,
+                })
+            },
+        };
 
         Ok(Expression {
             kind: ExpressionKind::Call(CallExpression {
                 method: left,
-
+                signature: None,
             }),
             lexeme:    token.lexeme,
             start_pos: token.start_pos,
