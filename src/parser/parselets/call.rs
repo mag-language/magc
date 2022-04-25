@@ -9,7 +9,7 @@ impl InfixParselet for CallParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
         parser.consume_expect(TokenKind::LeftParen)?;
 
-        let t = parser.peek();
+        let t = parser.peek()?;
 
         match t.kind {
             TokenKind::RightParen => parser.consume_expect(TokenKind::RightParen)?,

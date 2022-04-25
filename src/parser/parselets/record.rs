@@ -22,7 +22,7 @@ impl InfixParselet for RecordPatternParselet {
         }
 
         while !parser.eof() {
-            let next_token = parser.peek();
+            let next_token = parser.peek()?;
 
             match next_token.kind {
                 TokenKind::Identifier => {

@@ -14,7 +14,7 @@ impl PrefixParselet for ConditionalParselet {
             let then_arm = Box::new(parser.parse_expression(0)?);
 
             if !parser.eof() {
-                if let TokenKind::Keyword(Keyword::Else) = parser.peek().kind {
+                if let TokenKind::Keyword(Keyword::Else) = parser.peek()?.kind {
                     parser.advance();
         
                     let else_arm = Box::new(parser.parse_expression(0)?);

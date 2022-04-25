@@ -112,8 +112,8 @@ impl Parser {
                 return Ok(left)
             }
 
-            while !self.eof() && precedence < self.get_precedence() {
-                let token = self.peek();
+            while !self.eof() && precedence < self.get_precedence()? {
+                let token = self.peek()?;
 
                 if let Some(infix) = self.infix_parselets.get(&token.kind).cloned() {
                     left = infix.parse(self, Box::new(left.clone()), token)?;
@@ -126,11 +126,11 @@ impl Parser {
         }
     }
 
-    fn get_precedence(&self) -> usize {
-        if let Some(infix) = self.infix_parselets.get(&self.peek().kind) {
-            infix.get_precedence()
+    fn get_precedence(&self) -> Result<usize, ParserError> {
+        if let Some(infix) = self.infix_parselets.get(&self.peek()?.kind) {
+            Ok(infix.get_precedence())
         } else {
-            0
+            Ok(0)
         }
     }
 
@@ -165,8 +165,12 @@ impl Parser {
         }
     }
 
-    fn peek(&self) -> Token {
-        self.source[self.position].clone()
+    fn peek(&self) -> Result<Token, ParserError> {
+        if !self.eof() {
+            Ok(self.source[self.position].clone())
+        } else {
+            Err(ParserError::UnexpectedEOF)
+        }
     }
 
     fn eof(&self) -> bool {
