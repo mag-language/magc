@@ -33,6 +33,14 @@ pub struct PrefixExpression {
     pub operand:  Box<Expression>,
 }
 
+/// An expression which defines a multimethod.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MethodExpression {
+    pub method: Box<Expression>,
+    // The [`Record`] which contains the values of the arguments of the method call.
+    pub signature:  Option<Box<Expression>>,
+}
+
 /// An expression with a prefix operator.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CallExpression {
