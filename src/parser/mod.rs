@@ -16,6 +16,7 @@ use parselets::{
     VariablePatternParselet,
     LiteralParselet,
     RecordPatternParselet,
+    MethodParselet,
     FieldParselet,
     TuplePatternParselet,
     ConditionalParselet,
@@ -64,7 +65,8 @@ impl Parser {
         prefix_parselets.insert(TokenKind::Literal(Literal::Boolean), &LiteralParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Literal(Literal::String),  &LiteralParselet as &dyn PrefixParselet);
 
-        prefix_parselets.insert(TokenKind::Keyword(Keyword::If), &ConditionalParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(TokenKind::Keyword(Keyword::If),  &ConditionalParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(TokenKind::Keyword(Keyword::Def), &MethodParselet      as &dyn PrefixParselet);
 
         prefix_parselets.insert(TokenKind::Bang,  &PrefixOperatorParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Plus,  &PrefixOperatorParselet as &dyn PrefixParselet);

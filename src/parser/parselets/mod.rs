@@ -31,6 +31,7 @@ pub use self::infix::*;
 pub use self::literal::*;
 pub use self::pattern::*;
 pub use self::prefix::*;
+pub use self::method::*;
 pub use self::record::*;
 pub use self::tuple::*;
 
