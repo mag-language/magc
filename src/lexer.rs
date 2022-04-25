@@ -92,6 +92,8 @@ impl<'a> Lexer<'a> {
                 | "P" | "Q" | "R" | "S" | "T"
                 | "U" | "V" | "W" | "X" | "Y" | "Z"
                     => self.parse_type(),
+
+                "\"" => self.parse_string(),
                 
                 
                 _ => self.parse_identifier_or_keyword(&character),
@@ -265,6 +267,28 @@ impl<'a> Lexer<'a> {
                 Literal::Int
             )
         }
+    }
+
+    fn parse_string(&mut self) -> TokenKind {
+        self.advance();
+
+        while !self.eof() {
+            let character =  self.source[self.position];
+            self.current_lexeme.push_str(&character);
+
+            match character {
+                "\"" => {
+                    self.advance();
+                    break
+                },
+
+                _ => {
+                    self.advance();
+                },
+            }
+        }
+
+        TokenKind::Literal(Literal::String)
     }
 
     /// Advance the pointer by one if we're not at the end.
