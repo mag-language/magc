@@ -12,8 +12,6 @@ impl PrefixParselet for TuplePatternParselet {
         ];
 
         if !parser.eof() {
-            parser.advance();
-
             while !parser.eof() {
                 match parser.peek()?.kind {
                     TokenKind::RightParen => {
