@@ -23,6 +23,7 @@ pub enum ExpressionKind {
     Prefix(PrefixExpression),
     Infix(InfixExpression),
     Call(CallExpression),
+    Method(MethodExpression),
     Identifier,
 }
 
@@ -36,9 +37,11 @@ pub struct PrefixExpression {
 /// An expression which defines a multimethod.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MethodExpression {
-    pub method: Box<Expression>,
-    // The [`Record`] which contains the values of the arguments of the method call.
-    pub signature:  Option<Box<Expression>>,
+    /// The name by which this multimethod is referenced.
+    pub name: String,
+    /// The method signature which defines the arguments.
+    pub signature: Box<Expression>,
+    pub body: Vec<Expression>,
 }
 
 /// An expression with a prefix operator.

@@ -18,6 +18,7 @@ mod conditional;
 mod field;
 mod infix;
 mod literal;
+mod method;
 mod pattern;
 mod prefix;
 mod record;
