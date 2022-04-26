@@ -10,16 +10,19 @@ impl PrefixParselet for MethodParselet {
         // We'll implement complex signatures with receivers, getters and setters later,
         // so we just parse a simple method signature for now.
         let identifier = parser.consume_expect(TokenKind::Identifier)?;
+        parser.consume_expect(TokenKind::LeftParen)?;
         let signature = Box::new(parser.parse_expression(0)?);
+        parser.consume_expect(TokenKind::RightParen)?;
         let mut body = vec![];
 
         match parser.peek()?.kind {
             // Parse a block with a number of expressions in it.
             TokenKind::Keyword(Keyword::Do) => {
+                parser.consume_expect(TokenKind::Keyword(Keyword::Do))?;
                 while !parser.eof() {
                     match parser.peek()?.kind {
                         TokenKind::Keyword(Keyword::End) => {
-                            parser.advance();
+                            parser.consume_expect(TokenKind::Keyword(Keyword::End));
                             break
                         },
 
