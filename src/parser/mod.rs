@@ -29,14 +29,16 @@ pub mod parselets;
 
 pub type ParserResult = Result<Expression, ParserError>;
 
-pub static PREC_ASSIGNMENT: usize = 1000;
-pub static PREC_CONDITIONAL: usize = 200;
-pub static PREC_SUM: usize = 300;
-pub static PREC_PRODUCT: usize = 400;
-pub static PREC_EXPONENT: usize = 500;
-pub static PREC_PREFIX: usize = 600;
-pub static PREC_POSTFIX: usize = 700;
-pub static PREC_CALL: usize = 800;
+pub static PREC_ASSIGNMENT: usize = 10;
+pub static PREC_RECORD: usize = 20;
+pub static PREC_LOGICAL: usize = 30; // and or
+pub static PREC_EQUALITY: usize = 40; // == !=
+pub static PREC_COMPARISON: usize = 50; // < <= >= >
+pub static PREC_TERM: usize = 60; // + -
+pub static PREC_PRODUCT: usize = 70;
+pub static PREC_EXPONENT: usize = 80;
+pub static PREC_UNARY: usize = 90;
+pub static PREC_CALL: usize = 100;
 
 /// A parser which turns a linear token stream into a tree of Mag expressions.
 pub struct Parser {
@@ -72,12 +74,12 @@ impl Parser {
         prefix_parselets.insert(TokenKind::Plus,  &PrefixOperatorParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Minus, &PrefixOperatorParselet as &dyn PrefixParselet);
 
-        infix_parselets.insert(TokenKind::Plus,       infix_operator(PREC_SUM));
-        infix_parselets.insert(TokenKind::Minus,      infix_operator(PREC_SUM));
-        infix_parselets.insert(TokenKind::Identifier, infix_operator(PREC_SUM));
+        infix_parselets.insert(TokenKind::Plus,       infix_operator(PREC_TERM));
+        infix_parselets.insert(TokenKind::Minus,      infix_operator(PREC_TERM));
+        infix_parselets.insert(TokenKind::Identifier, infix_operator(PREC_TERM));
         infix_parselets.insert(TokenKind::Star,       infix_operator(PREC_PRODUCT));
         infix_parselets.insert(TokenKind::Slash,      infix_operator(PREC_PRODUCT));
-        infix_parselets.insert(TokenKind::EqualEqual, infix_operator(0));
+        infix_parselets.insert(TokenKind::EqualEqual, infix_operator(PREC_EQUALITY));
 
         infix_parselets.insert(TokenKind::LeftParen,  Rc::new(CallParselet) as Rc<dyn InfixParselet>);
         infix_parselets.insert(TokenKind::Comma,  Rc::new(RecordPatternParselet) as Rc<dyn InfixParselet>);

@@ -1,4 +1,4 @@
-use crate::parser::{Parser, ParserResult, ParserError, PREC_PREFIX};
+use crate::parser::{Parser, ParserResult, ParserError, PREC_UNARY};
 
 use crate::types::{
     Token,

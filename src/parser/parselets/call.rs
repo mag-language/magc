@@ -1,4 +1,4 @@
-use crate::parser::{Parser, ParserResult, InfixParselet};
+use crate::parser::{Parser, ParserResult, InfixParselet, PREC_CALL};
 use crate::types::{Expression, ExpressionKind, CallExpression, Token, TokenKind};
 
 #[derive(Debug, Clone)]
@@ -42,6 +42,6 @@ impl InfixParselet for CallParselet {
     }
 
     fn get_precedence(&self) -> usize {
-        100
+        PREC_CALL
     }
 }
