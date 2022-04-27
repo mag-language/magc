@@ -63,8 +63,10 @@ impl<'a> Lexer<'a> {
                     if self.peek() == "/" {
                         self.parse_comment()
                     } else if self.peek() == "=" {
+                        self.advance();
                         TokenKind::SlashEqual
                     } else {
+                        self.advance();
                         TokenKind::Slash
                     }
                 },
