@@ -7,38 +7,9 @@ pub struct TuplePatternParselet;
 
 impl PrefixParselet for TuplePatternParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
-        let mut children = vec![
-            parser.parse_expression(0)?,
-        ];
+        let expr = parser.parse_expression(0)?;
+        parser.consume_expect(TokenKind::RightParen)?;
 
-        if !parser.eof() {
-            while !parser.eof() {
-                match parser.peek()?.kind {
-                    TokenKind::RightParen => {
-                        parser.advance();
-                        break
-                    },
-
-                    TokenKind::Comma => {
-                        parser.advance();
-                    },
-    
-                    _ => {
-                        children.push(parser.parse_expression(0)?)
-                    }
-                }
-            }
-        } else {
-            return Err(ParserError::UnexpectedEOF)
-        }
-
-        Ok(Expression {
-            kind: ExpressionKind::Pattern(Pattern::Tuple {
-                children,
-            }),
-            start_pos: 0,
-            end_pos: 0,
-            lexeme: format!("{}", token.lexeme),
-        })
+        Ok(expr)
     }
 }
