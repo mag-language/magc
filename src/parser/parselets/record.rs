@@ -1,4 +1,4 @@
-use crate::parser::{Parser, ParserResult, ParserError, InfixParselet};
+use crate::parser::{Parser, ParserResult, ParserError, InfixParselet, PREC_RECORD};
 use crate::types::{Expression, ExpressionKind, Pattern, Token, TokenKind};
 
 use std::collections::HashMap;
@@ -17,7 +17,7 @@ impl InfixParselet for RecordPatternParselet {
                 TokenKind::Comma      => parser.advance(),
                 TokenKind::RightParen => break,
 
-                _                     => children.push(parser.parse_expression(0)?),
+                _                     => children.push(parser.parse_expression(PREC_RECORD)?),
             }
         }
 
@@ -32,6 +32,6 @@ impl InfixParselet for RecordPatternParselet {
     }
 
     fn get_precedence(&self) -> usize {
-        8
+        PREC_RECORD
     }
 }
