@@ -7,9 +7,16 @@ pub struct TuplePatternParselet;
 
 impl PrefixParselet for TuplePatternParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
-        let expr = parser.parse_expression(0)?;
+        let expr = Box::new(parser.parse_expression(0)?);
         parser.consume_expect(TokenKind::RightParen)?;
 
-        Ok(expr)
+        Ok(Expression {
+            kind: ExpressionKind::Pattern(Pattern::Tuple {
+                expr,
+            }),
+            lexeme: "".to_string(),
+            start_pos: 0,
+            end_pos: 0,
+        })
     }
 }
