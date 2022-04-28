@@ -1,5 +1,5 @@
 use crate::parser::{Parser, ParserResult, ParserError, PrefixParselet};
-use crate::types::{Expression, ExpressionKind, ConditionalExpression, Token, TokenKind, Keyword};
+use crate::types::{Expression, ExpressionKind, Conditional, Token, TokenKind, Keyword};
 
 #[derive(Debug, Clone)]
 /// A parselet which parses a conditional expression like `if condition then {expression} else {expression}`
@@ -19,7 +19,7 @@ impl PrefixParselet for ConditionalParselet {
                 parser.consume_expect(TokenKind::Keyword(Keyword::End))?;
 
                 Ok(Expression {
-                    kind: ExpressionKind::Conditional(ConditionalExpression {
+                    kind: ExpressionKind::Conditional(Conditional {
                         condition,
                         then_arm,
                         else_arm: Some(else_arm),
@@ -32,7 +32,7 @@ impl PrefixParselet for ConditionalParselet {
                 parser.consume_expect(TokenKind::Keyword(Keyword::End))?;
 
                 Ok(Expression {
-                    kind: ExpressionKind::Conditional(ConditionalExpression {
+                    kind: ExpressionKind::Conditional(Conditional {
                         condition,
                         then_arm,
                         else_arm: None,
@@ -44,7 +44,7 @@ impl PrefixParselet for ConditionalParselet {
             }
         } else {
             Ok(Expression {
-                kind: ExpressionKind::Conditional(ConditionalExpression {
+                kind: ExpressionKind::Conditional(Conditional {
                     condition,
                     then_arm,
                     else_arm: None,

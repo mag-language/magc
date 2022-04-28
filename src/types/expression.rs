@@ -12,7 +12,7 @@ pub struct Expression {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExpressionKind {
-    Conditional(ConditionalExpression),
+    Conditional(Conditional),
     /// A literal value like `23.4` or `"hello"`.
     Literal(Literal),
     /// A value, tuple, record or variable pattern.
@@ -20,23 +20,23 @@ pub enum ExpressionKind {
     /// A reference to a type like `Int32`.
     Type,
     /// An expression with a prefix operator.
-    Prefix(PrefixExpression),
-    Infix(InfixExpression),
-    Call(CallExpression),
-    Method(MethodExpression),
+    Prefix(Prefix),
+    Infix(Infix),
+    Call(Call),
+    Method(Method),
     Identifier,
 }
 
 /// An expression with a prefix operator.
 #[derive(Debug, Clone, PartialEq)]
-pub struct PrefixExpression {
+pub struct Prefix {
     pub operator: Token,
     pub operand:  Box<Expression>,
 }
 
 /// An expression which defines a multimethod.
 #[derive(Debug, Clone, PartialEq)]
-pub struct MethodExpression {
+pub struct Method {
     /// The name by which this multimethod is referenced.
     pub name: String,
     /// The method signature which defines the arguments.
@@ -46,14 +46,14 @@ pub struct MethodExpression {
 
 /// An expression with a prefix operator.
 #[derive(Debug, Clone, PartialEq)]
-pub struct CallExpression {
+pub struct Call {
     pub method: Box<Expression>,
     // The [`Record`] which contains the values of the arguments of the method call.
     pub signature:  Option<Box<Expression>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ConditionalExpression {
+pub struct Conditional {
     pub condition: Box<Expression>,
     pub then_arm:  Box<Expression>,
     pub else_arm:  Option<Box<Expression>>,
@@ -61,7 +61,7 @@ pub struct ConditionalExpression {
 
 /// An expression with a infix operator.
 #[derive(Debug, Clone, PartialEq)]
-pub struct InfixExpression {
+pub struct Infix {
     pub left:  Box<Expression>,
     pub operator: Token,
     pub right: Box<Expression>,

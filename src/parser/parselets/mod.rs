@@ -6,10 +6,10 @@ use crate::types::{
     Keyword,
     Expression,
     ExpressionKind,
-    CallExpression,
-    PrefixExpression,
-    InfixExpression,
-    ConditionalExpression,
+    Call,
+    Prefix,
+    Infix,
+    Conditional,
     Pattern,
 };
 

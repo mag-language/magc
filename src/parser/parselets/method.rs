@@ -1,5 +1,5 @@
 use crate::parser::{Parser, ParserResult, ParserError, PrefixParselet};
-use crate::types::{Expression, ExpressionKind, MethodExpression, Token, TokenKind, Keyword};
+use crate::types::{Expression, ExpressionKind, Method, Token, TokenKind, Keyword};
 
 #[derive(Debug, Clone)]
 /// A parselet which parses a multimethod definition like `def sayHello(name String)`
@@ -40,7 +40,7 @@ impl PrefixParselet for MethodParselet {
 
 
         Ok(Expression {
-            kind: ExpressionKind::Method(MethodExpression {
+            kind: ExpressionKind::Method(Method {
                 name: identifier.lexeme,
                 signature,
                 body,

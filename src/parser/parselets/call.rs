@@ -1,5 +1,5 @@
 use crate::parser::{Parser, ParserResult, InfixParselet, PREC_CALL};
-use crate::types::{Expression, ExpressionKind, CallExpression, Token, TokenKind};
+use crate::types::{Expression, ExpressionKind, Call, Token, TokenKind};
 
 #[derive(Debug, Clone)]
 /// A parselet which parses a call expression like `method()`
@@ -19,7 +19,7 @@ impl InfixParselet for CallParselet {
                 parser.consume_expect(TokenKind::RightParen)?;
 
                 return Ok(Expression {
-                    kind: ExpressionKind::Call(CallExpression {
+                    kind: ExpressionKind::Call(Call {
                         method: left,
                         signature: Some(Box::new(expr)),
                     }),
@@ -31,7 +31,7 @@ impl InfixParselet for CallParselet {
         };
 
         Ok(Expression {
-            kind: ExpressionKind::Call(CallExpression {
+            kind: ExpressionKind::Call(Call {
                 method: left,
                 signature: None,
             }),

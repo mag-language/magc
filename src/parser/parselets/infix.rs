@@ -1,5 +1,5 @@
 use crate::parser::{Parser, ParserResult, InfixParselet};
-use crate::types::{Expression, ExpressionKind, InfixExpression, Token};
+use crate::types::{Expression, ExpressionKind, Infix, Token};
 
 #[derive(Debug, Clone)]
 pub struct InfixOperatorParselet {
@@ -13,7 +13,7 @@ impl InfixParselet for InfixOperatorParselet {
         let right = parser.parse_expression(self.precedence)?;
 
         Ok(Expression {
-            kind: ExpressionKind::Infix(InfixExpression {
+            kind: ExpressionKind::Infix(Infix {
                 left,
                 operator: token.clone(),
                 right: Box::new(right),
