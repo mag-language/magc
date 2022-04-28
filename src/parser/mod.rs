@@ -162,6 +162,14 @@ impl Parser {
         }
     }
 
+    fn match_token(&self, kind: TokenKind) -> Result<bool, ParserError> {
+        if !self.eof() {
+            Ok(self.peek()?.kind == kind)
+        } else {
+            Err(ParserError::UnexpectedEOF)
+        }
+    }
+
     /// Advance the pointer by one if we're not at the end.
     fn advance(&mut self) {
         if !self.eof() {
