@@ -83,7 +83,7 @@ pub enum Pattern {
     },
     /// An unnamed series of patterns separated by commas.
     Tuple {
-        children: Vec<Expression>,
+        expr: Box<Expression>,
     },
     /// A named series of patterns separated by commas.
     Record {
