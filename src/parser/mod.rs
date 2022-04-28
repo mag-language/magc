@@ -93,6 +93,7 @@ impl Parser {
         }
     }
 
+    /// Parse a series of expressions.
     pub fn parse(&mut self) -> Result<Vec<Expression>, ParserError> {
         let mut expressions = vec![];
 
@@ -103,22 +104,31 @@ impl Parser {
         Ok(expressions)
     }
 
+    /// Parse a single expression with the given precedence.
     pub fn parse_expression(
         &mut self,
         precedence: usize,
     ) -> Result<Expression, ParserError> {
         let token = self.consume();
 
+        // Let's see if we find a prefix parselet for the current token.
         if let Some(prefix) = self.prefix_parselets.get(&token.kind) {
+            // Hand control over to our prefix parselet. This takes care of converting 
+            // simple expressions like numbers, strings or variable identifiers.
             let mut left = prefix.parse(self, token.clone())?;
 
             if self.eof() {
                 return Ok(left)
             }
 
+            // This is the bit where real magic happens. This conditional check right here
+            // is responsible for parsing infix expressions with the right precedence and
+            // associativity so we can do math and generally have useful operators.
             while !self.eof() && precedence < self.get_precedence()? {
                 let token = self.peek()?;
 
+                // Hand control over to the infix parselet if there is one, and 
+                // insert the previously parsed expression into this structure.
                 if let Some(infix) = self.infix_parselets.get(&token.kind).cloned() {
                     left = infix.parse(self, Box::new(left.clone()), token)?;
                 }
@@ -130,6 +140,7 @@ impl Parser {
         }
     }
 
+    /// Get the precedence for the current infix parselet.
     fn get_precedence(&self) -> Result<usize, ParserError> {
         if let Some(infix) = self.infix_parselets.get(&self.peek()?.kind) {
             Ok(infix.get_precedence())
@@ -146,7 +157,7 @@ impl Parser {
         token
     }
 
-    /// Consume a token with the given TokenKind, or return error.
+    /// Consume a token with the given TokenKind, or return an error.
     fn consume_expect(&mut self, kind: TokenKind) -> Result<Token, ParserError> {
         let token = self.source[self.position].clone();
 
