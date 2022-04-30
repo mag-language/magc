@@ -13,30 +13,7 @@ impl PrefixParselet for MethodParselet {
         parser.consume_expect(TokenKind::LeftParen)?;
         let signature = Box::new(parser.parse_expression(0)?);
         parser.consume_expect(TokenKind::RightParen)?;
-        let mut body = vec![];
-
-        match parser.peek()?.kind {
-            // Parse a block with a number of expressions in it.
-            TokenKind::Keyword(Keyword::Do) => {
-                parser.consume_expect(TokenKind::Keyword(Keyword::Do))?;
-                while !parser.eof() {
-                    match parser.peek()?.kind {
-                        TokenKind::Keyword(Keyword::End) => {
-                            parser.consume_expect(TokenKind::Keyword(Keyword::End));
-                            break
-                        },
-
-                        _ => {
-                            body.push(parser.parse_expression(0)?);
-                        }
-                    }
-                }
-            },
-
-            _ => {
-                body.push(parser.parse_expression(0)?);
-            }
-        }
+        let body = Box::new(parser.parse_expression(0)?);
 
 
         Ok(Expression {
