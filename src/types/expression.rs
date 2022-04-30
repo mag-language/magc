@@ -2,7 +2,7 @@ use crate::types::{Token, Literal};
 
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Expression {
     pub kind: ExpressionKind,
     pub lexeme: String,
@@ -10,7 +10,7 @@ pub struct Expression {
     pub end_pos: usize,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ExpressionKind {
     Conditional(Conditional),
     /// A literal value like `23.4` or `"hello"`.
@@ -28,14 +28,14 @@ pub enum ExpressionKind {
 }
 
 /// An expression with a prefix operator.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Prefix {
     pub operator: Token,
     pub operand:  Box<Expression>,
 }
 
 /// An expression which defines a multimethod.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Method {
     /// The name by which this multimethod is referenced.
     pub name: String,
@@ -45,14 +45,14 @@ pub struct Method {
 }
 
 /// An expression with a prefix operator.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Call {
     pub method: Box<Expression>,
     // The [`Record`] which contains the values of the arguments of the method call.
     pub signature:  Option<Box<Expression>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Conditional {
     pub condition: Box<Expression>,
     pub then_arm:  Box<Expression>,
@@ -60,7 +60,7 @@ pub struct Conditional {
 }
 
 /// An expression with a infix operator.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Infix {
     pub left:  Box<Expression>,
     pub operator: Token,
@@ -68,14 +68,14 @@ pub struct Infix {
 }
 
 /// An expression with two child expressions and an operator in between.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BinaryExpression {
     pub operator: Token,
     pub left:     Box<Expression>,
     pub right:    Box<Expression>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pattern {
     /// An expression that evaluates to a value.
     Value {
