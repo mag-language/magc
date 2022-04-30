@@ -15,7 +15,7 @@ pub enum ExpressionKind {
     Conditional(Conditional),
     /// A literal value like `23.4` or `"hello"`.
     Literal(Literal),
-    /// A value, tuple, record or variable pattern.
+    /// A value, tuple, record, field or variable pattern.
     Pattern(Pattern),
     /// A reference to a type like `Int32`.
     Type,
@@ -23,7 +23,10 @@ pub enum ExpressionKind {
     Prefix(Prefix),
     Infix(Infix),
     Call(Call),
+    /// A definition of a multimethod.
     Method(Method),
+    /// A first-class chunk of code that can be passed around as a value.
+    Block(Vec<Expression>),
     Identifier,
 }
 
@@ -41,7 +44,7 @@ pub struct Method {
     pub name: String,
     /// The method signature which defines the arguments.
     pub signature: Box<Expression>,
-    pub body: Vec<Expression>,
+    pub body: Box<Expression>,
 }
 
 /// An expression with a prefix operator.
