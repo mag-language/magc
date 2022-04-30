@@ -201,7 +201,6 @@ impl<'a> Lexer<'a> {
         // Start parsing the comment.
         while !self.eof() {
             let character =  self.source[self.position];
-            self.current_lexeme.push_str(&character);
 
             match character {
                 "A" | "B" | "C" | "D" | "E"
@@ -218,7 +217,8 @@ impl<'a> Lexer<'a> {
                 | "5" | "6" | "7" | "8" | "9"
                  => {
                     self.advance();
-                    type_string.push_str(character)
+                    self.current_lexeme.push_str(&character);
+                    type_string.push_str(character);
                 },
 
                 _ => break,
