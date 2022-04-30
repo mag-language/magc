@@ -13,6 +13,7 @@ use crate::types::{
     Pattern,
 };
 
+mod block;
 mod call;
 mod conditional;
 mod field;
@@ -24,6 +25,7 @@ mod prefix;
 mod record;
 mod tuple;
 
+pub use self::block::*;
 pub use self::call::*;
 pub use self::conditional::*;
 pub use self::field::*;
