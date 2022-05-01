@@ -1,4 +1,6 @@
 use crate::types::{Token, Literal};
+use crate::type_system::Typed;
+use crate::parser::{ParserError};
 
 use std::collections::HashMap;
 
@@ -27,6 +29,8 @@ pub enum ExpressionKind {
     Method(Method),
     /// A first-class chunk of code that can be passed around as a value.
     Block(Vec<Expression>),
+    /// One or more pattern enclosed in parentheses.
+    Group(Box<Expression>),
     Identifier,
 }
 
@@ -84,20 +88,23 @@ pub enum Pattern {
     Value {
         expr: Box<Expression>
     },
-    /// An unnamed series of patterns separated by commas.
+
+    /// A series of patterns separated by commas.
+    ///
+    /// The data structure is recursive since the comma is defined as an infix operator. This may
+    /// look confusing at first, but is fairly easy to work with since you only need to call the
+    /// method parsing the tuple items recursively.
     Tuple {
-        expr: Box<Expression>,
-    },
-    /// A named series of patterns separated by commas.
-    Record {
-        children: Vec<Expression>,
+        left:  Box<Expression>,
+        right: Box<Expression>,
     },
 
-    /// The smallest possible unit of a record, like `repeats: 4`.
+    /// A single entity within a record, like `repeats: 4` or `name: n String`.
     Field {
         name: String,
         value: Box<Expression>,
     },
+
     /// A variable identifier with optional name and type.
     Variable {
         name: Option<String>,
