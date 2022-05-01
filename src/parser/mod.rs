@@ -29,18 +29,28 @@ pub mod parselets;
 
 pub type ParserResult = Result<Expression, ParserError>;
 
+/// The precedence `10` for assignment expressions like `var n = 0`
 pub static PREC_ASSIGNMENT: usize = 10;
+/// The precedence `20` for field expressions like `name: n String`
 pub static PREC_RECORD: usize = 20;
-pub static PREC_LOGICAL: usize = 30; // and or
-pub static PREC_EQUALITY: usize = 40; // == !=
-pub static PREC_COMPARISON: usize = 50; // < <= >= >
-pub static PREC_TERM: usize = 60; // + -
+/// The precedence `30` for logical unary operators like `and` or `or`
+pub static PREC_LOGICAL: usize = 30;
+/// The precedence `40` for equality operators like `==` and `!=`
+pub static PREC_EQUALITY: usize = 40;
+/// The precedence `50` for comparison operators like `<`, `>`, `<=` and `>=`.
+pub static PREC_COMPARISON: usize = 50;
+/// The precedence `60` for term operators like `+`, `-`.
+pub static PREC_TERM: usize = 60;
+/// The precedence `70` for multiplications or divisions, for example `*`, `/` or `%`.
 pub static PREC_PRODUCT: usize = 70;
+/// The precedence `80` for exponents like `2 ^ 16`.
 pub static PREC_EXPONENT: usize = 80;
+/// The precedence `90` for unary operators, like `!isValid`.
 pub static PREC_UNARY: usize = 90;
+/// The precedence `100` for method calls, like `fib(0)`.
 pub static PREC_CALL: usize = 100;
 
-/// A parser which turns a linear token stream into a tree of Mag expressions.
+/// Turns a linear token stream into a tree of Mag expressions.
 pub struct Parser {
     position: usize,
     prefix_parselets: HashMap<TokenKind, &'static dyn PrefixParselet>,
