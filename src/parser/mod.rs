@@ -61,7 +61,7 @@ impl Parser {
         let mut infix_parselets  = HashMap::new();
 
         prefix_parselets.insert(TokenKind::Identifier, &VariablePatternParselet as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::LeftParen,  &TuplePatternParselet      as &dyn PrefixParselet);
+        //prefix_parselets.insert(TokenKind::LeftParen,  &TuplePatternParselet      as &dyn PrefixParselet);
 
         prefix_parselets.insert(TokenKind::Literal(Literal::Int),     &LiteralParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Literal(Literal::Float),   &LiteralParselet as &dyn PrefixParselet);
@@ -82,9 +82,9 @@ impl Parser {
         infix_parselets.insert(TokenKind::Star,       infix_operator(PREC_PRODUCT));
         infix_parselets.insert(TokenKind::Slash,      infix_operator(PREC_PRODUCT));
         infix_parselets.insert(TokenKind::EqualEqual, infix_operator(PREC_EQUALITY));
+        infix_parselets.insert(TokenKind::Comma,      infix_operator(PREC_RECORD));
 
         infix_parselets.insert(TokenKind::LeftParen,  Rc::new(CallParselet) as Rc<dyn InfixParselet>);
-        infix_parselets.insert(TokenKind::Comma,  Rc::new(RecordPatternParselet) as Rc<dyn InfixParselet>);
         infix_parselets.insert(TokenKind::Colon,  Rc::new(FieldParselet) as Rc<dyn InfixParselet>);
 
         Self {
