@@ -1,4 +1,4 @@
-use crate::parser::{Parser, ParserResult, ParserError, InfixParselet};
+use crate::parser::{Parser, ParserResult, ParserError, InfixParselet, PREC_RECORD};
 use crate::types::{Expression, ExpressionKind, Pattern, Token, TokenKind};
 
 #[derive(Debug, Clone)]
@@ -8,7 +8,7 @@ impl InfixParselet for FieldParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
         parser.consume_expect(TokenKind::Colon)?;
 
-        let value = Box::new(parser.parse_expression(8)?);
+        let value = Box::new(parser.parse_expression(self.get_precedence())?);
 
         if let ExpressionKind::Pattern(Pattern::Variable { name, type_id: _ }) = left.kind {
             if let Some(name) = name {
@@ -33,6 +33,6 @@ impl InfixParselet for FieldParselet {
     }
 
     fn get_precedence(&self) -> usize {
-        8
+        PREC_RECORD
     }
 }
