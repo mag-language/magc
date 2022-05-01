@@ -2,6 +2,10 @@ use crate::types::{
     Expression,
 };
 
+use crate::parser::{
+    ParserError,
+};
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pattern {
     /// An expression that evaluates to a value.
@@ -30,4 +34,11 @@ pub enum Pattern {
         name: Option<String>,
         type_id: Option<String>,
     },
+}
+
+impl Pattern {
+    /// Match this pattern to another while obeying the precedence rules for patterns.
+    pub fn linearize(&self, other: Pattern) -> Result<bool, ParserError> {
+        Ok(true)
+    }
 }
