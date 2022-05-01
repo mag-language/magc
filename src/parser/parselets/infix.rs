@@ -1,5 +1,5 @@
 use crate::parser::{Parser, ParserResult, InfixParselet};
-use crate::types::{Expression, ExpressionKind, Infix, Token};
+use crate::types::{Expression, ExpressionKind, Infix, Pattern, Token, TokenKind};
 
 #[derive(Debug, Clone)]
 pub struct InfixOperatorParselet {
@@ -12,16 +12,28 @@ impl InfixParselet for InfixOperatorParselet {
 
         let right = parser.parse_expression(self.precedence)?;
 
-        Ok(Expression {
-            kind: ExpressionKind::Infix(Infix {
-                left,
-                operator: token.clone(),
-                right: Box::new(right),
+        match token.kind {
+            TokenKind::Comma => Ok(Expression {
+                kind: ExpressionKind::Pattern(Pattern::Tuple {
+                    left,
+                    right: Box::new(right),
+                }),
+                lexeme:    token.lexeme,
+                start_pos: token.start_pos,
+                end_pos:   token.end_pos,
             }),
-            lexeme:    token.lexeme,
-            start_pos: token.start_pos,
-            end_pos:   token.end_pos,
-        })
+
+            _ => Ok(Expression {
+                kind: ExpressionKind::Infix(Infix {
+                    left,
+                    operator: token.clone(),
+                    right: Box::new(right),
+                }),
+                lexeme:    token.lexeme,
+                start_pos: token.start_pos,
+                end_pos:   token.end_pos,
+            })
+        }
     }
 
     fn get_precedence(&self) -> usize {
