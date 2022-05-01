@@ -16,10 +16,8 @@ use parselets::{
     InfixOperatorParselet,
     VariablePatternParselet,
     LiteralParselet,
-    RecordPatternParselet,
     MethodParselet,
     FieldParselet,
-    TuplePatternParselet,
     ConditionalParselet,
 };
 
