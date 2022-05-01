@@ -1,4 +1,4 @@
-//! An object which translates a Magpie source string into a linear sequence of tokens.
+//! Translate a Magpie source string into a linear sequence of tokens.
 
 use crate::types::{Token, TokenKind, Keyword, Literal};
 
