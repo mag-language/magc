@@ -18,6 +18,7 @@ use parselets::{
     LiteralParselet,
     MethodParselet,
     FieldParselet,
+    GroupParselet,
     ConditionalParselet,
 };
 
@@ -73,6 +74,7 @@ impl Parser {
         prefix_parselets.insert(TokenKind::Bang,  &PrefixOperatorParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Plus,  &PrefixOperatorParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Minus, &PrefixOperatorParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(TokenKind::LeftParen, &GroupParselet as &dyn PrefixParselet);
 
         infix_parselets.insert(TokenKind::Plus,       infix_operator(PREC_TERM));
         infix_parselets.insert(TokenKind::Minus,      infix_operator(PREC_TERM));
