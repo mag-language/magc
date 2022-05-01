@@ -7,6 +7,7 @@ use crate::types::{
     ExpressionKind,
 };
 
+/// Parse a literal expression like `"Mike"`, `27`, `3.141`, `true`, or `false`.
 pub struct LiteralParselet;
 
 impl PrefixParselet for LiteralParselet {

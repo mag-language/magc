@@ -2,6 +2,7 @@ use crate::parser::{Parser, ParserResult, ParserError, InfixParselet, PREC_RECOR
 use crate::types::{Expression, ExpressionKind, Pattern, Token, TokenKind};
 
 #[derive(Debug, Clone)]
+/// Parse a field expression like `name: n String`.
 pub struct FieldParselet;
 
 impl InfixParselet for FieldParselet {

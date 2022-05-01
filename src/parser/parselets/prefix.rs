@@ -1,7 +1,7 @@
 use crate::parser::{Parser, ParserResult, PREC_UNARY, PrefixParselet};
 use crate::types::{Expression, ExpressionKind, Prefix, Token};
 
-/// A parselet which converts a token and the following expression into a prefix expression.
+/// Parse a token and the following expression into a prefix expression.
 pub struct PrefixOperatorParselet;
 
 impl PrefixParselet for PrefixOperatorParselet {

@@ -7,7 +7,7 @@ use crate::types::{
     ExpressionKind,
 };
 
-/// Parses an expression enclosed in parentheses.
+/// Parse an expression enclosed in parentheses.
 pub struct GroupParselet;
 
 impl PrefixParselet for GroupParselet {

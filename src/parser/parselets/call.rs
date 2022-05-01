@@ -2,7 +2,7 @@ use crate::parser::{Parser, ParserResult, InfixParselet, PREC_CALL};
 use crate::types::{Expression, ExpressionKind, Call, Token, TokenKind};
 
 #[derive(Debug, Clone)]
-/// A parselet which parses a call expression like `method()`
+/// Parse a call expression like `fib(32)`.
 pub struct CallParselet;
 
 impl InfixParselet for CallParselet {

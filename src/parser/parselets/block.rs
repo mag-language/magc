@@ -3,7 +3,7 @@
 use crate::parser::{Parser, ParserResult, PREC_UNARY, PrefixParselet};
 use crate::types::{Expression, ExpressionKind, Prefix, Token, TokenKind, Keyword};
 
-/// A parselet which converts a token and the following expression into a prefix expression.
+/// Parse a series of expressions contained in a pair of `do` and `end` keywords.
 pub struct BlockParselet;
 
 impl PrefixParselet for BlockParselet {

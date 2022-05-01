@@ -2,7 +2,7 @@ use crate::parser::{Parser, ParserResult, ParserError, PrefixParselet};
 use crate::types::{Expression, ExpressionKind, Method, Token, TokenKind, Keyword};
 
 #[derive(Debug, Clone)]
-/// A parselet which parses a multimethod definition like `def sayHello(name String)`
+/// Parse a multimethod definition like `def fib(n Int) fib(n - 1) + fib(n - 2)`
 pub struct MethodParselet;
 
 impl PrefixParselet for MethodParselet {

@@ -2,7 +2,7 @@ use crate::parser::{Parser, ParserResult, ParserError, PrefixParselet};
 use crate::types::{Expression, ExpressionKind, Conditional, Token, TokenKind, Keyword};
 
 #[derive(Debug, Clone)]
-/// A parselet which parses a conditional expression like `if condition then {expression} else {expression}`
+/// Parse a conditional expression like `if condition then {expression} else {expression}`
 pub struct ConditionalParselet;
 
 impl PrefixParselet for ConditionalParselet {

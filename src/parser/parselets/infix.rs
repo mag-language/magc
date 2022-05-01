@@ -2,6 +2,7 @@ use crate::parser::{Parser, ParserResult, InfixParselet};
 use crate::types::{Expression, ExpressionKind, Infix, Pattern, Token, TokenKind};
 
 #[derive(Debug, Clone)]
+/// Parse a binary operator expression like `1 + 2`.
 pub struct InfixOperatorParselet {
     pub precedence: usize,
 }
