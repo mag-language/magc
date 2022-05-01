@@ -216,3 +216,48 @@ pub enum ParserError {
         found:    Expression,
     },
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::lexer::Lexer;
+    use crate::parser::Parser;
+    use crate::types::*;
+
+    #[test]
+    fn parse_infix_plus() {
+        let mut parser = Parser::new(Lexer::new("1 + 2").parse());
+
+        assert_eq!(
+            parser.parse(),
+            Ok(vec![Expression {
+                kind: ExpressionKind::Infix(Infix {
+                    left: Box::new(Expression {
+                        kind: ExpressionKind::Literal(
+                            Literal::Int,
+                        ),
+                        lexeme: "1".to_string(),
+                        start_pos: 0,
+                        end_pos: 1,
+                    }),
+                    operator: Token {
+                        kind: TokenKind::Plus,
+                        lexeme: "+".to_string(),
+                        start_pos: 2,
+                        end_pos: 3,
+                    },
+                    right: Box::new(Expression {
+                        kind: ExpressionKind::Literal(
+                            Literal::Int,
+                        ),
+                        lexeme: "2".to_string(),
+                        start_pos: 4,
+                        end_pos: 5,
+                    }),
+                }),
+                lexeme: "1 + 2".to_string(),
+                start_pos: 2,
+                end_pos: 3,
+            }])
+        );
+    }
+}
