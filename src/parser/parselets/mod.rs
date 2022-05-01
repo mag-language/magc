@@ -22,8 +22,6 @@ mod literal;
 mod method;
 mod pattern;
 mod prefix;
-mod record;
-mod tuple;
 
 pub use self::block::*;
 pub use self::call::*;
