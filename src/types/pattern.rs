@@ -35,39 +35,3 @@ pub enum Pattern {
         type_id: Option<String>,
     },
 }
-
-impl Pattern {
-    /// Match this pattern with a reference signature while obeying the precedence rules for patterns.
-    pub fn linearize(&self, reference: Pattern) -> Result<bool, ParserError> {
-        let mut does_match = false;
-
-        does_match = match self {
-            Pattern::Value { expr }             => self.linearize_value(reference, expr.clone())?,
-            Pattern::Tuple { left, right }      => self.linearize_tuple(reference, left.clone(), right.clone())?,
-            Pattern::Field { name, value }      => self.linearize_field(reference, name.clone(), value.clone())?,
-            Pattern::Variable { name, type_id } => self.linearize_variable(reference, name.clone(), type_id.clone())?,
-        };
-
-        Ok(does_match)
-    }
-
-    fn linearize_value(&self, reference: Pattern, given_expr: Box<Expression>) -> Result<bool, ParserError> {
-        if let Pattern::Value { expr } = reference {
-            Ok(expr == given_expr)
-        } else {
-            Ok(false)
-        }
-    }
-
-    fn linearize_tuple(&self, reference: Pattern, left:  Box<Expression>, right: Box<Expression>) -> Result<bool, ParserError> {
-        Ok(false)
-    }
-
-    fn linearize_field(&self, reference: Pattern, name: String, value: Box<Expression>) -> Result<bool, ParserError> {
-        Ok(false)
-    }
-
-    fn linearize_variable(&self, reference: Pattern, name: Option<String>, type_id: Option<String>) -> Result<bool, ParserError> {
-        Ok(false)
-    }
-}
