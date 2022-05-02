@@ -42,6 +42,10 @@ pub struct Prefix {
 }
 
 /// An expression which defines a multimethod.
+///
+/// This method can be registered to the same name multiple times if the signature is not already
+/// present. When it is called in the interpreter, we check if the call signature matches with one
+/// of the defined method's signatures, and if it does, execute that function's body.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Method {
     /// The name by which this multimethod is referenced.
