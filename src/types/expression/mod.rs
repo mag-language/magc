@@ -67,8 +67,8 @@ impl Expression {
     fn linearize_tuple(&self, reference: Pattern, left:  Box<Expression>, right: Box<Expression>) -> Result<bool, ParserError> {
         let mut does_match = false;
 
-        does_match = left.linearize(reference);
-        does_match = right.linearize(reference);
+        does_match = left.linearize(reference.clone())?;
+        does_match = right.linearize(reference)?;
 
         Ok(does_match)
     }
