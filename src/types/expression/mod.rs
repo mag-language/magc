@@ -39,7 +39,5 @@ pub enum ExpressionKind {
     Method(Method),
     /// A first-class chunk of code that can be passed around as a value.
     Block(Vec<Expression>),
-    /// One or more pattern enclosed in parentheses.
-    Group(Box<Expression>),
     Identifier,
 }
