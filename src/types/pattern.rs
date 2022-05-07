@@ -1,10 +1,7 @@
-use crate::types::{
-    Expression,
-};
+use crate::types::Expression;
+use crate::parser::ParserError;
 
-use crate::parser::{
-    ParserError,
-};
+use std::collections::HashMap;
 
 /*
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -46,6 +43,6 @@ pub trait Pattern {
     /// match succeeds, or [`None`] if the expression doesn't match with this pattern.
     fn match_with(
         &self, 
-        other: Box<Expression>
-    ) -> Option<HashMap<String, Box<Expression>>;
+        other: Box<Expression>,
+    ) -> Option<HashMap<String, Box<Expression>>>;
 }
