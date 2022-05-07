@@ -7,7 +7,7 @@ use crate::types::{
 
 /// A pattern enclosed in parentheses.
 pub struct TuplePattern {
-    pub child: Box<Pattern>,
+    pub child: Box<dyn Pattern>,
 }
 
 impl Pattern for TuplePattern {
