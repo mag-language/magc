@@ -76,4 +76,3 @@ pub struct VariablePattern {
     pub name:    Option<String>,
     pub type_id: Option<String>,
 }
-
