@@ -7,10 +7,10 @@ use crate::types::{
     ExpressionKind,
 };
 
-/// Parse an expression enclosed in parentheses.
-pub struct GroupParselet;
+/// Parse multiple comma-separated patterns enclosed in parentheses.
+pub struct TuplePatternParselet;
 
-impl PrefixParselet for GroupParselet {
+impl PrefixParselet for TuplePatternParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
         let content = parser.parse_expression(0)?;
         parser.consume_expect(TokenKind::RightParen);
