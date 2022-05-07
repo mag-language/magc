@@ -1,4 +1,9 @@
-use crate::types::{Pattern};
+use crate::types::{
+    Environment,
+    Expression,
+    ExpressionKind,
+    Pattern,
+};
 
 /// A series of patterns separated by commas.
 ///
@@ -8,4 +13,10 @@ use crate::types::{Pattern};
 pub struct TuplePattern {
     pub left:  Box<dyn Pattern>,
     pub right: Box<dyn Pattern>,
+}
+
+impl Pattern for TuplePattern {
+    fn match_with(&self, expression: Box<Expression>) -> Option<Environment> {
+        None
+    }
 }
