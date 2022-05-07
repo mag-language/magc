@@ -1,14 +1,33 @@
-use crate::parser::{Parser, ParserResult, PrefixParselet};
+use crate::parser::{
+    Parser,
+    ParserResult,
+    ParserError,
+    PrefixParselet,
+}
 
 use crate::types::{
     Token,
     TokenKind,
     Expression,
     ExpressionKind,
-};
+    Pattern,
+}
 
 /// Parse multiple comma-separated patterns enclosed in parentheses.
 pub struct TuplePatternParselet;
+
+impl TuplePatternParselet {
+    fn expect_pattern(expression: Box<Expression>) -> Result<Pattern, ParserError> {
+        match expression.kind {
+            ExpressionKind::Pattern(pattern) => Ok(pattern),
+
+            _ => Err(ParserError::UnexpectedExpression {
+                expected: ExpressionKind::Pattern(_),
+                found: expression,
+            }),
+        }
+    }
+}
 
 impl PrefixParselet for TuplePatternParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
