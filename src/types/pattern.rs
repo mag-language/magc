@@ -46,3 +46,34 @@ pub trait Pattern {
         other: Box<Expression>,
     ) -> Option<HashMap<String, Box<Expression>>>;
 }
+
+/// An expression that evaluates to a value.
+pub struct ValuePattern {
+    pub expression: Box<Expression>,
+}
+
+/// A series of patterns separated by commas.
+///
+/// The data structure is recursive since the comma is defined as an infix operator. This may
+/// look confusing at first, but is fairly easy to work with since you only need to call the
+/// method parsing the tuple items recursively.
+pub struct TuplePattern {
+    pub left:  Box<dyn Pattern>,
+    pub right: Box<dyn Pattern>,
+}
+
+/// A single entity within a record, like `repeats: 4` or `name: n String`.
+pub struct FieldPattern {
+    pub name:  String,
+    pub value: Box<dyn Pattern>,
+}
+
+/// A variable identifier with an optional name and type.
+///
+/// The pattern consists of an identifier and an optional following type, and if the 
+/// name happens to be `_`, an underscore character, then the variable has no name.
+pub struct VariablePattern {
+    pub name:    Option<String>,
+    pub type_id: Option<String>,
+}
+
