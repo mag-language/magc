@@ -21,7 +21,7 @@ mod group;
 mod infix;
 mod literal;
 mod method;
-mod pattern;
+mod variable_pattern;
 mod prefix;
 
 pub use self::block::*;
@@ -31,7 +31,7 @@ pub use self::field::*;
 pub use self::group::*;
 pub use self::infix::*;
 pub use self::literal::*;
-pub use self::pattern::*;
+pub use self::variable_pattern::*;
 pub use self::prefix::*;
 pub use self::method::*;
 
