@@ -1,5 +1,6 @@
 //! A compiler library which provides various methods and data structures used to compile Mag programs 
-//! for a set of back-end architectures, including Strontium bytecode.
+//! for a set of back-end architectures, including Strontium bytecode. We'll be looking into ahead-of-time 
+//! compilation in the future, possibly using `cranelift` or one of the various crates that generate LLVM IR.
 //!
 //! ## Data Structures
 //!
@@ -26,3 +27,5 @@ pub mod lexer;
 pub mod parser;
 pub mod types;
 pub mod type_system;
+
+pub use self::types::*;
