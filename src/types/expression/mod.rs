@@ -14,7 +14,7 @@ pub use self::infix::Infix;
 pub use self::method::{Method, Call};
 pub use self::prefix::Prefix;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Eq, Hash)]
 pub struct Expression {
     pub kind: ExpressionKind,
     pub lexeme: String,
@@ -22,7 +22,7 @@ pub struct Expression {
     pub end_pos: usize,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Eq, Hash)]
 pub enum ExpressionKind {
     Conditional(Conditional),
     /// A literal value like `23.4` or `"hello"`.

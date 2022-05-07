@@ -6,6 +6,7 @@ use crate::types::{
 };
 
 /// A pattern enclosed in parentheses.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TuplePattern {
     pub child: Box<dyn Pattern>,
 }

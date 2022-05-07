@@ -5,6 +5,7 @@ use crate::types::{
 };
 
 /// An expression that evaluates to a value.
+#[derive(Debug, Clone, Eq, Hash)]
 pub struct ValuePattern {
     pub expression: Box<Expression>,
 }
