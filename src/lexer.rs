@@ -1,4 +1,8 @@
-//! Translate a Magpie source string into a linear sequence of tokens.
+//! Translate a Mag source string into a linear sequence of tokens.
+//!
+//! This is the first stage in the compiler, which takes a string, splits it
+//! into UTF-8 characters and consumes them one at a time to create a list of
+//! tokens that exactly represent the code contained in the source string.
 
 use crate::types::{Token, TokenKind, Keyword, Literal};
 
