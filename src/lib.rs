@@ -1,6 +1,7 @@
 //! A compiler library which provides various methods and data structures used to compile Mag programs 
 //! for a set of back-end architectures, including Strontium bytecode. We'll be looking into ahead-of-time 
-//! compilation in the future, possibly using `cranelift` or one of the various crates that generate LLVM IR.
+//! compilation in the future, possibly using [`cranelift`](https://docs.rs/cranelift/latest/cranelift/) 
+//! or one of the various crates that provide bindings to LLVM.
 //!
 //! ## Data Structures
 //!
