@@ -14,7 +14,7 @@ pub use self::infix::Infix;
 pub use self::method::{Method, Call};
 pub use self::prefix::Prefix;
 
-#[derive(Debug, Clone, Eq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Expression {
     pub kind: ExpressionKind,
     pub lexeme: String,
@@ -22,7 +22,7 @@ pub struct Expression {
     pub end_pos: usize,
 }
 
-#[derive(Debug, Clone, Eq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum ExpressionKind {
     /// An `if` expression running different branches of code based on a given condition.
     Conditional(Conditional),

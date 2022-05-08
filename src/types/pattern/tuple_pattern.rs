@@ -3,7 +3,7 @@ use crate::types::{
 };
 
 /// A pattern enclosed in parentheses.
-#[derive(Debug, Clone, Eq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct TuplePattern {
     pub child: Box<Pattern>,
 }
