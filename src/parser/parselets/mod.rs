@@ -19,10 +19,7 @@ mod conditional;
 mod infix;
 mod literal;
 mod method;
-mod field_pattern;
-mod tuple_pattern;
-mod variable_pattern;
-mod pair;
+mod pattern;
 mod prefix;
 
 pub use self::block::*;
