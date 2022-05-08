@@ -1,17 +1,17 @@
 use crate::types::{Expression, Environment};
 use crate::parser::ParserError;
 
-pub mod field;
-pub mod tuple;
-pub mod value;
-pub mod pair;
-pub mod variable;
+mod field;
+mod tuple;
+mod value;
+mod pair;
+mod variable;
 
-use self::field::*;
-use self::tuple::*;
-use self::value::*;
-use self::pair::*;
-use self::variable::*;
+pub use self::field::*;
+pub use self::tuple::*;
+pub use self::value::*;
+pub use self::pair::*;
+pub use self::variable::*;
 
 /// A pattern that can be matched with an [`Expression`] to enable complex flow control
 /// and full destructuring pattern matching, which increases the flexibility and 
