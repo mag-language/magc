@@ -18,9 +18,7 @@ use crate::types::{
 
 /// Parse a pair of patterns separated by a comma.
 #[derive(Debug, Clone)]
-pub struct PairParselet {
-    pub precedence: usize,
-}
+pub struct PairParselet;
 
 impl InfixParselet for PairParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
@@ -29,7 +27,7 @@ impl InfixParselet for PairParselet {
         let right = parser.parse_expression(self.precedence)?;
 
         Ok(Expression {
-            kind: ExpressionKind::Pattern(Pattern::Tuple(TuplePattern {
+            kind: ExpressionKind::Pattern(Pattern::Pair(PairPattern {
                 left,
                 right: Box::new(right),
             })),
@@ -40,6 +38,6 @@ impl InfixParselet for PairParselet {
     }
 
     fn get_precedence(&self) -> usize {
-        self.precedence
+        15
     }
 }
