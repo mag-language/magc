@@ -6,5 +6,5 @@ use crate::types::{
 #[derive(Debug, Clone, Eq, Hash)]
 pub struct FieldPattern {
     pub name:  String,
-    pub value: Box<dyn Pattern>,
+    pub value: Box<Pattern>,
 }
