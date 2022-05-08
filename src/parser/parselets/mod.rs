@@ -30,11 +30,8 @@ pub use self::call::*;
 pub use self::conditional::*;
 pub use self::infix::*;
 pub use self::literal::*;
-pub use self::field_pattern::*;
-pub use self::tuple_pattern::*;
-pub use self::variable_pattern::*;
+pub use self::pattern::*;
 pub use self::prefix::*;
-pub use self::pair::*;
 pub use self::method::*;
 
 pub trait PrefixParselet {
