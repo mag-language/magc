@@ -14,6 +14,7 @@ use self::variable_pattern::*;
 /// A pattern that can be compared with an [`Expression`] to enable complex flow control
 /// and full destructuring pattern matching, which increases the flexibility and 
 /// expressivity within the language by a great degree.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Pattern {
     /// A named pattern, like `repeats: 4` or `name: n String`.
     Field(FieldPattern),
