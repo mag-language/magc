@@ -10,7 +10,7 @@ use super::{
 };
 
 #[derive(Debug, Clone)]
-/// Parse a variable pattern like `_` or `name String`.
+/// A variable identifier with an optional type annotation.
 pub struct VariablePatternParselet;
 
 impl PrefixParselet for VariablePatternParselet {
