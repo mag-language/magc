@@ -24,4 +24,6 @@ pub enum Pattern {
     Value(ValuePattern),
     /// A variable identifier with an optional type annotation.
     Variable(VariablePattern),
+    /// A pair of patterns separated by a comma.
+    Pair(Box<Pattern>, Box<Pattern>),
 }
