@@ -1,5 +1,21 @@
-use crate::parser::{Parser, ParserResult, ParserError, InfixParselet, PREC_RECORD};
-use crate::types::{Expression, ExpressionKind, Pattern, VariablePattern, Token, TokenKind};
+//! Parse a named pattern and return it as a single entry of a key-value association.
+
+use crate::parser::{
+    Parser,
+    ParserResult,
+    ParserError,
+    InfixParselet,
+    PREC_RECORD,
+};
+
+use crate::types::{
+    Expression,
+    ExpressionKind,
+    Pattern,
+    VariablePattern,
+    Token,
+    TokenKind,
+};
 
 #[derive(Debug, Clone)]
 /// A named pattern, like `repeats: 4` or `name: n String`.

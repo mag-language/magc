@@ -1,3 +1,5 @@
+//! Parse a single pattern enclosed in parentheses.
+
 use crate::parser::{
     Parser,
     ParserResult,
@@ -13,7 +15,7 @@ use crate::types::{
     Pattern,
 };
 
-/// Parse a pattern enclosed in parentheses.
+/// Parse a single pattern enclosed in parentheses.
 pub struct TuplePatternParselet;
 
 impl TuplePatternParselet {

@@ -1,3 +1,5 @@
+//! Parse a variable identifier with an optional type annotation.
+
 use super::{
     Parser,
     PrefixParselet,
@@ -10,7 +12,7 @@ use super::{
 };
 
 #[derive(Debug, Clone)]
-/// A variable identifier with an optional type annotation.
+/// Parse a variable identifier with an optional type annotation.
 pub struct VariablePatternParselet;
 
 impl PrefixParselet for VariablePatternParselet {
