@@ -3,9 +3,9 @@ use crate::types::{Expression, ExpressionKind, Pattern, Token, TokenKind};
 
 #[derive(Debug, Clone)]
 /// A named pattern, like `repeats: 4` or `name: n String`.
-pub struct FieldParselet;
+pub struct FieldPatternParselet;
 
-impl InfixParselet for FieldParselet {
+impl InfixParselet for FieldPatternParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
         parser.consume_expect(TokenKind::Colon)?;
 
