@@ -24,6 +24,7 @@ pub struct Expression {
 
 #[derive(Debug, Clone, Eq, Hash)]
 pub enum ExpressionKind {
+    /// An `if` expression running different branches of code based on a given condition.
     Conditional(Conditional),
     /// A literal value like `23.4` or `"hello"`.
     Literal(Literal),
@@ -33,7 +34,9 @@ pub enum ExpressionKind {
     Type,
     /// An expression with a prefix operator.
     Prefix(Prefix),
+    /// Two expressions with an infix operator in between.
     Infix(Infix),
+    /// An invocation of a method, like `print("Hello, World!")`
     Call(Call),
     /// A definition of a multimethod.
     Method(Method),
