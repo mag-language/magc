@@ -20,11 +20,13 @@ use self::variable_pattern::*;
 /// A pattern that can be compared with an [`Expression`] to enable complex flow control
 /// and full destructuring pattern matching, which increases the flexibility and 
 /// expressivity within the language by a great degree.
-pub trait Pattern: Debug + Clone + Eq + Hash {
-    /// Return an environment containing the extracted, newly-bound variables if the
-    /// match succeeds, or [`None`] if the expression doesn't match with this pattern.
-    fn match_with(
-        &self, 
-        expression: Box<Expression>,
-    ) -> Option<Environment>;
+pub enum Pattern {
+    /// A single entity within a record, like `repeats: 4` or `name: n String`.
+    Field(FieldPattern),
+    /// A pattern enclosed in parentheses.
+    Tuple(TuplePattern),
+    /// An expression that evaluates to a value.
+    Value(ValuePattern),
+    /// A variable identifier with an optional type annotation.
+    Variable(VariablePattern),
 }
