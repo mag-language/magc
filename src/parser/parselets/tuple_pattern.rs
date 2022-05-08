@@ -13,7 +13,7 @@ use crate::types::{
     Pattern,
 }
 
-/// Parse multiple comma-separated patterns enclosed in parentheses.
+/// Parse a pattern enclosed in parentheses.
 pub struct TuplePatternParselet;
 
 impl TuplePatternParselet {
