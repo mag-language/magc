@@ -16,7 +16,7 @@ use crate::types::{
     TokenKind,
 };
 
-//! Parse a pair of patterns separated by a comma.
+/// Parse a pair of patterns separated by a comma.
 #[derive(Debug, Clone)]
 pub struct PairParselet {
     pub precedence: usize,
