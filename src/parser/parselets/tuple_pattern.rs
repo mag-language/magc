@@ -3,7 +3,7 @@ use crate::parser::{
     ParserResult,
     ParserError,
     PrefixParselet,
-}
+};
 
 use crate::types::{
     Token,
@@ -11,7 +11,7 @@ use crate::types::{
     Expression,
     ExpressionKind,
     Pattern,
-}
+};
 
 /// Parse a pattern enclosed in parentheses.
 pub struct TuplePatternParselet;
