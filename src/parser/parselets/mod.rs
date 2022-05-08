@@ -20,15 +20,17 @@ mod infix;
 mod literal;
 mod method;
 mod field_pattern;
+mod tuple_pattern;
 mod variable_pattern;
 mod prefix;
 
 pub use self::block::*;
 pub use self::call::*;
 pub use self::conditional::*;
-pub use self::field_pattern::*;
 pub use self::infix::*;
 pub use self::literal::*;
+pub use self::field_pattern::*;
+pub use self::tuple_pattern::*;
 pub use self::variable_pattern::*;
 pub use self::prefix::*;
 pub use self::method::*;
