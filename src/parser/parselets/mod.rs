@@ -16,17 +16,17 @@ use crate::types::{
 mod block;
 mod call;
 mod conditional;
-mod field;
 mod infix;
 mod literal;
 mod method;
+mod field_pattern;
 mod variable_pattern;
 mod prefix;
 
 pub use self::block::*;
 pub use self::call::*;
 pub use self::conditional::*;
-pub use self::field::*;
+pub use self::field_pattern::*;
 pub use self::infix::*;
 pub use self::literal::*;
 pub use self::variable_pattern::*;
