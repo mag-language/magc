@@ -11,7 +11,7 @@ use self::tuple_pattern::*;
 use self::value_pattern::*;
 use self::variable_pattern::*;
 
-/// A pattern that can be compared with an [`Expression`] to enable complex flow control
+/// A pattern that can be matched with an [`Expression`] to enable complex flow control
 /// and full destructuring pattern matching, which increases the flexibility and 
 /// expressivity within the language by a great degree.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
