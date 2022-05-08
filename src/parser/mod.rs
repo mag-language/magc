@@ -16,6 +16,7 @@ use parselets::{
     InfixOperatorParselet,
     LiteralParselet,
     MethodParselet,
+    PairParselet,
     FieldPatternParselet,
     TuplePatternParselet,
     VariablePatternParselet,
@@ -92,8 +93,8 @@ impl Parser {
         infix_parselets.insert(TokenKind::Star,       infix_operator(PREC_PRODUCT));
         infix_parselets.insert(TokenKind::Slash,      infix_operator(PREC_PRODUCT));
         infix_parselets.insert(TokenKind::EqualEqual, infix_operator(PREC_EQUALITY));
-        infix_parselets.insert(TokenKind::Comma,      infix_operator(PREC_RECORD));
 
+        infix_parselets.insert(TokenKind::Comma,  Rc::new(PairParselet) as Rc<dyn InfixParselet>);
         infix_parselets.insert(TokenKind::LeftParen,  Rc::new(CallParselet) as Rc<dyn InfixParselet>);
         infix_parselets.insert(TokenKind::Colon,  Rc::new(FieldPatternParselet) as Rc<dyn InfixParselet>);
 
