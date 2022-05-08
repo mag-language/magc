@@ -27,8 +27,8 @@ pub enum ExpressionKind {
     Conditional(Conditional),
     /// A literal value like `23.4` or `"hello"`.
     Literal(Literal),
-    /// A value, tuple, record, field or variable pattern.
-    Pattern(Box<dyn Pattern>),
+    /// A value, tuple, field or variable pattern.
+    Pattern(Box<Pattern>),
     /// A reference to a type like `Int32`.
     Type,
     /// An expression with a prefix operator.
