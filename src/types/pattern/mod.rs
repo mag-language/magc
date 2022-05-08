@@ -1,12 +1,6 @@
 use crate::types::{Expression, Environment};
 use crate::parser::ParserError;
 
-use std::collections::HashMap;
-use std::fmt::Debug;
-use std::clone::Clone;
-use std::cmp::Eq;
-use std::hash::Hash;
-
 pub mod field_pattern;
 pub mod tuple_pattern;
 pub mod value_pattern;
@@ -21,7 +15,7 @@ use self::variable_pattern::*;
 /// and full destructuring pattern matching, which increases the flexibility and 
 /// expressivity within the language by a great degree.
 pub enum Pattern {
-    /// A single entity within a record, like `repeats: 4` or `name: n String`.
+    /// A named pattern, like `repeats: 4` or `name: n String`.
     Field(FieldPattern),
     /// A pattern enclosed in parentheses.
     Tuple(TuplePattern),
