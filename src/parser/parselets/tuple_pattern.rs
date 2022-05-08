@@ -36,7 +36,7 @@ impl PrefixParselet for TuplePatternParselet {
 
         Ok(Expression {
             kind: ExpressionKind::Pattern(
-                Box::new(TuplePattern { child }) as Box<dyn Pattern>,
+                Box::new(TuplePattern { child }) as Box<Pattern>,
             ),
             lexeme:    token.lexeme,
             start_pos: token.start_pos,
