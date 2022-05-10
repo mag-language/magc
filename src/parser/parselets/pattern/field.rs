@@ -13,6 +13,7 @@ use crate::types::{
     ExpressionKind,
     Pattern,
     VariablePattern,
+    FieldPattern,
     Token,
     TokenKind,
 };
@@ -44,10 +45,10 @@ impl InfixParselet for FieldPatternParselet {
 
         if let Some(name) = name {
             Ok(Expression {
-                kind: ExpressionKind::Pattern(Pattern::Field {
+                kind: ExpressionKind::Pattern(Pattern::Field(FieldPattern {
                     name,
                     value,
-                }),
+                })),
                 lexeme:    token.lexeme,
                 start_pos: token.start_pos,
                 end_pos:   token.end_pos,
