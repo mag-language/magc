@@ -1,14 +1,18 @@
 //! Parse a variable identifier with an optional type annotation.
 
-use super::{
+use crate::parser::{
     Parser,
     PrefixParselet,
+    ParserResult,
+};
+
+use crate::types::{
     Token,
     TokenKind,
-    ParserResult,
     Expression,
     ExpressionKind,
     Pattern,
+    VariablePattern,
 };
 
 #[derive(Debug, Clone)]
@@ -19,7 +23,7 @@ impl PrefixParselet for VariablePatternParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
         let name;
 
-        if token.lexeme == "_" {
+        if token.lexeme == "_".to_string() {
             name = None;
         } else {
             name = Some(token.lexeme.clone());
@@ -33,16 +37,16 @@ impl PrefixParselet for VariablePatternParselet {
                 TokenKind::Type => {
                     parser.advance();
 
-                    Pattern::Variable {
+                    Pattern::Variable(VariablePattern {
                         name,
                         type_id: Some(next_token.lexeme),
-                    }
+                    })
                 },
 
-                _ => Pattern::Variable {
+                _ => Pattern::Variable(VariablePattern {
                     name,
                     type_id: None,
-                }
+                })
             };
 
             Ok(Expression {
@@ -53,10 +57,10 @@ impl PrefixParselet for VariablePatternParselet {
             })
         } else {
             Ok(Expression {
-                kind:      ExpressionKind::Pattern(Pattern::Variable {
+                kind:      ExpressionKind::Pattern(Pattern::Variable(VariablePattern {
                     name,
                     type_id: None,
-                }),
+                })),
                 lexeme:    token.lexeme,
                 start_pos: token.start_pos,
                 end_pos:   token.end_pos,
@@ -65,9 +69,9 @@ impl PrefixParselet for VariablePatternParselet {
     }
 }
 
-#[cfg(test)]
+/*#[cfg(test)]
 mod tests {
-    use super::*;
+    use super::;
     use crate::lexer::*;
 
     #[test]
@@ -149,4 +153,4 @@ mod tests {
             parser.parse_expression(0)
         );
     }
-}
+}*/
