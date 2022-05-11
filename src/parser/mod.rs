@@ -32,6 +32,8 @@ pub type ParserResult = Result<Expression, ParserError>;
 
 /// The precedence `10` for assignment expressions like `var n = 0`
 pub static PREC_ASSIGNMENT: usize = 10;
+/// The precedence `15` for pair expressions like `a, b, c`
+pub static PREC_PAIR: usize       = 15;
 /// The precedence `20` for field expressions like `name: n String`
 pub static PREC_RECORD: usize = 20;
 /// The precedence `30` for logical unary operators like `and` or `or`
@@ -226,6 +228,7 @@ pub enum ParserError {
         expected: ExpressionKind,
         found:    Expression,
     },
+    ExpectedPattern,
 }
 
 #[cfg(test)]
