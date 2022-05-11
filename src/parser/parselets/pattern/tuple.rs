@@ -13,20 +13,18 @@ use crate::types::{
     Expression,
     ExpressionKind,
     Pattern,
+    TuplePattern,
 };
 
 /// Parse a single pattern enclosed in parentheses.
 pub struct TuplePatternParselet;
 
 impl TuplePatternParselet {
-    fn expect_pattern(expression: Box<Expression>) -> Result<Pattern, ParserError> {
+    fn expect_pattern(&self, expression: Expression) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
 
-            _ => Err(ParserError::UnexpectedExpression {
-                expected: ExpressionKind::Pattern(_),
-                found: expression,
-            }),
+            _ => Err(ParserError::ExpectedPattern),
         }
     }
 }
@@ -38,7 +36,7 @@ impl PrefixParselet for TuplePatternParselet {
 
         Ok(Expression {
             kind: ExpressionKind::Pattern(
-                Box::new(TuplePattern { child }) as Box<Pattern>,
+                Pattern::Tuple(TuplePattern { child }),
             ),
             lexeme:    token.lexeme,
             start_pos: token.start_pos,
