@@ -55,8 +55,8 @@ impl InfixParselet for PairParselet {
 
         Ok(Expression {
             kind: ExpressionKind::Pattern(Pattern::Pair(PairPattern {
-                left: Box::new(self.pattern_or_value_pattern(Box::new(right.clone()))?),
-                right: Box::new(self.expect_pattern(Box::new(right))?),
+                left: Box::new(self.pattern_or_value_pattern(left)?),
+                right: Box::new(self.pattern_or_value_pattern(Box::new(right))?),
             })),
             lexeme:    token.lexeme,
             start_pos: token.start_pos,
