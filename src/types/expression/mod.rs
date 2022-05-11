@@ -29,7 +29,7 @@ pub enum ExpressionKind {
     /// A literal value like `23.4` or `"hello"`.
     Literal(Literal),
     /// A value, tuple, field or variable pattern.
-    Pattern(Box<Pattern>),
+    Pattern(Pattern),
     /// A reference to a type like `Int32`.
     Type,
     /// An expression with a prefix operator.
