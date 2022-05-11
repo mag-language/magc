@@ -4,14 +4,21 @@
 //! lists. Since a value pattern simply contains an [`Expression`], the contents of this
 //! structure can be pretty much anything.
 
-use crate::parser::{Parser, ParserResult, InfixParselet};
+use crate::parser::{
+    Parser,
+    ParserResult,
+    ParserError,
+    InfixParselet,
+    PREC_PAIR,
+};
 
 use crate::types::{
     Expression,
     ExpressionKind,
     Infix,
     Pattern,
-    TuplePattern,
+    PairPattern,
+    ValuePattern,
     Token,
     TokenKind,
 };
@@ -20,16 +27,36 @@ use crate::types::{
 #[derive(Debug, Clone)]
 pub struct PairParselet;
 
+impl PairParselet {
+    fn pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+        match expression.kind {
+            ExpressionKind::Pattern(pattern) => Ok(pattern),
+
+            _ => Ok(Pattern::Value(ValuePattern {
+                expression,
+            })),
+        }
+    }
+
+    fn expect_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+        match expression.kind {
+            ExpressionKind::Pattern(pattern) => Ok(pattern),
+
+            _ => Err(ParserError::ExpectedPattern),
+        }
+    }
+}
+
 impl InfixParselet for PairParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
         parser.advance();
 
-        let right = parser.parse_expression(self.precedence)?;
+        let right = parser.parse_expression(self.get_precedence())?;
 
         Ok(Expression {
             kind: ExpressionKind::Pattern(Pattern::Pair(PairPattern {
-                left,
-                right: Box::new(right),
+                left: Box::new(self.pattern_or_value_pattern(Box::new(right.clone()))?),
+                right: Box::new(self.expect_pattern(Box::new(right))?),
             })),
             lexeme:    token.lexeme,
             start_pos: token.start_pos,
@@ -38,6 +65,6 @@ impl InfixParselet for PairParselet {
     }
 
     fn get_precedence(&self) -> usize {
-        15
+        PREC_PAIR
     }
 }
