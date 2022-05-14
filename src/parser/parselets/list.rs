@@ -25,9 +25,13 @@ impl PrefixParselet for ListParselet {
         let mut kind;
 
         if parser.peek()?.kind == TokenKind::RightBracket {
-            kind = ExpressionKind::List(None),
+            kind = ExpressionKind::List(None);
         } else {
-            kind = ExpressionKind::List(Some(parser.parse_expression(0)?));
+            kind = ExpressionKind::List(
+                Some(
+                    Box::new(parser.parse_expression(0)?)
+                )
+            );
             parser.consume_expect(TokenKind::RightBracket);
         }
 
