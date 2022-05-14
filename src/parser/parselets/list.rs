@@ -17,7 +17,7 @@ use crate::types::{
 };
 
 #[derive(Debug, Clone)]
-/// A named pattern, like `repeats: 4` or `name: n String`.
+/// Parse a list of expressions enclosed in brackets, like `[1, 2, 3]`.
 pub struct ListParselet;
 
 impl PrefixParselet for ListParselet {
