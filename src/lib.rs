@@ -30,3 +30,4 @@ pub mod types;
 pub mod type_system;
 
 pub use self::types::*;
+pub use self::type_system::*;
