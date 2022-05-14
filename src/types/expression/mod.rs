@@ -1,4 +1,5 @@
 use crate::types::{Literal, Pattern};
+use crate::type_system::Typed;
 
 mod conditional;
 mod infix;
@@ -39,7 +40,7 @@ pub enum ExpressionKind {
     Infix(Infix),
     /// An invocation of a method, like `print("Hello, World!")`
     Call(Call),
-    /// A definition of a multimethod.
+    /// A definition of a method with a given name, signature and body.
     Method(Method),
     /// A first-class chunk of code that can be passed around as a value.
     Block(Vec<Expression>),
