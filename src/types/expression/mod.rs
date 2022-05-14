@@ -1,4 +1,4 @@
-use crate::types::{Literal, Pattern};
+use crate::types::{Literal, Pattern, PairPattern};
 
 mod conditional;
 mod infix;
@@ -22,11 +22,13 @@ pub struct Expression {
 pub enum ExpressionKind {
     /// An `if` expression running different branches of code based on a given condition.
     Conditional(Conditional),
+    /// A list of expressions enclosed in brackets, like `[1, 2, 3]`.
+    List(PairPattern),
     /// A literal value like `23.4` or `"hello"`.
     Literal(Literal),
     /// A value, tuple, field or variable pattern.
     Pattern(Pattern),
-    /// A reference to a type like `Int32`.
+    /// A reference to a type, like `Int32`.
     Type,
     /// An expression with a prefix operator.
     Prefix(Prefix),
