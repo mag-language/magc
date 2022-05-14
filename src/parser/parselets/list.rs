@@ -32,8 +32,9 @@ impl PrefixParselet for ListParselet {
                     Box::new(parser.parse_expression(0)?)
                 )
             );
-            parser.consume_expect(TokenKind::RightBracket);
         }
+
+        parser.consume_expect(TokenKind::RightBracket);
 
         Ok(Expression {
             kind,
