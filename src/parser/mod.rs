@@ -14,6 +14,7 @@ use parselets::{
     BlockParselet,
     PrefixOperatorParselet,
     InfixOperatorParselet,
+    ListParselet,
     LiteralParselet,
     MethodParselet,
     PairParselet,
@@ -87,7 +88,8 @@ impl Parser {
         prefix_parselets.insert(TokenKind::Bang,  &PrefixOperatorParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Plus,  &PrefixOperatorParselet as &dyn PrefixParselet);
         prefix_parselets.insert(TokenKind::Minus, &PrefixOperatorParselet as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::LeftParen, &TuplePatternParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(TokenKind::LeftParen,   &TuplePatternParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(TokenKind::LeftBracket, &ListParselet as &dyn PrefixParselet);
 
         infix_parselets.insert(TokenKind::Plus,       infix_operator(PREC_TERM));
         infix_parselets.insert(TokenKind::Minus,      infix_operator(PREC_TERM));
