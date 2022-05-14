@@ -1,7 +1,9 @@
-//! A compiler library which provides various methods and data structures used to compile Mag programs 
-//! for a set of back-end architectures, including Strontium bytecode. We'll be looking into ahead-of-time 
-//! compilation in the future, possibly using [`cranelift`](https://docs.rs/cranelift/latest/cranelift/) 
-//! or one of the various crates that provide bindings to LLVM.
+//! ![mag banner](https://world-of-music.at/downloads/bird-banner.png)
+//!
+//! # What's this?
+//!
+//! `magc` is a compiler library which provides various methods and data structures used to compile Mag programs 
+//! into a tree of Expressions, and optionally into a set of back-end architectures, including Strontium bytecode.
 //!
 //! ## Data Structures
 //!
@@ -20,9 +22,6 @@
 //! The resulting array of tokens is fed into a [`Parser`] instance and then iteratively turned into a tree 
 //! of expressions representing the structure of the original source string. In case the compiler encounters 
 //! some form of invalid code, it will return an error which is then reported by the runtime.
-//!
-//! This tree of expressions can then be executed on an interpreter or compiled to some binary format like
-//! Strontium bytecode. There is no code generation or interpreter code yet.
 
 pub mod lexer;
 pub mod parser;
