@@ -1,0 +1,41 @@
+//! Parse a named pattern and return it as a single entry of a key-value association.
+
+use crate::parser::{
+    Parser,
+    ParserResult,
+    ParserError,
+    PrefixParselet,
+};
+
+use crate::types::{
+    Expression,
+    ExpressionKind,
+    Pattern,
+    PairPattern,
+    Token,
+    TokenKind,
+};
+
+#[derive(Debug, Clone)]
+/// A named pattern, like `repeats: 4` or `name: n String`.
+pub struct ListParselet;
+
+impl PrefixParselet for ListParselet {
+    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
+        let mut kind;
+
+        if parser.peek()?.kind == TokenKind::RightBracket {
+            kind = ExpressionKind::List(None),
+        } else {
+            kind = ExpressionKind::List(Some(parser.parse_expression(0)?));
+            parser.consume_expect(TokenKind::RightBracket);
+        }
+
+        Ok(Expression {
+            kind,
+            start_pos: 0,
+            end_pos: 0,
+            lexeme: format!("{}", token.lexeme),
+        })
+    }
+}
