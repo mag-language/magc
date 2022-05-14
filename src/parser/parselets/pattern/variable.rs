@@ -31,7 +31,6 @@ impl PrefixParselet for VariablePatternParselet {
 
         if !parser.eof() {
             let next_token = parser.peek()?;
-            println!("[P] peeking next, is {:?}", next_token);
             
             let pattern = match next_token.kind {
                 TokenKind::Type => {
