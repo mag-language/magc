@@ -1,4 +1,4 @@
-use crate::parser::{Parser, ParserResult, ParserError, PrefixParselet};
+use crate::parser::{Parser, ParserResult, PrefixParselet};
 use crate::types::{Expression, ExpressionKind, Conditional, Token, TokenKind, Keyword};
 
 #[derive(Debug, Clone)]

@@ -1,7 +1,7 @@
 //! A first-class chunk of code that can be passed around as a value.
 
-use crate::parser::{Parser, ParserResult, PREC_UNARY, PrefixParselet};
-use crate::types::{Expression, ExpressionKind, Prefix, Token, TokenKind, Keyword};
+use crate::parser::{Parser, ParserResult, PrefixParselet};
+use crate::types::{Expression, ExpressionKind, Token, TokenKind, Keyword};
 
 /// Parse a series of expressions contained in a pair of `do` and `end` keywords.
 pub struct BlockParselet;

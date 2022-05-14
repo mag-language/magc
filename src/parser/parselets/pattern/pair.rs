@@ -15,12 +15,10 @@ use crate::parser::{
 use crate::types::{
     Expression,
     ExpressionKind,
-    Infix,
     Pattern,
     PairPattern,
     ValuePattern,
     Token,
-    TokenKind,
 };
 
 /// Parse a pair of patterns separated by a comma.

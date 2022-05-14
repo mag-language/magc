@@ -1,7 +1,5 @@
 use crate::types::{
-    Environment,
     Expression,
-    Pattern,
 };
 
 /// An expression that evaluates to a value.

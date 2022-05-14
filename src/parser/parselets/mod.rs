@@ -1,16 +1,8 @@
-use crate::parser::{Parser, ParserResult, ParserError, PREC_UNARY};
+use crate::parser::{Parser, ParserResult};
 
 use crate::types::{
     Token,
-    TokenKind,
-    Keyword,
     Expression,
-    ExpressionKind,
-    Call,
-    Prefix,
-    Infix,
-    Conditional,
-    Pattern,
 };
 
 mod block;

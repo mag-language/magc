@@ -4,10 +4,7 @@ use crate::types::{
     Expression,
     ExpressionKind,
     Infix,
-    Pattern,
-    TuplePattern,
     Token,
-    TokenKind,
 };
 
 /// Parse a binary operator expression like `1 + 2`.

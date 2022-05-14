@@ -1,5 +1,5 @@
-use crate::parser::{Parser, ParserResult, ParserError, PrefixParselet};
-use crate::types::{Expression, ExpressionKind, Method, Token, TokenKind, Keyword};
+use crate::parser::{Parser, ParserResult, PrefixParselet};
+use crate::types::{Expression, ExpressionKind, Method, Token, TokenKind};
 
 #[derive(Debug, Clone)]
 /// Parse a multimethod definition like `def fib(n Int) fib(n - 1) + fib(n - 2)`

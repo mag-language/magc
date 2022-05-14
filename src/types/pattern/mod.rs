@@ -1,6 +1,3 @@
-use crate::types::{Expression, Environment};
-use crate::parser::ParserError;
-
 mod field;
 mod tuple;
 mod value;
@@ -20,7 +17,7 @@ pub use self::variable::*;
 pub enum Pattern {
     /// A named pattern, like `repeats: 4` or `name: n String`.
     Field(FieldPattern),
-    /// A pattern enclosed in parentheses.
+     /// A pattern enclosed in parentheses.
     Tuple(TuplePattern),
     /// An expression that evaluates to a value.
     Value(ValuePattern),

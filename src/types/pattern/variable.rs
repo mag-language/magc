@@ -1,9 +1,3 @@
-use crate::types::{
-    Environment,
-    Expression,
-    Pattern,
-};
-
 /// A variable identifier with an optional type annotation.
 ///
 /// If the name of the identifier happens to be a single underscore character,

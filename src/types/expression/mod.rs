@@ -1,6 +1,4 @@
-use crate::types::{Token, Literal, Pattern};
-use crate::type_system::Typed;
-use crate::parser::{ParserError};
+use crate::types::{Literal, Pattern};
 
 use std::collections::HashMap;
 
