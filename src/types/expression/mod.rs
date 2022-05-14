@@ -23,7 +23,10 @@ pub enum ExpressionKind {
     /// An `if` expression running different branches of code based on a given condition.
     Conditional(Conditional),
     /// A list of expressions enclosed in brackets, like `[1, 2, 3]`.
-    List(PairPattern),
+    ///
+    /// The optional single child expression allows putting zero or more entries into
+    /// the list, making use of the pair pattern if there is more than one expression.
+    List(Option<Box<Expression>>),
     /// A literal value like `23.4` or `"hello"`.
     Literal(Literal),
     /// A value, tuple, field or variable pattern.
