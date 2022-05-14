@@ -48,7 +48,7 @@ impl InfixParselet for FieldPatternParselet {
 
         let right = Box::new(parser.parse_expression(self.get_precedence())?);
 
-        let VariablePattern { name, type_id } = self.expect_variable_pattern(left)?;
+        let VariablePattern { name, type_id: _ } = self.expect_variable_pattern(left)?;
 
         let n = match name {
             Some(v) => v,

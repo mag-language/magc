@@ -1,7 +1,5 @@
 use crate::types::{Literal, Pattern};
 
-use std::collections::HashMap;
-
 mod conditional;
 mod infix;
 mod method;
