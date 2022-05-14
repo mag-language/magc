@@ -1,4 +1,4 @@
-use crate::types::{Literal, Pattern, PairPattern};
+use crate::types::{Literal, Pattern};
 
 mod conditional;
 mod infix;

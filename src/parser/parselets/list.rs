@@ -3,15 +3,12 @@
 use crate::parser::{
     Parser,
     ParserResult,
-    ParserError,
     PrefixParselet,
 };
 
 use crate::types::{
     Expression,
     ExpressionKind,
-    Pattern,
-    PairPattern,
     Token,
     TokenKind,
 };
