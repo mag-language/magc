@@ -1,7 +1,9 @@
 use crate::types::{
     Expression,
-    Environment
+    Environment,
 };
+
+use crate::type_system::Typed;
 use crate::parser::{ParserError};
 use std::collections::HashMap;
 
@@ -34,6 +36,23 @@ pub enum Pattern {
     Variable(VariablePattern),
     /// A pair of patterns separated by a comma.
     Pair(PairPattern),
+}
+
+impl Typed for Pattern {
+    fn get_type(&self) -> Option<String> {
+        match self {
+            Pattern::Field(_)    => Some(String::from("FieldPattern")),
+            Pattern::Tuple(_)    => Some(String::from("TuplePattern")),
+            Pattern::Value(_)    => Some(String::from("ValuePattern")),
+            Pattern::Variable(
+                VariablePattern {
+                    name: _,
+                    type_id,
+                }
+            ) => type_id.clone(),
+            Pattern::Pair(_)     => Some(String::from("PairPattern")),
+        }
+    }
 }
 
 impl Pattern {
