@@ -1,3 +1,5 @@
+use crate::type_system::Typed;
+
 /// A single textual entity of a program like `(` or `if`.
 ///
 /// The literal values contained in tokens are not parsed
@@ -85,4 +87,15 @@ pub enum Literal {
 	Float,
 	String,
 	Boolean,
+}
+
+impl Typed for Literal {
+    fn get_type(&self) -> Option<String> {
+        Some(match self {
+            Literal::Int   	 => String::from("Int"),
+            Literal::Float 	 => String::from("Float"),
+            Literal::String  => String::from("String"),
+            Literal::Boolean => String::from("Boolean"),
+        })
+    }
 }
