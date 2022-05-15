@@ -46,3 +46,14 @@ pub enum ExpressionKind {
     Block(Vec<Expression>),
     Identifier,
 }
+
+impl Typed for Expression {
+    fn get_type(&self) -> Option<String> {
+        match self.kind {
+            ExpressionKind::Conditional(_) => Some(String::from("ConditionalExpression")),
+            ExpressionKind::List(_)        => Some(String::from("ListExpression")),
+
+            _ => unimplemented!(),
+        }
+    }
+}
