@@ -43,7 +43,9 @@ impl Typed for Pattern {
         match self {
             Pattern::Field(_)    => Some(String::from("FieldPattern")),
             Pattern::Tuple(_)    => Some(String::from("TuplePattern")),
-            Pattern::Value(_)    => Some(String::from("ValuePattern")),
+            Pattern::Value(ValuePattern {
+                expression,
+            })    => expression.get_type(),
             Pattern::Variable(
                 VariablePattern {
                     name: _,
