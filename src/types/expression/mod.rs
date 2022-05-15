@@ -49,11 +49,18 @@ pub enum ExpressionKind {
 
 impl Typed for Expression {
     fn get_type(&self) -> Option<String> {
-        match self.kind {
-            ExpressionKind::Conditional(_) => Some(String::from("ConditionalExpression")),
-            ExpressionKind::List(_)        => Some(String::from("ListExpression")),
-
-            _ => unimplemented!(),
+        match &self.kind {
+            ExpressionKind::Conditional(_)   => Some(String::from("ConditionalExpression")),
+            ExpressionKind::List(_)          => Some(String::from("ListExpression")),
+            ExpressionKind::Literal(literal) => literal.get_type(),
+            ExpressionKind::Pattern(pattern) => pattern.get_type(),
+            ExpressionKind::Type             => Some(self.lexeme.clone()),
+            ExpressionKind::Prefix(_)        => Some(String::from("PrefixExpression")),
+            ExpressionKind::Infix(_)         => Some(String::from("InfixExpression")),
+            ExpressionKind::Call(_)          => Some(String::from("CallExpression")),
+            ExpressionKind::Method(_)        => Some(String::from("MethodExpression")),
+            ExpressionKind::Block(_)         => Some(String::from("BlockExpression")),
+            ExpressionKind::Identifier       => Some(String::from("Identifier")),
         }
     }
 }
