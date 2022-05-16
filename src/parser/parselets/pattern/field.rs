@@ -13,6 +13,7 @@ use crate::types::{
     ExpressionKind,
     Pattern,
     VariablePattern,
+    ValuePattern,
     FieldPattern,
     Token,
     TokenKind,
@@ -33,11 +34,13 @@ impl FieldPatternParselet {
         }
     }
 
-    fn expect_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+    fn pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
 
-            _ => Err(ParserError::ExpectedPattern),
+            _ => Ok(Pattern::Value(ValuePattern {
+                expression,
+            })),
         }
     }
 }
@@ -58,7 +61,7 @@ impl InfixParselet for FieldPatternParselet {
         Ok(Expression {
             kind: ExpressionKind::Pattern(Pattern::Field(FieldPattern {
                 name: n,
-                value: Box::new(self.expect_pattern(right)?),
+                value: Box::new(self.pattern_or_value_pattern(right)?),
             })),
             lexeme:    token.lexeme,
             start_pos: token.start_pos,
