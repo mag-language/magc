@@ -231,6 +231,8 @@ pub enum ParserError {
         found:    Expression,
     },
     ExpectedPattern,
+    /// The linearization of the two given patterns failed.
+    NoMatch,
 }
 
 #[cfg(test)]
