@@ -1,5 +1,6 @@
 use crate::types::{
     Expression,
+    ExpressionKind,
     Environment,
 };
 
@@ -38,6 +39,18 @@ pub enum Pattern {
     Pair(PairPattern),
 }
 
+impl Pattern {
+    fn pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+        match expression.kind {
+            ExpressionKind::Pattern(pattern) => Ok(pattern),
+
+            _ => Ok(Pattern::Value(ValuePattern {
+                expression,
+            })),
+        }
+    }
+}
+
 impl Typed for Pattern {
     fn get_type(&self) -> Option<String> {
         match self {
@@ -65,28 +78,58 @@ impl Pattern {
     /// variable matches any value pattern, for example.
     pub fn linearize(&self, other: Pattern) -> LinearizeResult {
         match self {
-            Pattern::Field(pattern)    => self.linearize_field(pattern.clone(), other),
-            Pattern::Tuple(pattern)    => self.linearize_tuple(pattern.clone(), other),
-            Pattern::Value(pattern)    => self.linearize_value(pattern.clone(), other),
-            Pattern::Variable(pattern) => self.linearize_variable(pattern.clone(), other),
-            Pattern::Pair(pattern)     => self.linearize_pair(pattern.clone(), other),
+            Pattern::Field(reference)    => self.linearize_field(reference.clone(), other),
+            Pattern::Tuple(reference)    => self.linearize_tuple(reference.clone(), other),
+            Pattern::Value(reference)    => self.linearize_value(reference.clone(), other),
+            Pattern::Variable(reference) => self.linearize_variable(reference.clone(), other),
+            Pattern::Pair(reference)     => self.linearize_pair(reference.clone(), other),
         }
     }
 
     fn linearize_field(&self, reference: FieldPattern, other: Pattern) -> LinearizeResult {
-        Ok(HashMap::new())
+        if let Pattern::Field(given) = other {
+            if given.name != reference.name { return Err(ParserError::NoMatch) }
+
+            Ok(HashMap::new())
+        } else {
+            Err(ParserError::NoMatch)
+        }
     }
 
     fn linearize_tuple(&self, reference: TuplePattern, other: Pattern) -> LinearizeResult {
-        Ok(HashMap::new())
+        if let Pattern::Tuple(TuplePattern { child: other_pattern }) = other {
+            reference.child.linearize(*other_pattern)
+        } else {
+            Err(ParserError::NoMatch)
+        }
     }
 
     fn linearize_value(&self, reference: ValuePattern, other: Pattern) -> LinearizeResult {
-        Ok(HashMap::new())
+        if let Pattern::Value(ValuePattern { child }) = other {
+            if reference.expression == child.expression {
+                Ok(HashMap::new())
+            } else {
+                Err(ParserError::NoMatch)
+            }
+        } else {
+            Err(ParserError::NoMatch)
+        }
     }
 
     fn linearize_variable(&self, reference: VariablePattern, other: Pattern) -> LinearizeResult {
-        Ok(HashMap::new())
+        let mut variables = HashMap::new();
+
+        if let Some(name) = reference.name {
+            // Extract value into environment and skip type checking for now.
+            if let Pattern::Value(ValuePattern { expression }) = other {
+                variables.insert(name, expression);
+            } else {
+                // TODO: add proper error handling here!
+                Err(ParserError::NoMatch)
+            }
+        }
+        
+        Ok(variables)
     }
 
     fn linearize_pair(&self, reference: PairPattern, other: Pattern) -> LinearizeResult {
