@@ -133,6 +133,15 @@ impl Pattern {
     }
 
     fn linearize_pair(&self, reference: PairPattern, other: Pattern) -> LinearizeResult {
-        Ok(HashMap::new())
+        if let Pattern::Pair(PairPattern { left, right }) = other {
+            let mut left_map = reference.left.linearize(*left)?;
+            let right_map = reference.right.linearize(*right)?;
+
+            left_map.extend(right_map);
+
+            Ok(left_map)
+        } else {
+            Err(ParserError::NoMatch)
+        }
     }
 }
