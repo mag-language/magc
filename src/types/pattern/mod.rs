@@ -90,7 +90,7 @@ impl Pattern {
         if let Pattern::Field(given) = other {
             if given.name != reference.name { return Err(ParserError::NoMatch) }
 
-            Ok(HashMap::new())
+            given.value.linearize(*reference.value)
         } else {
             Err(ParserError::NoMatch)
         }
