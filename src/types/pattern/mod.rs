@@ -105,8 +105,8 @@ impl Pattern {
     }
 
     fn linearize_value(&self, reference: ValuePattern, other: Pattern) -> LinearizeResult {
-        if let Pattern::Value(ValuePattern { child }) = other {
-            if reference.expression == child.expression {
+        if let Pattern::Value(ValuePattern { expression }) = other {
+            if reference.expression == expression {
                 Ok(HashMap::new())
             } else {
                 Err(ParserError::NoMatch)
@@ -125,7 +125,7 @@ impl Pattern {
                 variables.insert(name, expression);
             } else {
                 // TODO: add proper error handling here!
-                Err(ParserError::NoMatch)
+                return Err(ParserError::NoMatch)
             }
         }
         
