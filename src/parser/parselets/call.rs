@@ -13,6 +13,7 @@ use crate::types::{
     TokenKind,
     Pattern,
     ValuePattern,
+    VariablePattern,
 };
 
 #[derive(Debug, Clone)]
@@ -29,10 +30,27 @@ impl CallParselet {
             })),
         }
     }
+
+    fn expect_typeless_variable_pattern(&self, expression: Box<Expression>) -> Result<String, ParserError> {
+        match expression.kind {
+            ExpressionKind::Pattern(
+                Pattern::Variable(pattern)
+            ) => {
+                if let VariablePattern { name: Some(name), type_id: None } = pattern {
+                    Ok(name)
+                } else {
+                    Err(ParserError::ExpectedPattern)
+                }
+            },
+
+            _ => Err(ParserError::ExpectedPattern),
+        }
+    }
 }
 
 impl InfixParselet for CallParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
+        let name = self.expect_typeless_variable_pattern(left)?;
         parser.consume_expect(TokenKind::LeftParen)?;
 
         let t = parser.peek()?;
@@ -46,7 +64,7 @@ impl InfixParselet for CallParselet {
 
                 return Ok(Expression {
                     kind: ExpressionKind::Call(Call {
-                        method: left,
+                        name,
                         signature: Some(self.pattern_or_value_pattern(Box::new(expr))?),
                     }),
                     lexeme:    token.lexeme,
@@ -58,7 +76,7 @@ impl InfixParselet for CallParselet {
 
         Ok(Expression {
             kind: ExpressionKind::Call(Call {
-                method: left,
+                name,
                 signature: None,
             }),
             lexeme:    token.lexeme,
