@@ -19,5 +19,5 @@ pub struct Method {
 pub struct Call {
     pub method: Box<Expression>,
     // The [`Record`] which contains the values of the arguments of the method call.
-    pub signature:  Option<Box<Expression>>,
+    pub signature:  Option<Pattern>,
 }
