@@ -10,7 +10,7 @@ pub struct Method {
     /// The name by which this multimethod is referenced.
     pub name: String,
     /// The method signature which defines the arguments.
-    pub signature: Box<Expression>,
+    pub signature: Option<Pattern>,
     pub body: Box<Expression>,
 }
 
