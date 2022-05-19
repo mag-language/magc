@@ -17,7 +17,8 @@ pub struct Method {
 /// An expression with a prefix operator.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Call {
-    pub method: Box<Expression>,
+    /// The name of the multimethod being called.
+    pub name: String,
     // The [`Record`] which contains the values of the arguments of the method call.
     pub signature:  Option<Pattern>,
 }
