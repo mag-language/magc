@@ -1,11 +1,13 @@
 use crate::types::{Literal, Pattern};
 use crate::type_system::Typed;
 
+mod block;
 mod conditional;
 mod infix;
 mod method;
 mod prefix;
 
+pub use self::block::Block;
 pub use self::conditional::Conditional;
 pub use self::infix::Infix;
 pub use self::method::{Method, Call};
@@ -43,7 +45,7 @@ pub enum ExpressionKind {
     /// A definition of a method with a given name, signature and body.
     Method(Method),
     /// A first-class chunk of code that can be passed around as a value.
-    Block(Vec<Expression>),
+    Block(Block),
     Identifier,
 }
 
