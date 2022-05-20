@@ -11,9 +11,11 @@ use unicode_segmentation::UnicodeSegmentation;
 /// An object which translates a Magpie source string into a linear sequence of tokens.
 pub struct Lexer<'a> {
     position: usize,
-    // This variable is used to accumulate the parsed characters of the current
-    // structure into a string containing the entire lexeme.
+    /// This variable is used to accumulate the parsed characters of the current
+    /// structure into a string containing the entire lexeme.
     current_lexeme: String,
+    /// Tracks which line the current token is in.
+    current_line: usize,
     source: Vec<&'a str>,
 }
 
@@ -25,6 +27,7 @@ impl<'a> Lexer<'a> {
         Self {
             position: 0,
             current_lexeme: String::from(""),
+            current_line: 1,
             source,
         }
     }
