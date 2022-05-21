@@ -11,6 +11,7 @@ mod conditional;
 mod infix;
 mod list;
 mod literal;
+mod member;
 mod method;
 mod pattern;
 mod prefix;
@@ -23,6 +24,7 @@ pub use self::list::*;
 pub use self::literal::*;
 pub use self::pattern::*;
 pub use self::prefix::*;
+pub use self::member::*;
 pub use self::method::*;
 
 pub trait PrefixParselet {
