@@ -16,6 +16,7 @@ use parselets::{
     InfixOperatorParselet,
     ListParselet,
     LiteralParselet,
+    MemberParselet,
     MethodParselet,
     PairParselet,
     FieldPatternParselet,
@@ -101,6 +102,7 @@ impl Parser {
         infix_parselets.insert(TokenKind::Comma,  Rc::new(PairParselet) as Rc<dyn InfixParselet>);
         infix_parselets.insert(TokenKind::LeftParen,  Rc::new(CallParselet) as Rc<dyn InfixParselet>);
         infix_parselets.insert(TokenKind::Colon,  Rc::new(FieldPatternParselet) as Rc<dyn InfixParselet>);
+        infix_parselets.insert(TokenKind::Dot,  Rc::new(MemberParselet) as Rc<dyn InfixParselet>);
 
         Self {
             position: 0,
