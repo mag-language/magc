@@ -106,7 +106,7 @@ impl Pattern {
 
     fn linearize_value(&self, reference: ValuePattern, other: Pattern) -> LinearizeResult {
         if let Pattern::Value(ValuePattern { expression }) = other {
-            if reference.expression == expression {
+            if reference.expression.kind == expression.kind {
                 Ok(HashMap::new())
             } else {
                 Err(ParserError::NoMatch)
