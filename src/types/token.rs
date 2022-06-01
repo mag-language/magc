@@ -69,6 +69,7 @@ pub enum Keyword {
     Enum,
     If, 
     Import,
+	Interface,
     It,
     For,
     Match,
