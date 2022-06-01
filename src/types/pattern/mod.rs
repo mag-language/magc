@@ -49,6 +49,13 @@ impl Pattern {
             })),
         }
     }
+
+    pub fn get_precedence(&self) -> usize {
+        match &self {
+            Pattern::Value(_) => 1,
+            _                 => 0,
+        }
+    }
 }
 
 impl Typed for Pattern {
