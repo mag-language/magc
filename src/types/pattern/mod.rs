@@ -58,7 +58,12 @@ impl Typed for Pattern {
             Pattern::Tuple(_)    => Some(String::from("TuplePattern")),
             Pattern::Value(ValuePattern {
                 expression,
-            })    => format!("ValuePattern<{}>", expression.get_type()),
+            })    => {
+                match expression.get_type() {
+                    Some(type_id) => Some(format!("ValuePattern<{}>", type_id)),
+                    None          => Some(format!("ValuePattern")),
+                }
+            },
             Pattern::Variable(
                 VariablePattern {
                     name: _,
