@@ -20,7 +20,7 @@ pub use self::value::*;
 pub use self::pair::*;
 pub use self::variable::*;
 
-pub type LinearizeResult = Result<HashMap<String, Box<Expression>>, ParserError>;
+pub type LinearizeResult = Result<HashMap<VariablePattern, Box<Expression>>, ParserError>;
 
 /// A pattern that can be matched with an [`Expression`] to enable complex flow control
 /// and full destructuring pattern matching, which increases the flexibility and 
@@ -49,13 +49,6 @@ impl Pattern {
             })),
         }
     }
-
-    pub fn get_precedence(&self) -> usize {
-        match &self {
-            Pattern::Value(_) => 1,
-            _                 => 0,
-        }
-    }
 }
 
 impl Typed for Pattern {
@@ -65,7 +58,7 @@ impl Typed for Pattern {
             Pattern::Tuple(_)    => Some(String::from("TuplePattern")),
             Pattern::Value(ValuePattern {
                 expression,
-            })    => expression.get_type(),
+            })    => format!("ValuePattern<{}>", expression.get_type()),
             Pattern::Variable(
                 VariablePattern {
                     name: _,
@@ -90,6 +83,20 @@ impl Pattern {
             Pattern::Value(reference)    => self.linearize_value(reference.clone(), other),
             Pattern::Variable(reference) => self.linearize_variable(reference.clone(), other),
             Pattern::Pair(reference)     => self.linearize_pair(reference.clone(), other),
+        }
+    }
+
+    pub fn matches_with(&self, other: Pattern) -> bool {
+        match self.linearize(other) {
+            Ok(_)  => true,
+            Err(_) => false,
+        }
+    }
+
+    pub fn get_precedence(&self) -> usize {
+        match self {
+            Pattern::Value(_) => 2,
+            _                 => 1,
         }
     }
 
@@ -130,7 +137,7 @@ impl Pattern {
         if let Some(name) = reference.name {
             // Extract value into environment and skip type checking for now.
             if let Pattern::Value(ValuePattern { expression }) = other {
-                variables.insert(name, expression);
+                variables.insert(VariablePattern { name: Some(name), type_id: None }, expression);
             } else {
                 // TODO: add proper error handling here!
                 return Err(ParserError::NoMatch)
