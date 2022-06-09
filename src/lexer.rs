@@ -175,6 +175,9 @@ impl<'a> Lexer<'a> {
             "with"      => TokenKind::Keyword(Keyword::With),
             "while"     => TokenKind::Keyword(Keyword::While),
 
+            "true"      => TokenKind::Literal(Literal::Boolean),
+            "false"     => TokenKind::Literal(Literal::Boolean),
+
             _ => TokenKind::Identifier,
         }
     }
