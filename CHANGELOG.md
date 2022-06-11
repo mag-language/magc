@@ -28,11 +28,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 ## Unreleased
+
+## 0.2.0
 ### Added
+- Documentation comments for the members of the `Parser` struct.
+- A new member parselet which parses expressions like `person.favoriteColor`.
 - A trait called `Typed` which defines an interface for anything that has a type.
 - Various implementations of the former trait so we can retrieve the types of any `Expression`, `Literal` or `Pattern`.
 - A new parser error called `NoMatch` which is returned if two patterns don't match.
-- Start using human-readable changelogs.
+- A new parser error called `UnexpectedType` which is returned if there is a type mismatch.
+- Various implementations of the `linearize` method to enable destructuring pattern matching.
+- Human-readable changelogs.
 
 ### Removed
 - The method  `can_assign_from` in the `Typed` trait has been temporarily commented out.
+
+### Fixed
+- Make sure boolean values are accounted for in the `parse_identifier_or_keyword` method.
