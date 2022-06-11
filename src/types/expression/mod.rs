@@ -35,7 +35,7 @@ pub enum ExpressionKind {
     /// A value, tuple, field or variable pattern.
     Pattern(Pattern),
     /// A reference to a type, like `Int32`.
-    Type,
+    Type(String),
     /// An expression with a prefix operator.
     Prefix(Prefix),
     /// Two expressions with an infix operator in between.
@@ -76,7 +76,7 @@ impl Typed for Expression {
             ExpressionKind::List(_)          => Some(String::from("ListExpression")),
             ExpressionKind::Literal(literal) => literal.get_type(),
             ExpressionKind::Pattern(pattern) => pattern.get_type(),
-            ExpressionKind::Type             => Some(self.lexeme.clone()),
+            ExpressionKind::Type(type_id)    => Some(type_id.clone()),
             ExpressionKind::Prefix(_)        => Some(String::from("PrefixExpression")),
             ExpressionKind::Infix(_)         => Some(String::from("InfixExpression")),
             ExpressionKind::Call(_)          => Some(String::from("CallExpression")),
