@@ -1,5 +1,6 @@
-use crate::types::{Literal, Pattern};
+use crate::types::{Literal, Pattern, ValuePattern};
 use crate::type_system::Typed;
+use crate::parser::ParserError;
 
 mod block;
 mod conditional;
@@ -47,6 +48,26 @@ pub enum ExpressionKind {
     /// A first-class chunk of code that can be passed around as a value.
     Block(Block),
     Identifier,
+}
+
+impl Expression {
+    pub fn pattern_or_value_pattern(&self) -> Result<Pattern, ParserError> {
+        match self.kind.clone() {
+            ExpressionKind::Pattern(pattern) => Ok(pattern),
+
+            _ => Ok(Pattern::Value(ValuePattern {
+                expression: Box::new(self.clone()),
+            })),
+        }
+    }
+
+    pub fn expect_pattern(&self) -> Result<Pattern, ParserError> {
+        match self.kind.clone() {
+            ExpressionKind::Pattern(pattern) => Ok(pattern),
+
+            _ => Err(ParserError::ExpectedPattern),
+        }
+    }
 }
 
 impl Typed for Expression {
