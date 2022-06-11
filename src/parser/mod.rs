@@ -118,6 +118,7 @@ impl Parser {
             position: 0,
             prefix_parselets,
             infix_parselets,
+            current_lexeme: format!(""),
             source,
         }
     }
@@ -138,7 +139,11 @@ impl Parser {
         &mut self,
         precedence: usize,
     ) -> Result<Expression, ParserError> {
-        let token = self.consume();
+        self.current_lexeme = format!("");
+        let token           = self.consume();
+        let start_pos       = token.start_pos;
+        let mut end_pos     = token.end_pos;
+        //self.current_lexeme.push_str(token.lexeme.as_str());
 
         // Let's see if we find a prefix parselet for the current token.
         if let Some(prefix) = self.prefix_parselets.get(&token.kind) {
@@ -147,7 +152,14 @@ impl Parser {
             let mut left = prefix.parse(self, token.clone())?;
 
             if self.eof() {
-                return Ok(left)
+                end_pos = token.end_pos;
+
+                return Ok(Expression {
+                    kind: left.kind,
+                    lexeme: self.current_lexeme.clone(),
+                    start_pos,
+                    end_pos,
+                })
             }
 
             // This is the bit where real magic happens. This conditional check right here
@@ -155,15 +167,23 @@ impl Parser {
             // associativity so we can do math and generally have useful operators.
             while !self.eof() && precedence < self.get_precedence()? {
                 let token = self.peek()?;
+                end_pos = token.end_pos;
 
                 // Hand control over to the infix parselet if there is one, and 
                 // insert the previously parsed expression into this structure.
                 if let Some(infix) = self.infix_parselets.get(&token.kind).cloned() {
+                    self.current_lexeme.push_str(token.lexeme.as_str());
+
                     left = infix.parse(self, Box::new(left.clone()), token)?;
                 }
             }
 
-            Ok(left)
+            Ok(Expression {
+                kind: left.kind,
+                lexeme: self.current_lexeme.clone(),
+                start_pos,
+                end_pos,
+            })
         } else {
             return Err(ParserError::MissingPrefixParselet(token.clone().kind))
         }
