@@ -35,13 +35,13 @@ impl InfixParselet for MemberParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
         parser.advance();
 
+        let right = parser.parse_expression(PREC_CALL)?;
+
         let name_opt = self.expect_typeless_variable_pattern(
-            Box::new(parser.parse_expression(PREC_CALL)?)
+            Box::new(right)
         )?;
 
-        let signature = Some(Pattern::Value(ValuePattern {
-            expression: left,
-        }));
+        let signature = Some(left.expect_pattern()?);
 
         if let Some(name) = name_opt {
             Ok(Expression {
@@ -60,5 +60,35 @@ impl InfixParselet for MemberParselet {
 
     fn get_precedence(&self) -> usize {
         PREC_CALL
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::types::{Expression, ExpressionKind, Call, Pattern, VariablePattern};
+    use crate::lexer::Lexer;
+    use crate::parser::Parser;
+
+    #[test]
+    fn parses_getter_into_call() {
+        let instance = "person";
+        let member   = "favoriteColor";
+
+        assert_eq!(
+            Ok(vec![Expression {
+                kind: ExpressionKind::Call(Call {
+                    name: member.to_string(),
+                    signature: Some(Pattern::Variable(VariablePattern {
+                        name: Some(instance.to_string()),
+                        type_id: None,
+                    })),
+                }),
+                lexeme: format!("{}.{}", instance, member),
+                start_pos: 0,
+                end_pos:   instance.len() + member.len(),
+            }]),
+
+            Parser::new(Lexer::new(format!("{}.{}", instance, member).as_str()).parse()).parse(),
+        );
     }
 }
