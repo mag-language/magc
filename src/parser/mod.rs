@@ -55,11 +55,21 @@ pub static PREC_UNARY: usize = 90;
 /// The precedence `100` for method calls, like `fib(0)`.
 pub static PREC_CALL: usize = 100;
 
-/// Turns a linear token stream into a tree of Mag expressions.
+/// Converts a linear token stream into a tree of Mag expressions.
 pub struct Parser {
+    /// The current position in the token array.
     position: usize,
+    /// Maps [`TokenKind`]s to pieces of code able to parse a specific prefix expression.
     prefix_parselets: HashMap<TokenKind, &'static dyn PrefixParselet>,
+    /// Maps [`TokenKind`]s to pieces of code able to parse a specific infix expression.
     infix_parselets:  HashMap<TokenKind, Rc<dyn InfixParselet>>,
+    /// Accumulates all lexemes of the expression being parsed into a single string.
+    ///
+    /// At the beginning of the `parse_expression` method, this variable is reset. Any lexemes
+    /// contained in the parsed tokens will then be added after they have been retrieved, and the
+    /// final value is then used as the new lexeme for the parsed expression.
+    current_lexeme: String,
+    /// The input sequence from which expressions are constructed.
     source: Vec<Token>,
 }
 
