@@ -70,7 +70,7 @@ pub struct Parser {
     /// final value is then used as the new lexeme for the parsed expression.
     current_lexeme: String,
     /// The input sequence from which expressions are constructed.
-    source: Vec<Token>,
+    tokens: Vec<Token>,
 }
 
 fn infix_operator(precedence: usize) -> Rc<dyn InfixParselet> {
@@ -80,7 +80,7 @@ fn infix_operator(precedence: usize) -> Rc<dyn InfixParselet> {
 }
 
 impl Parser {
-    pub fn new(source: Vec<Token>) -> Self {
+    pub fn new(tokens: Vec<Token>) -> Self {
         let mut prefix_parselets = HashMap::new();
         let mut infix_parselets  = HashMap::new();
 
@@ -119,7 +119,7 @@ impl Parser {
             prefix_parselets,
             infix_parselets,
             current_lexeme: format!(""),
-            source,
+            tokens,
         }
     }
 
@@ -143,7 +143,7 @@ impl Parser {
         let token           = self.consume();
         let start_pos       = token.start_pos;
         let mut end_pos     = token.end_pos;
-        //self.current_lexeme.push_str(token.lexeme.as_str());
+        self.current_lexeme.push_str(token.lexeme.as_str());
 
         // Let's see if we find a prefix parselet for the current token.
         if let Some(prefix) = self.prefix_parselets.get(&token.kind) {
@@ -158,7 +158,7 @@ impl Parser {
                     kind: left.kind,
                     lexeme: self.current_lexeme.clone(),
                     start_pos,
-                    end_pos,
+                    end_pos: start_pos + self.current_lexeme.len(),
                 })
             }
 
@@ -182,7 +182,7 @@ impl Parser {
                 kind: left.kind,
                 lexeme: self.current_lexeme.clone(),
                 start_pos,
-                end_pos,
+                end_pos: start_pos + self.current_lexeme.len(),
             })
         } else {
             return Err(ParserError::MissingPrefixParselet(token.clone().kind))
@@ -200,7 +200,7 @@ impl Parser {
 
     /// Consume a token and advance the pointer.
     fn consume(&mut self) -> Token {
-        let token = self.source[self.position].clone();
+        let token = self.tokens[self.position].clone();
         self.advance();
 
         token
@@ -208,7 +208,7 @@ impl Parser {
 
     /// Consume a token with the given TokenKind, or return an error.
     fn consume_expect(&mut self, kind: TokenKind) -> Result<Token, ParserError> {
-        let token = self.source[self.position].clone();
+        let token = self.tokens[self.position].clone();
 
         if token.kind == kind {
             self.advance();
@@ -239,14 +239,14 @@ impl Parser {
 
     fn peek(&self) -> Result<Token, ParserError> {
         if !self.eof() {
-            Ok(self.source[self.position].clone())
+            Ok(self.tokens[self.position].clone())
         } else {
             Err(ParserError::UnexpectedEOF)
         }
     }
 
     fn eof(&self) -> bool {
-        self.position == self.source.len()
+        self.position == self.tokens.len()
     }
 }
 
