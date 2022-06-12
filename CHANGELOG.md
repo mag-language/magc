@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+- An error where types starting with `U` would not be tokenized correctly.
+
 ## 0.2.0
 ### Added
 - Documentation comments for the members of the `Parser` struct.
