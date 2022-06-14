@@ -3,6 +3,14 @@ use std::collections::HashMap;
 
 pub type Environment<T> = HashMap<String, T>;
 
+mod errors;
+mod type_system;
+mod multimethod;
+
+pub use self::errors::ErrorReporter;
+pub use self::multimethod::Multimethod;
+pub use self::type_system::TypeSystem;
+
 pub struct Compiler {
     /// The global namespace for variables.
     variables:    Environment<Expression>,
@@ -12,10 +20,6 @@ pub struct Compiler {
     types:        TypeSystem,
     errors:       ErrorReporter,
 }
-
-pub struct TypeSystem;
-pub struct ErrorReporter;
-pub struct Multimethod;
 
 pub struct InfixOperatorDefinition {
     pub precedence: usize,
