@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+- A first implementation of the `Compiler` struct which coordinates multiple components.
+
 ### Fixed
 - An error where types starting with `U` would not be tokenized correctly.
 
