@@ -11,9 +11,6 @@ use unicode_segmentation::UnicodeSegmentation;
 /// An object which translates a Magpie source string into a linear sequence of tokens.
 pub struct Lexer<'a> {
     position: usize,
-    /// This variable is used to accumulate the parsed characters of the current
-    /// structure into a string containing the entire lexeme.
-    current_lexeme: String,
     /// Tracks which line the current token is in.
     current_line: usize,
     source: Vec<&'a str>,
@@ -26,7 +23,6 @@ impl<'a> Lexer<'a> {
 
         Self {
             position: 0,
-            current_lexeme: String::from(""),
             current_line: 1,
             source,
         }
@@ -37,15 +33,10 @@ impl<'a> Lexer<'a> {
         let mut tokens = vec![];
 
         while !self.eof() {
-            // We are starting a new lexeme, so we start over from a blank slate.
-            self.current_lexeme = String::from("");
 
             // Fetch our character and set the starting point of the lexeme.
             let character = self.source[self.position];
             let start_pos = self.position;
-
-            // Add the current character to our lexeme string.
-            self.current_lexeme.push_str(&character);
 
             let kind = match character {
                 "!" => self.single_token(TokenKind::Bang),
@@ -112,7 +103,7 @@ impl<'a> Lexer<'a> {
 
             tokens.push(Token {
                 kind,
-                lexeme: self.current_lexeme.clone(),
+                
                 start_pos,
                 end_pos
             });
@@ -145,7 +136,6 @@ impl<'a> Lexer<'a> {
 
                 _ => {
                     self.advance();
-                    self.current_lexeme.push_str(&character);
                     string.push_str(character);
                 },
             }
@@ -191,7 +181,6 @@ impl<'a> Lexer<'a> {
         // Start parsing the comment.
         while !self.eof() {
             let character =  self.source[self.position];
-            self.current_lexeme.push_str(&character);
 
             match character {
                 "\n" => break,
@@ -288,7 +277,6 @@ impl<'a> Lexer<'a> {
 
         while !self.eof() {
             let character =  self.source[self.position];
-            self.current_lexeme.push_str(&character);
 
             match character {
                 "\"" => {
@@ -348,7 +336,6 @@ mod tests {
             lexer.parse(),
             vec![Token {
                 kind: TokenKind::Comment,
-                lexeme: "// This is a single line comment.".to_string(),
                 start_pos: 0,
                 end_pos: 33,
             }]
@@ -363,7 +350,6 @@ mod tests {
             lexer.parse(),
             vec![Token {
                 kind: TokenKind::Literal(Literal::Int),
-                lexeme: "1453".to_string(),
                 start_pos: 0,
                 end_pos: 4,
             }]
@@ -378,7 +364,6 @@ mod tests {
             lexer.parse(),
             vec![Token {
                 kind: TokenKind::Literal(Literal::Float),
-                lexeme: "12.38475".to_string(),
                 start_pos: 0,
                 end_pos: 8,
             }]
@@ -393,7 +378,6 @@ mod tests {
             lexer.parse(),
             vec![Token {
                 kind: TokenKind::Type,
-                lexeme: "Int32".to_string(),
                 start_pos: 0,
                 end_pos: 5,
             }]
