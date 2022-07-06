@@ -218,7 +218,6 @@ impl<'a> Lexer<'a> {
                 | "5" | "6" | "7" | "8" | "9"
                  => {
                     self.advance();
-                    self.current_lexeme.push_str(&character);
                     type_string.push_str(character);
                 },
 
