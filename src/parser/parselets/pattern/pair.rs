@@ -56,7 +56,7 @@ impl InfixParselet for PairParselet {
                 left: Box::new(self.pattern_or_value_pattern(left)?),
                 right: Box::new(self.pattern_or_value_pattern(Box::new(right))?),
             })),
-            lexeme:    token.lexeme,
+            
             start_pos: token.start_pos,
             end_pos:   token.end_pos,
         })

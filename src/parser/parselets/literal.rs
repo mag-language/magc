@@ -19,7 +19,7 @@ impl PrefixParselet for LiteralParselet {
 
         Ok(Expression {
             kind,
-            lexeme:    token.lexeme,
+            
             start_pos: token.start_pos,
             end_pos:   token.end_pos,
         })

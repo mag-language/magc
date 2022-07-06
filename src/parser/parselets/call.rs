@@ -67,7 +67,7 @@ impl InfixParselet for CallParselet {
                         name,
                         signature: Some(self.pattern_or_value_pattern(Box::new(expr))?),
                     }),
-                    lexeme:    token.lexeme,
+                    
                     start_pos: token.start_pos,
                     end_pos:   token.end_pos,
                 })
@@ -79,7 +79,7 @@ impl InfixParselet for CallParselet {
                 name,
                 signature: None,
             }),
-            lexeme:    token.lexeme,
+            
             start_pos: token.start_pos,
             end_pos:   token.end_pos,
         })

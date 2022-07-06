@@ -10,7 +10,7 @@ pub struct Token {
 	// What type of token this object represents.
 	pub kind:   TokenKind,
 	/// The string this token was parsed from.
-	pub lexeme: String,
+	
 	pub start_pos:   usize,
 	pub end_pos:   usize,
 }

@@ -49,7 +49,7 @@ impl InfixParselet for MemberParselet {
                     name,
                     signature,
                 }),
-                lexeme:    token.lexeme,
+                
                 start_pos: token.start_pos,
                 end_pos:   token.end_pos,
             })
@@ -83,7 +83,7 @@ mod tests {
                         type_id: None,
                     })),
                 }),
-                lexeme: format!("{}.{}", instance, member),
+                
                 start_pos: 0,
                 end_pos:   instance.len() + member.len(),
             }]),

@@ -38,7 +38,7 @@ impl PrefixParselet for TuplePatternParselet {
             kind: ExpressionKind::Pattern(
                 Pattern::Tuple(TuplePattern { child }),
             ),
-            lexeme:    token.lexeme,
+            
             start_pos: token.start_pos,
             end_pos:   token.end_pos,
         })

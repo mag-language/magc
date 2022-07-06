@@ -147,7 +147,7 @@ impl Parser {
 
                 return Ok(Expression {
                     kind: left.kind,
-                    lexeme: "".to_string(),
+                    
                     start_pos,
                     end_pos,
                 })
@@ -170,7 +170,7 @@ impl Parser {
 
             Ok(Expression {
                 kind: left.kind,
-                lexeme: "".to_string(),
+                
                 start_pos,
                 end_pos,
             })
@@ -279,13 +279,13 @@ mod tests {
                         kind: ExpressionKind::Literal(
                             Literal::Int,
                         ),
-                        lexeme: "1".to_string(),
+                        
                         start_pos: 0,
                         end_pos: 1,
                     }),
                     operator: Token {
                         kind: TokenKind::Plus,
-                        lexeme: "+".to_string(),
+                        
                         start_pos: 2,
                         end_pos: 3,
                     },
@@ -293,12 +293,12 @@ mod tests {
                         kind: ExpressionKind::Literal(
                             Literal::Int,
                         ),
-                        lexeme: "2".to_string(),
+                        
                         start_pos: 4,
                         end_pos: 5,
                     }),
                 }),
-                lexeme: "1 + 2".to_string(),
+                
                 start_pos: 2,
                 end_pos: 3,
             }])

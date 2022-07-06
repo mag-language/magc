@@ -63,7 +63,7 @@ impl InfixParselet for FieldPatternParselet {
                 name: n,
                 value: Box::new(self.pattern_or_value_pattern(right)?),
             })),
-            lexeme:    token.lexeme,
+            
             start_pos: token.start_pos,
             end_pos:   token.end_pos,
         })

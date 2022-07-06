@@ -26,7 +26,7 @@ impl PrefixParselet for ConditionalParselet {
                     }),
                     start_pos: 0,
                     end_pos: 0,
-                    lexeme: format!("{}", token.lexeme),
+                    
                 })
             } else {
                 parser.consume_expect(TokenKind::Keyword(Keyword::End))?;
@@ -39,7 +39,7 @@ impl PrefixParselet for ConditionalParselet {
                     }),
                     start_pos: 0,
                     end_pos: 0,
-                    lexeme: format!("{}", token.lexeme),
+                    
                 })
             }
         } else {
@@ -51,7 +51,7 @@ impl PrefixParselet for ConditionalParselet {
                 }),
                 start_pos: 0,
                 end_pos: 0,
-                lexeme: format!("{}", token.lexeme),
+                
             })
         }
     }

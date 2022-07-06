@@ -72,7 +72,7 @@ impl PrefixParselet for MethodParselet {
             kind,
             start_pos: 0,
             end_pos: 0,
-            lexeme: format!("{}", token.lexeme),
+            
         })
     }
 }

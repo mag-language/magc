@@ -50,7 +50,7 @@ impl PrefixParselet for VariablePatternParselet {
 
             Ok(Expression {
                 kind:      ExpressionKind::Pattern(pattern),
-                lexeme:    token.lexeme,
+                
                 start_pos: token.start_pos,
                 end_pos:   token.end_pos,
             })
@@ -60,7 +60,7 @@ impl PrefixParselet for VariablePatternParselet {
                     name,
                     type_id: None,
                 })),
-                lexeme:    token.lexeme,
+                
                 start_pos: token.start_pos,
                 end_pos:   token.end_pos,
             })
@@ -85,7 +85,7 @@ mod tests {
                     name: Some("name".to_string()),
                     type_id: Some("String".to_string()),
                 }),
-                lexeme:    "name".to_string(),
+                
                 start_pos: 0,
                 end_pos:   4,
             }),
@@ -105,7 +105,7 @@ mod tests {
                     name: None,
                     type_id: None,
                 }),
-                lexeme:    "_".to_string(),
+                
                 start_pos: 0,
                 end_pos:   1,
             }),
@@ -125,7 +125,7 @@ mod tests {
                     name: None,
                     type_id: Some("Int".to_string()),
                 }),
-                lexeme:    "_".to_string(),
+                
                 start_pos: 0,
                 end_pos:   1,
             }),
@@ -145,7 +145,7 @@ mod tests {
                     name: Some("lexer".to_string()),
                     type_id: None,
                 }),
-                lexeme:    "lexer".to_string(),
+                
                 start_pos: 0,
                 end_pos:   5,
             }),

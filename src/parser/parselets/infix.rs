@@ -25,7 +25,7 @@ impl InfixParselet for InfixOperatorParselet {
                 operator: token.clone(),
                 right: Box::new(right),
             }),
-            lexeme:    token.lexeme,
+            
             start_pos: token.start_pos,
             end_pos:   token.end_pos,
         })

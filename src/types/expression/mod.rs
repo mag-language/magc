@@ -17,7 +17,7 @@ pub use self::prefix::Prefix;
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Expression {
     pub kind: ExpressionKind,
-    pub lexeme: String,
+    
     pub start_pos: usize,
     pub end_pos: usize,
 }
