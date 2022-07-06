@@ -63,12 +63,6 @@ pub struct Parser {
     prefix_parselets: HashMap<TokenKind, &'static dyn PrefixParselet>,
     /// Maps [`TokenKind`]s to pieces of code able to parse a specific infix expression.
     infix_parselets:  HashMap<TokenKind, Rc<dyn InfixParselet>>,
-    /// Accumulates all lexemes of the expression being parsed into a single string.
-    ///
-    /// At the beginning of the `parse_expression` method, this variable is reset. Any lexemes
-    /// contained in the parsed tokens will then be added after they have been retrieved, and the
-    /// final value is then used as the new lexeme for the parsed expression.
-    current_lexeme: String,
     /// The input sequence from which expressions are constructed.
     tokens: Vec<Token>,
 }
@@ -118,7 +112,6 @@ impl Parser {
             position: 0,
             prefix_parselets,
             infix_parselets,
-            current_lexeme: format!(""),
             tokens,
         }
     }
@@ -139,11 +132,9 @@ impl Parser {
         &mut self,
         precedence: usize,
     ) -> Result<Expression, ParserError> {
-        self.current_lexeme = format!("");
         let token           = self.consume();
         let start_pos       = token.start_pos;
         let mut end_pos     = token.end_pos;
-        self.current_lexeme.push_str(token.lexeme.as_str());
 
         // Let's see if we find a prefix parselet for the current token.
         if let Some(prefix) = self.prefix_parselets.get(&token.kind) {
@@ -156,9 +147,9 @@ impl Parser {
 
                 return Ok(Expression {
                     kind: left.kind,
-                    lexeme: self.current_lexeme.clone(),
+                    lexeme: "".to_string(),
                     start_pos,
-                    end_pos: start_pos + self.current_lexeme.len(),
+                    end_pos,
                 })
             }
 
@@ -172,7 +163,6 @@ impl Parser {
                 // Hand control over to the infix parselet if there is one, and 
                 // insert the previously parsed expression into this structure.
                 if let Some(infix) = self.infix_parselets.get(&token.kind).cloned() {
-                    self.current_lexeme.push_str(token.lexeme.as_str());
 
                     left = infix.parse(self, Box::new(left.clone()), token)?;
                 }
@@ -180,9 +170,9 @@ impl Parser {
 
             Ok(Expression {
                 kind: left.kind,
-                lexeme: self.current_lexeme.clone(),
+                lexeme: "".to_string(),
                 start_pos,
-                end_pos: start_pos + self.current_lexeme.len(),
+                end_pos,
             })
         } else {
             return Err(ParserError::MissingPrefixParselet(token.clone().kind))
