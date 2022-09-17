@@ -141,7 +141,7 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        match self.current_lexeme.as_str() {
+        match string.as_str() {
             "and"       => TokenKind::Keyword(Keyword::And),
             "as"        => TokenKind::Keyword(Keyword::As),
             "catch"     => TokenKind::Keyword(Keyword::Catch),
@@ -250,7 +250,6 @@ impl<'a> Lexer<'a> {
                 | "9"
                 | "." => {
                     self.advance();
-                    self.current_lexeme.push_str(&character);
                     number_string.push_str(character);
                 },
 
