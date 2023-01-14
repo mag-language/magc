@@ -23,7 +23,10 @@
 //! of expressions representing the structure of the original source string. In case the compiler encounters 
 //! some form of invalid code, it will return an error which is then reported by the runtime.
 
+#![feature(type_ascription)]
+
 pub mod compiler;
+pub mod helpers;
 pub mod lexer;
 pub mod parser;
 pub mod types;
