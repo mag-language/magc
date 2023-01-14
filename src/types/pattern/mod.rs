@@ -4,6 +4,8 @@ use crate::types::{
     Environment,
 };
 
+use crate::parser::Parser;
+
 use crate::type_system::Typed;
 use crate::parser::{ParserError};
 use std::collections::HashMap;
@@ -81,18 +83,18 @@ impl Pattern {
     /// This function recursively calls itself and the respective pattern methods
     /// to evaluate whether a tree of patterns matches with another. A typeless
     /// variable matches any value pattern, for example.
-    pub fn linearize(&self, other: Pattern) -> LinearizeResult {
+    pub fn linearize(&self, parser: &mut Parser, other: Pattern) -> LinearizeResult {
         match self {
-            Pattern::Field(reference)    => self.linearize_field(reference.clone(), other),
-            Pattern::Tuple(reference)    => self.linearize_tuple(reference.clone(), other),
-            Pattern::Value(reference)    => self.linearize_value(reference.clone(), other),
+            Pattern::Field(reference)    => self.linearize_field(parser, reference.clone(), other),
+            Pattern::Tuple(reference)    => self.linearize_tuple(parser, reference.clone(), other),
+            Pattern::Value(reference)    => self.linearize_value(parser, reference.clone(), other),
             Pattern::Variable(reference) => self.linearize_variable(reference.clone(), other),
-            Pattern::Pair(reference)     => self.linearize_pair(reference.clone(), other),
+            Pattern::Pair(reference)     => self.linearize_pair(parser, reference.clone(), other),
         }
     }
 
-    pub fn matches_with(&self, other: Pattern) -> bool {
-        match self.linearize(other) {
+    pub fn matches_with(&self, parser: &mut Parser, other: Pattern) -> bool {
+        match self.linearize(parser: &mut Parser, other) {
             Ok(_)  => true,
             Err(_) => false,
         }
@@ -105,28 +107,38 @@ impl Pattern {
         }
     }
 
-    fn linearize_field(&self, reference: FieldPattern, other: Pattern) -> LinearizeResult {
+    fn linearize_field(&self, parser: &mut Parser, reference: FieldPattern, other: Pattern) -> LinearizeResult {
         if let Pattern::Field(given) = other {
             if given.name != reference.name { return Err(ParserError::NoMatch) }
 
-            given.value.linearize(*reference.value)
+            given.value.linearize(parser, *reference.value)
         } else {
             Err(ParserError::NoMatch)
         }
     }
 
-    fn linearize_tuple(&self, reference: TuplePattern, other: Pattern) -> LinearizeResult {
+    fn linearize_tuple(&self, parser: &mut Parser, reference: TuplePattern, other: Pattern) -> LinearizeResult {
         if let Pattern::Tuple(TuplePattern { child: other_pattern }) = other {
-            reference.child.linearize(*other_pattern)
+            reference.child.linearize(parser, *other_pattern)
         } else {
             Err(ParserError::NoMatch)
         }
     }
 
-    fn linearize_value(&self, reference: ValuePattern, other: Pattern) -> LinearizeResult {
+    fn linearize_value(&self, parser: &mut Parser, reference: ValuePattern, other: Pattern) -> LinearizeResult {
+        let reference_lexeme = parser.get_lexeme(
+            reference.expression.start_pos,
+            reference.expression.end_pos,
+        )?;
+
         if let Pattern::Value(ValuePattern { expression }) = other {
+            let given_lexeme = parser.get_lexeme(
+                expression.start_pos,
+                expression.end_pos,
+            )?;
+
             if reference.expression.kind == expression.kind
-                    && reference.expression.lexeme == expression.lexeme {
+                    && reference_lexeme == given_lexeme {
                 Ok(HashMap::new())
             } else {
                 Err(ParserError::NoMatch)
@@ -152,10 +164,10 @@ impl Pattern {
         Ok(variables)
     }
 
-    fn linearize_pair(&self, reference: PairPattern, other: Pattern) -> LinearizeResult {
+    fn linearize_pair(&self, parser: &mut Parser, reference: PairPattern, other: Pattern) -> LinearizeResult {
         if let Pattern::Pair(PairPattern { left, right }) = other {
-            let mut left_map = reference.left.linearize(*left)?;
-            let right_map = reference.right.linearize(*right)?;
+            let mut left_map = reference.left.linearize(parser, *left)?;
+            let right_map = reference.right.linearize(parser, *right)?;
 
             left_map.extend(right_map);
 
