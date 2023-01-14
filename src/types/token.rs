@@ -9,16 +9,8 @@ use crate::type_system::Typed;
 pub struct Token {
 	// What type of token this object represents.
 	pub kind:   TokenKind,
-	/// The string this token was parsed from.
-	
 	pub start_pos:   usize,
 	pub end_pos:   usize,
-}
-
-impl std::fmt::Display for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.lexeme)
-    }
 }
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
