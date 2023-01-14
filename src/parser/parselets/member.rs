@@ -88,7 +88,10 @@ mod tests {
                 end_pos:   instance.len() + member.len(),
             }]),
 
-            Parser::new(Lexer::new(format!("{}.{}", instance, member).as_str()).parse()).parse(),
+            Parser::new(
+                crate::helpers::convert_to_graphemes("person.favoriteColor"),
+                Lexer::new(format!("{}.{}", instance, member).as_str()).parse(),
+            ).parse(),
         );
     }
 }
