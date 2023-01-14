@@ -23,10 +23,12 @@ impl PrefixParselet for VariablePatternParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
         let name;
 
-        if token.lexeme == "_".to_string() {
+        let lexeme = parser.get_lexeme(token.start_pos, token.end_pos)?;
+
+        if lexeme == "_".to_string() {
             name = None;
         } else {
-            name = Some(token.lexeme.clone());
+            name = Some(lexeme.clone());
         }
 
         if !parser.eof() {
@@ -38,7 +40,7 @@ impl PrefixParselet for VariablePatternParselet {
 
                     Pattern::Variable(VariablePattern {
                         name,
-                        type_id: Some(next_token.lexeme),
+                        type_id: Some(lexeme),
                     })
                 },
 
