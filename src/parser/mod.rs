@@ -65,6 +65,8 @@ pub struct Parser {
     infix_parselets:  HashMap<TokenKind, Rc<dyn InfixParselet>>,
     /// The input sequence from which expressions are constructed.
     tokens: Vec<Token>,
+    /// The original sequence of UTF-8 graphemes, or characters in how a human would understand it.
+    source: Vec<&'static str>,
 }
 
 fn infix_operator(precedence: usize) -> Rc<dyn InfixParselet> {
@@ -74,7 +76,7 @@ fn infix_operator(precedence: usize) -> Rc<dyn InfixParselet> {
 }
 
 impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Self {
+    pub fn new(source: Vec<&'static str>, tokens: Vec<Token>) -> Self {
         let mut prefix_parselets = HashMap::new();
         let mut infix_parselets  = HashMap::new();
 
@@ -113,6 +115,7 @@ impl Parser {
             prefix_parselets,
             infix_parselets,
             tokens,
+            source,
         }
     }
 
@@ -125,6 +128,24 @@ impl Parser {
         }
 
         Ok(expressions)
+    }
+
+    // Retrieve a string from the original source at the given position
+    pub fn get_lexeme(&self, start: usize, end: usize) -> Result<String, ParserError> {
+        let mut string = String::new();
+
+        if end < self.source.len() {
+            let mut i = start;
+
+            while i < end {
+                string.push_str(self.source[i].clone());
+                i += 1;
+            }
+
+            Ok(string)
+        } else {
+            Err(ParserError::UnexpectedEOF)
+        }
     }
 
     /// Parse a single expression with the given precedence.
@@ -269,7 +290,10 @@ mod tests {
 
     #[test]
     fn parse_infix_plus() {
-        let mut parser = Parser::new(Lexer::new("1 + 2").parse());
+        let mut parser = Parser::new(
+            crate::helpers::convert_to_graphemes("1 + 2"),
+            Lexer::new("1 + 2",
+        ).parse());
 
         assert_eq!(
             parser.parse(),
