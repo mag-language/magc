@@ -18,8 +18,8 @@ use crate::types::{
 pub struct ListParselet;
 
 impl PrefixParselet for ListParselet {
-    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
-        let mut kind;
+    fn parse(&self, parser: &mut Parser, _token: Token) -> ParserResult {
+        let kind;
 
         if parser.peek()?.kind == TokenKind::RightBracket {
             kind = ExpressionKind::List(None);

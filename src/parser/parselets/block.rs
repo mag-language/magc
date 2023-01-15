@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 pub struct BlockParselet;
 
 impl PrefixParselet for BlockParselet {
-    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
+    fn parse(&self, parser: &mut Parser, _token: Token) -> ParserResult {
         let mut children = vec![];
 
         while !parser.eof() {

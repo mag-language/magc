@@ -6,7 +6,7 @@ use crate::types::{Expression, ExpressionKind, Conditional, Token, TokenKind, Ke
 pub struct ConditionalParselet;
 
 impl PrefixParselet for ConditionalParselet {
-    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
+    fn parse(&self, parser: &mut Parser, _token: Token) -> ParserResult {
         let condition = Box::new(parser.parse_expression(0)?);
         parser.consume_expect(TokenKind::Keyword(Keyword::Then))?;
         let then_arm = Box::new(parser.parse_expression(0)?);

@@ -1,9 +1,5 @@
 //! A set of utilities which enable static type checking in Mag.
 
-use crate::types::{
-    Expression,
-};
-
 /// An interface which is implemented by anything that has a type.
 pub trait Typed {
     // / Can we assign a value of the given type to a variable of this type?

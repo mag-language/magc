@@ -9,8 +9,6 @@ use crate::types::{
     Expression,
     ExpressionKind,
     Pattern,
-    VariablePattern,
-    ValuePattern,
     Call,
     Token,
 };

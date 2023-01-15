@@ -1,4 +1,4 @@
-use crate::types::{Expression, VariablePattern, Pattern};
+use crate::types::{Expression, Pattern};
 use std::collections::HashMap;
 
 pub type Environment<T> = HashMap<String, T>;

@@ -1,7 +1,6 @@
 use crate::types::{
     Expression,
     ExpressionKind,
-    Environment,
 };
 
 use crate::parser::Parser;

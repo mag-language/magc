@@ -31,11 +31,11 @@ impl MethodParselet {
 }
 
 impl PrefixParselet for MethodParselet {
-    fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
+    fn parse(&self, parser: &mut Parser, _token: Token) -> ParserResult {
         // We'll implement complex signatures with receivers, getters and setters later,
         // so we just parse a simple method signature for now.
         let identifier_start = parser.position;
-        let identifier = parser.consume_expect(TokenKind::Identifier)?;
+        parser.consume_expect(TokenKind::Identifier)?;
         let identifier_end = parser.position;
 
         parser.consume_expect(TokenKind::LeftParen)?;
