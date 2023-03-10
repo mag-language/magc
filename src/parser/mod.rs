@@ -297,9 +297,12 @@ mod tests {
     #[test]
     fn parse_infix_plus() {
         let mut parser = Parser::new();
+        let mut lexer = Lexer::new();
+        lexer.add_text("1 + 2");
+
         parser.add_tokens(
             crate::helpers::convert_to_graphemes("1 + 2"),
-            Lexer::new("1 + 2",).parse(),
+            lexer.parse(),
         );
 
         assert_eq!(

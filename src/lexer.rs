@@ -17,15 +17,18 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(source: &'a str) -> Self {
-        // Split our source string into UTF-8 graphemes.
-        let source = source.graphemes(true).collect::<Vec<&'a str>>();
-
+    pub fn new() -> Self {
         Self {
             position: 0,
             current_line: 1,
-            source,
+            source: vec![],
         }
+    }
+
+    pub fn add_text(&mut self, text: &'a str) {
+        self.source.append(
+            &mut text.graphemes(true).collect::<Vec<&'a str>>(),
+        );
     }
 
     /// Convert the source string into a linear collection of tokens.
@@ -328,7 +331,8 @@ mod tests {
 
     #[test]
     fn scan_comment() {
-        let mut lexer = Lexer::new("// This is a single line comment.");
+        let mut lexer = Lexer::new();
+        lexer.add_text("// This is a single line comment.");
 
         assert_eq!(
             lexer.parse(),
@@ -342,7 +346,8 @@ mod tests {
 
     #[test]
     fn scan_integer() {
-        let mut lexer = Lexer::new("1453");
+        let mut lexer = Lexer::new();
+        lexer.add_text("1453");
 
         assert_eq!(
             lexer.parse(),
@@ -356,7 +361,8 @@ mod tests {
 
     #[test]
     fn scan_float() {
-        let mut lexer = Lexer::new("12.38475");
+        let mut lexer = Lexer::new();
+        lexer.add_text("12.38475");
 
         assert_eq!(
             lexer.parse(),
@@ -370,7 +376,8 @@ mod tests {
 
     #[test]
     fn scan_type() {
-        let mut lexer = Lexer::new("Int32");
+        let mut lexer = Lexer::new();
+        lexer.add_text("Int32");
 
         assert_eq!(
             lexer.parse(),

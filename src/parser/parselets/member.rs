@@ -88,10 +88,14 @@ mod tests {
 
             {
                 let mut parser = Parser::new();
+                let mut lexer  = Lexer::new();
+                // We create this variable here so we can properly borrow the String as a &str
+                let text = format!("{}.{}", instance, member);
+                lexer.add_text(&text);
 
                 parser.add_tokens(
                     crate::helpers::convert_to_graphemes("person.favoriteColor"),
-                    Lexer::new(format!("{}.{}", instance, member).as_str()).parse(),
+                    lexer.parse(),
                 );
                 
                 parser.parse()
