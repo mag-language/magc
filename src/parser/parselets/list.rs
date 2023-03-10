@@ -31,7 +31,7 @@ impl PrefixParselet for ListParselet {
             );
         }
 
-        parser.consume_expect(TokenKind::RightBracket);
+        parser.consume_expect(TokenKind::RightBracket)?;
 
         Ok(Expression {
             kind,

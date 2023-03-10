@@ -32,7 +32,7 @@ impl TuplePatternParselet {
 impl PrefixParselet for TuplePatternParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
         let child = Box::new(self.expect_pattern(parser.parse_expression(0)?)?);
-        parser.consume_expect(TokenKind::RightParen);
+        parser.consume_expect(TokenKind::RightParen)?;
 
         Ok(Expression {
             kind: ExpressionKind::Pattern(
