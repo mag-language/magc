@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - A first implementation of the `Compiler` struct which coordinates multiple components.
 
+### Changed
+- The tokens and graphemes can now be dynamically added to the parser by using the `add_tokens` method on the `Parser` struct instead of just being fixed with each indiviual instance.
+
 ### Fixed
 - An error where types starting with `U` would not be tokenized correctly.
 

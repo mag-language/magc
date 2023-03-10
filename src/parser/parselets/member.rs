@@ -86,10 +86,16 @@ mod tests {
                 end_pos:   instance.len() + member.len(),
             }]),
 
-            Parser::new(
-                crate::helpers::convert_to_graphemes("person.favoriteColor"),
-                Lexer::new(format!("{}.{}", instance, member).as_str()).parse(),
-            ).parse(),
+            {
+                let mut parser = Parser::new();
+
+                parser.add_tokens(
+                    crate::helpers::convert_to_graphemes("person.favoriteColor"),
+                    Lexer::new(format!("{}.{}", instance, member).as_str()).parse(),
+                );
+                
+                parser.parse()
+            },
         );
     }
 }

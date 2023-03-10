@@ -76,7 +76,7 @@ fn infix_operator(precedence: usize) -> Rc<dyn InfixParselet> {
 }
 
 impl Parser {
-    pub fn new(source: Vec<&'static str>, tokens: Vec<Token>) -> Self {
+    pub fn new() -> Self {
         let mut prefix_parselets = HashMap::new();
         let mut infix_parselets  = HashMap::new();
 
@@ -114,9 +114,15 @@ impl Parser {
             position: 0,
             prefix_parselets,
             infix_parselets,
-            tokens,
-            source,
+            tokens: vec![],
+            source: vec![],
         }
+    }
+
+    // Add tokens and their corresponding graphemes to the buffer.
+    pub fn add_tokens(&mut self, mut source: Vec<&'static str>, mut tokens: Vec<Token>) {
+        self.source.append(&mut source);
+        self.tokens.append(&mut tokens);
     }
 
     /// Parse a series of expressions.
@@ -290,10 +296,11 @@ mod tests {
 
     #[test]
     fn parse_infix_plus() {
-        let mut parser = Parser::new(
+        let mut parser = Parser::new();
+        parser.add_tokens(
             crate::helpers::convert_to_graphemes("1 + 2"),
-            Lexer::new("1 + 2",
-        ).parse());
+            Lexer::new("1 + 2",).parse(),
+        );
 
         assert_eq!(
             parser.parse(),
