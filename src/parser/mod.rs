@@ -66,7 +66,7 @@ pub struct Parser {
     /// The input sequence from which expressions are constructed.
     tokens: Vec<Token>,
     /// The original sequence of UTF-8 graphemes, or characters in how a human would understand it.
-    source: Vec<&'static str>,
+    source: Vec<String>,
 }
 
 fn infix_operator(precedence: usize) -> Rc<dyn InfixParselet> {
@@ -120,7 +120,7 @@ impl Parser {
     }
 
     // Add tokens and their corresponding graphemes to the buffer.
-    pub fn add_tokens(&mut self, mut source: Vec<&'static str>, mut tokens: Vec<Token>) {
+    pub fn add_tokens(&mut self, mut source: Vec<String>, mut tokens: Vec<Token>) {
         self.source.append(&mut source);
         self.tokens.append(&mut tokens);
     }
@@ -144,7 +144,7 @@ impl Parser {
             let mut i = start;
 
             while i < end {
-                string.push_str(self.source[i].clone());
+                string = format!("{}{}", string, self.source[i].clone());
                 i += 1;
             }
 

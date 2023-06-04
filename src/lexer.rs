@@ -9,14 +9,14 @@ use crate::types::{Token, TokenKind, Keyword, Literal};
 use unicode_segmentation::UnicodeSegmentation;
 
 /// An object which translates a Magpie source string into a linear sequence of tokens.
-pub struct Lexer<'a> {
+pub struct Lexer {
     position: usize,
     /// Tracks which line the current token is in.
     current_line: usize,
-    source: Vec<&'a str>,
+    source: Vec<String>,
 }
 
-impl<'a> Lexer<'a> {
+impl Lexer {
     pub fn new() -> Self {
         Self {
             position: 0,
@@ -25,9 +25,9 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn add_text(&mut self, text: &'a str) {
+    pub fn add_text(&mut self, text: String) {
         self.source.append(
-            &mut text.graphemes(true).collect::<Vec<&'a str>>(),
+            &mut text.graphemes(true).map(String::from).collect::<Vec<String>>(),
         );
     }
 
@@ -38,10 +38,10 @@ impl<'a> Lexer<'a> {
         while !self.eof() {
 
             // Fetch our character and set the starting point of the lexeme.
-            let character = self.source[self.position];
+            let character = self.source[self.position].clone();
             let start_pos = self.position;
 
-            let kind = match character {
+            let kind = match character.as_str() {
                 "!" => self.single_token(TokenKind::Bang),
                 ":" => self.single_token(TokenKind::Colon),
                 "," => self.single_token(TokenKind::Comma),
@@ -99,7 +99,7 @@ impl<'a> Lexer<'a> {
                 "\"" => self.parse_string(),
                 
                 
-                _ => self.parse_identifier_or_keyword(&character),
+                _ => self.parse_identifier_or_keyword(character),
             };
 
             let end_pos = self.position;
@@ -122,15 +122,13 @@ impl<'a> Lexer<'a> {
         kind
     }
 
-    fn parse_identifier_or_keyword(&mut self, character: &'a str) -> TokenKind {
-        let mut string = String::from(character);
-
+    fn parse_identifier_or_keyword(&mut self, mut character: String) -> TokenKind {
         self.advance();
 
         while !self.eof() {
-            let character =  self.source[self.position];
+            let c =  self.source[self.position].clone();
 
-            match character {
+            match c.as_str() {
                 "!" | ":" | "," | "." | "[" | "(" |
                 "%" | "?" | ")" | "]" | "*" | "/" |
                 "+" | "-" | "=" | "<" | ">" | "\"" | 
@@ -139,12 +137,12 @@ impl<'a> Lexer<'a> {
 
                 _ => {
                     self.advance();
-                    string.push_str(character);
+                    character = format!("{}{}", character, c);
                 },
             }
         }
 
-        match string.as_str() {
+        match character.as_str() {
             "and"       => TokenKind::Keyword(Keyword::And),
             "as"        => TokenKind::Keyword(Keyword::As),
             "catch"     => TokenKind::Keyword(Keyword::Catch),
@@ -177,19 +175,19 @@ impl<'a> Lexer<'a> {
     }
 
     fn parse_comment(&mut self) -> TokenKind {
-        let mut comment = String::from(self.source[self.position]);
+        let mut comment = String::from(self.source[self.position].clone());
 
         self.advance();
 
         // Start parsing the comment.
         while !self.eof() {
-            let character =  self.source[self.position];
+            let character =  self.source[self.position].clone();
 
-            match character {
+            match character.as_str() {
                 "\n" => break,
                 _ => {
                     self.advance();
-                    comment.push_str(character)
+                    comment = format!("{}{}", comment, character);
                 },
             }
         }
@@ -204,9 +202,9 @@ impl<'a> Lexer<'a> {
 
         // Start parsing the comment.
         while !self.eof() {
-            let character =  self.source[self.position];
+            let character =  self.source[self.position].clone();
 
-            match character {
+            match character.as_str() {
                 "A" | "B" | "C" | "D" | "E"
                 | "F" | "G" | "H" | "I" | "J" 
                 | "K" | "L" | "M" | "N" | "O"
@@ -221,7 +219,7 @@ impl<'a> Lexer<'a> {
                 | "5" | "6" | "7" | "8" | "9"
                  => {
                     self.advance();
-                    type_string.push_str(character);
+                    type_string = format!("{}{}", type_string, character);
                 },
 
                 _ => break,
@@ -232,15 +230,15 @@ impl<'a> Lexer<'a> {
     }
 
     fn parse_number(&mut self) -> TokenKind {
-        let mut number_string = String::from(self.source[self.position]);
+        let mut number_string = String::from(self.source[self.position].clone());
 
         self.advance();
 
         // Start parsing the number.
         while !self.eof() {
-            let character =  self.source[self.position];
+            let character =  self.source[self.position].clone();
 
-            match character {
+            match character.as_str() {
                 "0" 
                 | "1"
                 | "2"
@@ -253,7 +251,7 @@ impl<'a> Lexer<'a> {
                 | "9"
                 | "." => {
                     self.advance();
-                    number_string.push_str(character);
+                    number_string = format!("{}{}", number_string, character);
                 },
 
                 _ => {
@@ -277,9 +275,9 @@ impl<'a> Lexer<'a> {
         self.advance();
 
         while !self.eof() {
-            let character =  self.source[self.position];
+            let character =  self.source[self.position].clone();
 
-            match character {
+            match character.as_str() {
                 "\"" => {
                     self.advance();
                     break
@@ -312,12 +310,12 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn current(&self) -> &'a str {
-        self.source[self.position]
+    fn current(&self) -> String {
+        self.source[self.position].clone()
     }
     
-    fn peek(&self) -> &'a str {
-        self.source[self.position + 1]
+    fn peek(&self) -> String {
+        self.source[self.position + 1].clone()
     }
 
     fn eof(&self) -> bool {
