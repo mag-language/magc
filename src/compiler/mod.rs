@@ -3,10 +3,12 @@ use std::collections::HashMap;
 
 pub type Environment<T> = HashMap<String, T>;
 
+mod compilelets;
 mod errors;
 mod type_system;
 mod multimethod;
 
+pub use self::compilelets::Compilelet;
 pub use self::errors::ErrorReporter;
 pub use self::multimethod::Multimethod;
 pub use self::type_system::TypeSystem;
@@ -20,10 +22,8 @@ pub struct Compiler {
     /// of method signatures and bodies under a single name, provides methods to match
     /// its signatures with a given call signature and extracts any variables.
     multimethods: Environment<Multimethod>,
-    /// Contains all infix operators defined at runtime.
-    infix_ops:    Environment<InfixOperatorDefinition>,
-    /// Contains all prefix operators defined at runtime.
-    prefix_ops:   Environment<PrefixOperatorDefinition>,
+    /// Maps expression types to pieces of code able to compile that specific expression.
+    compilelets: HashMap<String, &'static dyn Compilelet>,
     /// A structure which keeps track of defined types.
     types:        TypeSystem,
     /// Reports errors to the user with helpful information.
@@ -35,21 +35,9 @@ impl Compiler {
         Self {
             variables:    HashMap::new(),
             multimethods: HashMap::new(),
-            infix_ops:    HashMap::new(),
-            prefix_ops:   HashMap::new(),
+            compilelets:  HashMap::new(),
             types:        TypeSystem,
             errors:       ErrorReporter,
         }
     }
-}
-
-pub struct InfixOperatorDefinition {
-    pub precedence: usize,
-    pub signature: Option<Pattern>,
-    pub body: Vec<Expression>,
-}
-
-pub struct PrefixOperatorDefinition {
-    pub signature: Option<Pattern>,
-    pub body: Vec<Expression>,
 }
