@@ -2,7 +2,7 @@
 
 # Introduction
 
-This repository contains a compiler library, `magc`, which converts Mag source code to executable binaries for various hardware architectures. The main compilation target will be the [Strontium](https://gitlab.com/strontium-environment/vm) architecture, but the roadmap includes ahead-of-time compilation to fast and efficient native code using the [`cranelift`](https://docs.rs/cranelift/latest/cranelift/) crate in the future.
+[`magc`](https://github.com/mag-language/magc) is a compiler library which translates Mag source code into a series of bytecode instructions for the [`strontium`](https://github.com/mag-language/magc) machine.
 
 This is what a simple (and very inefficient) fibonacci function looks like in Mag:
 
