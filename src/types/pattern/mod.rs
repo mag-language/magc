@@ -93,7 +93,7 @@ impl Pattern {
     }
 
     pub fn matches_with(&self, parser: &mut Parser, other: Pattern) -> bool {
-        match self.linearize(parser: &mut Parser, other) {
+        match self.linearize(parser, other) {
             Ok(_)  => true,
             Err(_) => false,
         }
