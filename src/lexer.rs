@@ -13,7 +13,7 @@ pub struct Lexer {
     position: usize,
     /// Tracks which line the current token is in.
     current_line: usize,
-    source: Vec<String>,
+    pub source: Vec<String>,
 }
 
 impl Lexer {
