@@ -12,7 +12,7 @@ use unicode_segmentation::UnicodeSegmentation;
 pub struct Lexer {
     position: usize,
     /// Tracks which line the current token is in.
-    current_line: usize,
+    _current_line: usize,
     pub source: Vec<String>,
 }
 
@@ -20,7 +20,7 @@ impl Lexer {
     pub fn new() -> Self {
         Self {
             position: 0,
-            current_line: 1,
+            _current_line: 1,
             source: vec![],
         }
     }
@@ -310,6 +310,15 @@ impl Lexer {
         }
     }
 
+    /// Get the string value of a literal from the source based on its start and end positions.
+    pub fn get_literal_string(&self, start_pos: usize, end_pos: usize) -> Option<String> {
+        if start_pos < self.source.len() && end_pos <= self.source.len() && start_pos <= end_pos {
+            Some(self.source[start_pos..end_pos].concat())
+        } else {
+            None
+        }
+    }
+
     fn current(&self) -> String {
         self.source[self.position].clone()
     }
@@ -330,7 +339,7 @@ mod tests {
     #[test]
     fn scan_comment() {
         let mut lexer = Lexer::new();
-        lexer.add_text("// This is a single line comment.");
+        lexer.add_text("// This is a single line comment.".to_string());
 
         assert_eq!(
             lexer.parse(),
@@ -345,7 +354,7 @@ mod tests {
     #[test]
     fn scan_integer() {
         let mut lexer = Lexer::new();
-        lexer.add_text("1453");
+        lexer.add_text("1453".to_string());
 
         assert_eq!(
             lexer.parse(),
@@ -360,7 +369,7 @@ mod tests {
     #[test]
     fn scan_float() {
         let mut lexer = Lexer::new();
-        lexer.add_text("12.38475");
+        lexer.add_text("12.38475".to_string());
 
         assert_eq!(
             lexer.parse(),
@@ -375,7 +384,7 @@ mod tests {
     #[test]
     fn scan_type() {
         let mut lexer = Lexer::new();
-        lexer.add_text("Int32");
+        lexer.add_text("Int32".to_string());
 
         assert_eq!(
             lexer.parse(),
