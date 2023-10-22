@@ -19,6 +19,6 @@ pub struct Method {
 pub struct Call {
     /// The name of the multimethod being called.
     pub name: String,
-    // The [`Record`] which contains the values of the arguments of the method call.
+    // A single optional [`Pattern`] which contains all arguments.
     pub signature:  Option<Pattern>,
 }
