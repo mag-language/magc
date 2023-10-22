@@ -41,7 +41,7 @@ pub enum Pattern {
 }
 
 impl Pattern {
-    fn pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+    fn _pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
 
@@ -50,21 +50,64 @@ impl Pattern {
             })),
         }
     }
+
+    pub fn expect_field(self) -> Result<FieldPattern, ParserError> {
+        match self {
+            Pattern::Field(pattern) => Ok(pattern),
+            _ => Err(ParserError::UnexpectedPattern {
+                expected: String::from("FieldPattern"),
+                found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),
+            }),
+        }
+    }
+
+    pub fn expect_tuple(self) -> Result<TuplePattern, ParserError> {
+        match self {
+            Pattern::Tuple(pattern) => Ok(pattern),
+            _ => Err(ParserError::UnexpectedPattern {
+                expected: String::from("TuplePattern"),
+                found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),
+            }),
+        }
+    }
+
+    pub fn expect_value(self) -> Result<ValuePattern, ParserError> {
+        match self {
+            Pattern::Value(pattern) => Ok(pattern),
+            _ => Err(ParserError::UnexpectedPattern {
+                expected: String::from("ValuePattern"),
+                found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),
+            }),
+        }
+    }
+
+    pub fn expect_variable(self) -> Result<VariablePattern, ParserError> {
+        match self {
+            Pattern::Variable(pattern) => Ok(pattern),
+            _ => Err(ParserError::UnexpectedPattern {
+                expected: String::from("VariablePattern"),
+                found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),
+            }),
+        }
+    }
+
+    pub fn expect_pair(self) -> Result<PairPattern, ParserError> {
+        match self {
+            Pattern::Pair(pattern) => Ok(pattern),
+            _ => Err(ParserError::UnexpectedPattern {
+                expected: String::from("PairPattern"),
+                found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),
+            }),
+        }
+    }
 }
 
 impl Typed for Pattern {
     fn get_type(&self) -> Option<String> {
         match self {
-            Pattern::Field(_)    => Some(String::from("FieldPattern")),
-            Pattern::Tuple(_)    => Some(String::from("TuplePattern")),
-            Pattern::Value(ValuePattern {
-                expression,
-            })    => {
-                match expression.get_type() {
-                    Some(type_id) => Some(format!("ValuePattern<{}>", type_id)),
-                    None          => Some(format!("ValuePattern")),
-                }
-            },
+            Pattern::Field(_) => Some(String::from("FieldPattern")),
+            Pattern::Tuple(_) => Some(String::from("TuplePattern")),
+            Pattern::Value(_) => Some(String::from("ValuePattern")),
             Pattern::Variable(
                 VariablePattern {
                     name: _,
