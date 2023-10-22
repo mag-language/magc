@@ -239,14 +239,6 @@ impl Parser {
         }
     }
 
-    fn match_token(&self, kind: TokenKind) -> Result<bool, ParserError> {
-        if !self.eof() {
-            Ok(self.peek()?.kind == kind)
-        } else {
-            Err(ParserError::UnexpectedEOF)
-        }
-    }
-
     /// Advance the pointer by one if we're not at the end.
     fn advance(&mut self) {
         if !self.eof() {
@@ -298,10 +290,10 @@ mod tests {
     fn parse_infix_plus() {
         let mut parser = Parser::new();
         let mut lexer = Lexer::new();
-        lexer.add_text("1 + 2");
+        lexer.add_text("1 + 2".to_string());
 
         parser.add_tokens(
-            crate::helpers::convert_to_graphemes("1 + 2"),
+            crate::helpers::convert_to_graphemes("1 + 2".to_string()),
             lexer.parse(),
         );
 
