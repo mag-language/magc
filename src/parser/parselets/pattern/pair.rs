@@ -36,7 +36,7 @@ impl PairParselet {
         }
     }
 
-    fn expect_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+    fn _expect_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
 
