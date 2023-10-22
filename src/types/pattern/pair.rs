@@ -1,8 +1,6 @@
 //! A pair of patterns separated by a comma.
 
-use crate::types::{
-    Pattern,
-};
+use crate::types::Pattern;
 
 /// A pair of patterns separated by a comma.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
