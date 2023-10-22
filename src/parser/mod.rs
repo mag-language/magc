@@ -275,6 +275,10 @@ pub enum ParserError {
         expected: String,
         found:    Option<String>,
     },
+    UnexpectedPattern {
+        expected: String,
+        found:    String,
+    },
     ExpectedPattern,
     /// The linearization of the two given patterns failed.
     NoMatch,
