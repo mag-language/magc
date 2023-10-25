@@ -1,6 +1,11 @@
 use std::string::String;
 
-use strontium::machine::instruction::{Instruction, CalculationMethod};
+use strontium::machine::instruction::{
+    Instruction,
+    CalculationMethod,
+    Interrupt,
+    InterruptKind,
+};
 
 use crate::types::{CompilerResult, Expression, ExpressionKind};
 use crate::compiler::Compiler;
@@ -30,7 +35,7 @@ impl Compilelet for CallCompilelet {
             // let left_instructions = compiler.compile(*signature.left);
             // let right_instructions = compiler.compile(*signature.right);
 
-            let instruction = match method_name.as_str() {
+            match method_name.as_str() {
                 "+" | "-" | "/" |  "*" | "^" | "%" => {
                     let method = match method_name.as_str() {
                         "+" => CalculationMethod::ADD,
@@ -66,21 +71,27 @@ impl Compilelet for CallCompilelet {
                         Some(right_register.clone()),
                     )?);
 
-                    Instruction::CALCULATE {
+                    instructions.push(Instruction::CALCULATE {
                         method,
                         operand1:    left_register,
                         operand2:    right_register,
-                        destination,
-                    }
+                        destination: destination.clone(),
+                    });
+                    
+                    // TODO: Remove this once we output REPL results properly.
+                    instructions.push(Instruction::INTERRUPT {
+                        interrupt: Interrupt {
+                            address: destination,
+                            kind: InterruptKind::Print,
+                        },
+                    });
                 }
 
                 _ => {
                     // Define a CALL instruction to find an empty register and load the value into it.
-                    Instruction::CALL {}
+                    instructions.push(Instruction::CALL {});
                 }
             };
-
-            instructions.push(instruction);
         }
         Ok(instructions)
     }
