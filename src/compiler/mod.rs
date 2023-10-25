@@ -53,6 +53,7 @@ impl Compiler {
 
         compilelets.insert("InfixExpression".to_string(),&InfixCompilelet        as &dyn Compilelet);
         compilelets.insert("CallExpression".to_string(), &CallCompilelet         as &dyn Compilelet);
+        compilelets.insert("Float".to_string(),          &LiteralCompilelet      as &dyn Compilelet);
         compilelets.insert("Int".to_string(),            &LiteralCompilelet      as &dyn Compilelet);
         compilelets.insert("ValuePattern".to_string(),   &ValuePatternCompilelet as &dyn Compilelet);
 
