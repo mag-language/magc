@@ -52,6 +52,8 @@ fn get_method_name(operator: &TokenKind) -> String {
     match operator {
         TokenKind::Plus => "+".to_string(),
         TokenKind::Minus => "-".to_string(),
+        TokenKind::Star => "*".to_string(),
+        TokenKind::Slash => "/".to_string(),
         // ... other operators ...
         _ => unimplemented!(),
     }
