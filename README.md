@@ -8,8 +8,6 @@ More specifically, the `Compiler` struct found in this library combines the `Lex
 
 Please refer to the `mag-lang` crate to find code examples for the Mag language.
 
-**For now, please make sure to clone `mag`, `magc` and `strontium` into the same directory for the language REPL in the `mag` crate to work. These direct file system references contained in the cargo manifests will be removed soon.**
-
 # How far along are we?
 
 The current implementation has a fairly complete implementation of the lexer and parser stages of the compiler, so building an AST from a source string works quite well. The code generation modules are very new though, so the function set available in the REPL is limited for now. Simple arithmetic operators with two operators work already, such as `+`, `-`, `*` and `/`. More is in the works. Don't nest infix expressions for now. There are still many rough edges to this project.
