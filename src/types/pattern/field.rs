@@ -1,6 +1,4 @@
-use crate::types::{
-    Pattern,
-};
+use crate::types::Pattern;
 
 /// A named pattern, like `repeats: 4` or `name: n String`.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

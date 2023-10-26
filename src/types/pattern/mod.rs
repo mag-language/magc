@@ -6,7 +6,7 @@ use crate::types::{
 use crate::parser::Parser;
 
 use crate::type_system::Typed;
-use crate::parser::{ParserError};
+use crate::parser::ParserError;
 use std::collections::HashMap;
 
 mod field;
