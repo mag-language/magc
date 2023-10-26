@@ -1,4 +1,4 @@
-//! Translate a Mag source string into a linear sequence of tokens.
+//! Convert a Mag source string to a linear sequence of tokens.
 //!
 //! This is the first stage in the compiler, which takes a string, splits it
 //! into UTF-8 characters and consumes them one at a time to create a list of
@@ -25,10 +25,11 @@ impl Lexer {
         }
     }
 
-    pub fn add_text(&mut self, text: String) {
+    pub fn add_text(&mut self, text: String) -> &mut Self {
         self.source.append(
             &mut text.graphemes(true).map(String::from).collect::<Vec<String>>(),
         );
+        self
     }
 
     /// Convert the source string into a linear collection of tokens.
