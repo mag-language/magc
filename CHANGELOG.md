@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Extend doc comments with code examples and describe the internal workings of the compiler in greater detail.
+- Add code examples to crate documentation and describe the internal workings of the compiler in greater detail.
 
 ### Fixed
 
