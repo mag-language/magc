@@ -2,7 +2,7 @@
 
 # Introduction
 
-[`magc`](https://github.com/mag-language/magc) is a compiler library which translates Mag code into a series of executable instructions.
+[`magc`](https://github.com/mag-language/magc) is a compiler library which translates Mag code into a series of executable instructions for the Strontium machine.
 
 More specifically, the `Compiler` struct found in this library combines the `Lexer` and `Parser` modules along with its own code generation code into a pipeline. This processing pipeline then produces a sequence of bytecode instructions representing the semantics of the Mag source string and finally executes it on an instance of the `strontium` VM.
 
