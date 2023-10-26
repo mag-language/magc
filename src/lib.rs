@@ -34,3 +34,6 @@ pub mod type_system;
 
 pub use self::types::*;
 pub use self::type_system::*;
+
+pub use self::lexer::Lexer;
+pub use self::parser::Parser;
