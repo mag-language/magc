@@ -1,3 +1,5 @@
+//! Assemble a token sequence into a tree of expressions.
+
 use crate::types::{
     Keyword,
     Literal,

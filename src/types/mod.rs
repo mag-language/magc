@@ -1,3 +1,5 @@
+//! Data structures common to the entire crate, such as [`Token`], [`Expression`] or [`Pattern`].
+
 pub mod expression;
 pub mod token;
 pub mod pattern;

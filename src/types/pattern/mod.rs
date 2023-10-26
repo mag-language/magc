@@ -30,17 +30,18 @@ pub type LinearizeResult = Result<HashMap<VariablePattern, Box<Expression>>, Par
 pub enum Pattern {
     /// A named pattern, like `repeats: 4` or `name: n String`.
     Field(FieldPattern),
-    /// A pattern enclosed in parentheses.
+    /// A pattern enclosed in parentheses, like `(1 + 2)`
     Tuple(TuplePattern),
-    /// An expression that evaluates to a value.
+    /// Any expression that evaluates to a value, like `1 + 2` or `get_address_book()`.
     Value(ValuePattern),
-    /// A variable identifier with an optional type annotation.
+    /// A variable identifier with an optional type annotation, such as `name` or `name String`.
     Variable(VariablePattern),
     /// A pair of patterns separated by a comma.
     Pair(PairPattern),
 }
 
 impl Pattern {
+    /// Convert an expression into a pattern, if possible.
     fn _pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
@@ -120,11 +121,21 @@ impl Typed for Pattern {
 }
 
 impl Pattern {
-    /// Compare this pattern with another and return any destructured variables.
+    /// Compare this pattern with another and destructure any variables if it matches.
     ///
-    /// This function recursively calls itself and the respective pattern methods
-    /// to evaluate whether a tree of patterns matches with another. A typeless
-    /// variable matches any value pattern, for example.
+    /// This function is used to determine which multimethod implementation matches the
+    /// arguments of a given call, applying precedence rules to ensure that the most specific
+    /// patterns are chosen. In the ubiquitous Fibonacci example, it decides which of the
+    /// multimethods actually get executed based on the input parameters:
+    ///
+    /// ```text
+    /// def fib(0) 0
+    /// #       |- high specificity
+    /// def fib(1) 1
+    ///
+    /// def fib(n Int) fib(n - 1) + fib(n - 2)
+    /// #       ^- low specificity
+    /// ```
     pub fn linearize(&self, parser: &mut Parser, other: Pattern) -> LinearizeResult {
         match self {
             Pattern::Field(reference)    => self.linearize_field(parser, reference.clone(), other),
