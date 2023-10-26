@@ -29,7 +29,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## 0.1.0
+### Added
+
+- Extend doc comments with code examples and describe the internal workings of the compiler in greater detail.
+
+### Fixed
+
+- Re-enable doc references to `Lexer` and `Parser` structs by publicly exporting them in `lib.rs`.
+
+## [0.1.0] - October 26, 2023
+
 ### Added
 - A first implementation of the `Compiler` struct converting infix expressions to Strontium instructions.
 - Modular parser and compiler design by passing control to a `Parselet` or `Compilelet` trait implementors based on the given token or expression.
