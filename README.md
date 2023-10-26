@@ -2,17 +2,24 @@
 
 # Introduction
 
-[`magc`](https://github.com/mag-language/magc) is a compiler library which translates Mag source code into a series of bytecode instructions for the [`strontium`](https://github.com/mag-language/magc) machine.
+[`magc`](https://github.com/mag-language/magc) is a compiler library which translates Mag code into a series of executable instructions.
 
-This is what a simple (and very inefficient) fibonacci function looks like in Mag:
+More specifically, the `Compiler` struct found in this library combines the `Lexer` and `Parser` modules along with its own code generation code into a pipeline. This processing pipeline then produces a sequence of bytecode instructions representing the semantics of the Mag source string and finally executes it on an instance of the `strontium` VM.
 
-```python
-def fib(0) 0
-def fib(1) 1
-def fib(n Int) fib(n - 2) + fib(n - 1)
-```
+Please refer to the `mag-lang` crate to find code examples for the Mag language.
 
-The three definitions generate a selection of methods with the same name, but different arguments.
+**For now, please make sure to clone `mag`, `magc` and `strontium` into the same directory for the language REPL in the `mag` crate to work. These direct file system references contained in the cargo manifests will be removed soon.**
+
+# How far along are we?
+
+The current implementation has a fairly complete implementation of the lexer and parser stages of the compiler, so building an AST from a source string works quite well. The code generation modules are very new though, so the function set available in the REPL is limited for now. Simple arithmetic operators with two operators work already, such as `+`, `-`, `*` and `/`. More is in the works. Don't nest infix expressions for now. There are still many rough edges to this project.
+
+# Data Structures
+
+*This section is still a work in progress.*
+
+* `Expression`
+* `Token`
 
 ## Credits
 
