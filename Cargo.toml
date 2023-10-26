@@ -1,6 +1,9 @@
 [package]
 name = "magc"
 description = "The Mag Language Compiler"
+keywords = ["language", "parser", "compiler"]
+categories = ["compilers", "development-tools", "parser-implementations"]
+license = "MIT"
 version = "0.1.0"
 edition = "2021"
 
