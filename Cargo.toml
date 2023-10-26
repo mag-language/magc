@@ -11,5 +11,5 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "3.1.8", features = ["derive"] }
-strontium = { path = "../strontium" }
+strontium = "0.6.0"
 unicode-segmentation = "1.9.0"

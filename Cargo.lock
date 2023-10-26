@@ -687,6 +687,8 @@ checksum = "942b4a808e05215192e39f4ab80813e599068285906cc91aa64f923db842bd5a"
 [[package]]
 name = "strontium"
 version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e73ae627b64b2ab37767e0ac670e85be61d3ee1e8cac1868b4e5879664c6a351"
 dependencies = [
  "bincode",
  "byteorder",
