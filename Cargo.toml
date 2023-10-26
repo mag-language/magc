@@ -1,6 +1,7 @@
 [package]
 name = "magc"
 description = "The Mag Language Compiler"
+repository = "https://github.com/mag-language/magc"
 keywords = ["language", "parser", "compiler"]
 categories = ["compilers", "development-tools", "parser-implementations"]
 license = "MIT"
