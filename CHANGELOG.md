@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.1.1] - October 27, 2023
+
 ### Added
 
 - New sections in the crate documentation, providing code examples and more detailed information about the inner workings of the compiler.
