@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Re-enable doc references to `Lexer` and `Parser` structs by publicly exporting them in `lib.rs`.
+- Nested infix expressions now work properly.
 
 ## [0.1.0] - October 26, 2023
 
