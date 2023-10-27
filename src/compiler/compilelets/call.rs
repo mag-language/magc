@@ -1,98 +1,68 @@
-use std::string::String;
+use strontium::machine::instruction::{Instruction, CalculationMethod, Interrupt, InterruptKind};
+use crate::types::{CompilerResult, Expression, ExpressionKind, Pattern, ValuePattern};
+use crate::compiler::{Compiler, Compilelet};
 
-use strontium::machine::instruction::{
-    Instruction,
-    CalculationMethod,
-    Interrupt,
-    InterruptKind,
-};
-
-use crate::types::{CompilerResult, Expression, ExpressionKind};
-use crate::compiler::Compiler;
-
-use super::Compilelet;
-
-/// A compilelet for method calls.
 pub struct CallCompilelet;
 
 impl Compilelet for CallCompilelet {
     fn compile(
         &self,
-        compiler:   &mut Compiler,
+        compiler: &mut Compiler,
         expression: Expression,
-        _target_register: Option<String>,
+        target_register: Option<String>,
     ) -> CompilerResult<Vec<Instruction>> {
-        let mut instructions = vec![];
+        let mut instructions = Vec::new();
 
-        // Implement the call compilelet, compiling method calls to CALCULATE
-            // instructions if a common operators like +, -, *, /, etc. are used as
-            // the method name, and to CALL instructions otherwise.
         if let ExpressionKind::Call(call) = expression.kind {
             let method_name = call.name;
             let signature = call.signature.unwrap();
 
-            // Compile the left and right expressions
-            // let left_instructions = compiler.compile(*signature.left);
-            // let right_instructions = compiler.compile(*signature.right);
-
-            match method_name.as_str() {
-                "+" | "-" | "/" |  "*" | "^" | "%" => {
-                    let method = match method_name.as_str() {
-                        "+" => CalculationMethod::ADD,
-                        "-" => CalculationMethod::SUBTRACT,
-                        "*" => CalculationMethod::MULTIPLY,
-                        "/" => CalculationMethod::DIVIDE,
-                        "^" => CalculationMethod::POWER,
-                        "%" => CalculationMethod::MODULO,
-                        _ => unreachable!(),
-                    };
-
-                    let operands = signature.expect_pair().unwrap();
-
-                    let left_register = compiler.registers.allocate_register();
-                    let right_register = compiler.registers.allocate_register();
-                    let destination = compiler.registers.allocate_register();
-
-                    instructions.append(&mut compiler.compile_expression(
-                        Expression {
-                            kind: ExpressionKind::Pattern(*operands.left),
-                            start_pos: expression.start_pos,
-                            end_pos:   expression.end_pos,
-                        },
-                        Some(left_register.clone()),
-                    )?);
-
-                    instructions.append(&mut compiler.compile_expression(
-                        Expression {
-                            kind: ExpressionKind::Pattern(*operands.right),
-                            start_pos: expression.start_pos,
-                            end_pos:   expression.end_pos,
-                        },
-                        Some(right_register.clone()),
-                    )?);
-
-                    instructions.push(Instruction::CALCULATE {
-                        method,
-                        operand1:    left_register,
-                        operand2:    right_register,
-                        destination: destination.clone(),
-                    });
-                    
-                    // TODO: Remove this once we output REPL results properly.
-                    instructions.push(Instruction::INTERRUPT {
-                        interrupt: Interrupt {
-                            address: destination,
-                            kind: InterruptKind::Print,
-                        },
-                    });
-                }
-
-                _ => {
-                    // Define a CALL instruction to find an empty register and load the value into it.
-                    instructions.push(Instruction::CALL {});
-                }
+            let method = match method_name.as_str() {
+                "+" => CalculationMethod::ADD,
+                "-" => CalculationMethod::SUBTRACT,
+                "*" => CalculationMethod::MULTIPLY,
+                "/" => CalculationMethod::DIVIDE,
+                "^" => CalculationMethod::POWER,
+                "%" => CalculationMethod::MODULO,
+                _ => unreachable!(),
             };
+
+            if let Pattern::Pair(pair) = signature {
+                let left_expr = if let Pattern::Value(ValuePattern { expression }) = *pair.left {
+                    *expression
+                } else {
+                    unreachable!()
+                };
+
+                let right_expr = if let Pattern::Value(ValuePattern { expression }) = *pair.right {
+                    *expression
+                } else {
+                    unreachable!()
+                };
+
+                let left_register = compiler.registers.allocate_register();
+                instructions.append(&mut compiler.compile_expression(left_expr, Some(left_register.clone()))?);
+
+                let right_register = compiler.registers.allocate_register();
+                instructions.append(&mut compiler.compile_expression(right_expr, Some(right_register.clone()))?);
+
+                let destination_register = target_register.unwrap_or_else(|| compiler.registers.allocate_register());
+                instructions.push(Instruction::CALCULATE {
+                    method,
+                    operand1: left_register,
+                    operand2: right_register,
+                    destination: destination_register.clone(),
+                });
+
+                instructions.push(Instruction::INTERRUPT {
+                    interrupt: Interrupt {
+                        address: destination_register,
+                        kind: InterruptKind::Print,
+                    },
+                });
+            }
         }
+
         Ok(instructions)
     }
 }
