@@ -31,7 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add code examples to crate documentation and describe the internal workings of the compiler in greater detail.
+- New sections in the crate documentation, providing code examples and more detailed information about the inner workings of the compiler.
+- A new `desugar` method for the `ExpressionKind` type, which converts syntactic sugar constructs like infix expressions to their semantic counterparts just before compilation.
+- The `log` and `env_logger` dependencies printing the compilation tree for easier debugging.
+
+### Changed
+
+- `pattern.expect_value()` now provides the inner expression directly instead of the value pattern.
 
 ### Fixed
 
