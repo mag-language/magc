@@ -37,8 +37,6 @@ pub struct Compiler {
     compilelets: HashMap<String, &'static dyn Compilelet>,
     lexer: Lexer,
     parser: Parser,
-    /// The register to store the result the last compiled expression for REPL output.
-    result_register: Option<String>,
     context: CompilationContext,
     /// Contains all method instances defined at runtime.
     ///
