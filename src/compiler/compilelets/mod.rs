@@ -4,12 +4,10 @@ use strontium::machine::instruction::Instruction;
 use super::Compiler;
 
 mod call;
-mod infix;
 mod literal;
 mod value_pattern;
 
 pub use self::call::CallCompilelet;
-pub use self::infix::InfixCompilelet;
 pub use self::literal::LiteralCompilelet;
 pub use self::value_pattern::ValuePatternCompilelet;
 
