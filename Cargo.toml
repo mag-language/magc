@@ -12,5 +12,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "3.1.8", features = ["derive"] }
+env_logger = "0.10.0"
+log = "0.4.20"
 strontium = "0.6.0"
 unicode-segmentation = "1.9.0"
