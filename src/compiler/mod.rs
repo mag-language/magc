@@ -48,6 +48,7 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn new() -> Self {
+        env_logger::init();
         let mut compilelets = HashMap::new();
 
         compilelets.insert("CallExpression".to_string(), &CallCompilelet         as &dyn Compilelet);
