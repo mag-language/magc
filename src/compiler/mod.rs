@@ -18,7 +18,6 @@ mod multimethod;
 pub use self::compilelets::{
     Compilelet,
     CallCompilelet,
-    InfixCompilelet,
     LiteralCompilelet,
     ValuePatternCompilelet,
 };
@@ -51,7 +50,6 @@ impl Compiler {
     pub fn new() -> Self {
         let mut compilelets = HashMap::new();
 
-        compilelets.insert("InfixExpression".to_string(),&InfixCompilelet        as &dyn Compilelet);
         compilelets.insert("CallExpression".to_string(), &CallCompilelet         as &dyn Compilelet);
         compilelets.insert("Float".to_string(),          &LiteralCompilelet      as &dyn Compilelet);
         compilelets.insert("Int".to_string(),            &LiteralCompilelet      as &dyn Compilelet);
@@ -95,7 +93,8 @@ impl Compiler {
         let expressions = self.parser.parse().unwrap();
         let mut bytecode = vec![];
 
-        for expr in expressions {
+        for mut expr in expressions {
+            expr.desugar();
             bytecode.append(&mut self.compile_expression(expr, None)?);
         }
 
