@@ -25,6 +25,9 @@ pub use self::errors::ErrorReporter;
 pub use self::multimethod::Multimethod;
 pub use self::type_system::TypeSystem;
 
+pub struct CompilationContext {
+    pub recursion_depth: usize,
+}
 pub struct Compiler {
     /// The global namespace for variables.
     _variables:    Environment<Expression>,
@@ -34,6 +37,9 @@ pub struct Compiler {
     compilelets: HashMap<String, &'static dyn Compilelet>,
     lexer: Lexer,
     parser: Parser,
+    /// The register to store the result the last compiled expression for REPL output.
+    result_register: Option<String>,
+    context: CompilationContext,
     /// Contains all method instances defined at runtime.
     ///
     /// The `Multimethod` type in this environment stores an arbitrary number of pairs
@@ -62,6 +68,8 @@ impl Compiler {
             compilelets,
             lexer:         Lexer::new(),
             parser:        Parser::new(),
+            context: CompilationContext { recursion_depth: 0 },
+            result_register: None,
             _multimethods: HashMap::new(),
             _types:        TypeSystem,
             _errors:       ErrorReporter,
@@ -73,6 +81,9 @@ impl Compiler {
         expression: Expression,
         target_register: Option<String>,
     ) -> CompilerResult<Vec<Instruction>> {
+        // TODO: Add a limit to recursion depth
+        self.context.recursion_depth += 1;
+
         let mut bytecode = vec![];
         let expression_type = expression.get_type().unwrap();
 
@@ -80,9 +91,11 @@ impl Compiler {
             let mut compiled = compilelet.compile(self, expression, target_register)?;
 
             bytecode.append(&mut compiled);
+            self.context.recursion_depth -= 1;
 
             Ok(bytecode)
         } else {
+            self.context.recursion_depth -= 1;
             Err(CompilerError::Generic(format!("No compilelet found for type {}", expression_type)))
         }
     }

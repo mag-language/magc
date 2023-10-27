@@ -54,12 +54,15 @@ impl Compilelet for CallCompilelet {
                     destination: destination_register.clone(),
                 });
 
-                instructions.push(Instruction::INTERRUPT {
-                    interrupt: Interrupt {
-                        address: destination_register,
-                        kind: InterruptKind::Print,
-                    },
-                });
+                // Add the interrupt to print the result if this is at the top level.
+                if compiler.context.recursion_depth == 1 {
+                    instructions.push(Instruction::INTERRUPT {
+                        interrupt: Interrupt {
+                            address: destination_register,
+                            kind: InterruptKind::Print,
+                        },
+                    });
+                }
             }
         }
 
