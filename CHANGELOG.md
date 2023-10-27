@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New sections in the crate documentation, providing code examples and more detailed information about the inner workings of the compiler.
 - A new `desugar` method for the `ExpressionKind` type, which converts syntactic sugar constructs like infix expressions to their semantic counterparts just before compilation.
 - The `log` and `env_logger` dependencies printing the compilation tree for easier debugging.
+- The `CompilationContext` struct which keeps track of recursion depth in the compiler so that we can print the final output of a calculation without any other intermediates.
 
 ### Changed
 
