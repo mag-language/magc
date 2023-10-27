@@ -1,4 +1,10 @@
-use crate::types::{Literal, Pattern, ValuePattern};
+use crate::types::{
+    Literal,
+    Pattern,
+    PairPattern,
+    TokenKind,
+    ValuePattern,
+};
 use crate::type_system::Typed;
 use crate::parser::ParserError;
 
@@ -49,6 +55,36 @@ pub enum ExpressionKind {
     Identifier,
 }
 
+impl ExpressionKind {
+    pub fn desugar(self) -> Self {
+        match self {
+            ExpressionKind::Infix(mut infix) => {
+                // Recursively desugar left and right expressions
+                infix.left.desugar();
+                infix.right.desugar();
+
+                // Convert infix expressions to method calls
+                let method_name = match &infix.operator.kind {
+                    TokenKind::Plus => "+".to_string(),
+                    TokenKind::Minus => "-".to_string(),
+                    TokenKind::Star => "*".to_string(),
+                    TokenKind::Slash => "/".to_string(),
+                    _ => unimplemented!(),
+                };
+                ExpressionKind::Call(Call {
+                    name: method_name,
+                    signature: Some(Pattern::Pair(PairPattern {
+                        left: Box::new(Pattern::Value(ValuePattern { expression: infix.left })),
+                        right: Box::new(Pattern::Value(ValuePattern { expression: infix.right })),
+                    })),
+                })
+            },
+            // Desugar other expression kinds if necessary
+            _ => self,
+        }
+    }
+}
+
 impl Expression {
     pub fn pattern_or_value_pattern(&self) -> Result<Pattern, ParserError> {
         match self.kind.clone() {
@@ -66,6 +102,12 @@ impl Expression {
 
             _ => Err(ParserError::ExpectedPattern),
         }
+    }
+
+    /// Convert syntactic constructs into their actual semantics, like converting infix expressions
+    /// to method calls.
+    pub fn desugar(&mut self) {
+        self.kind = self.kind.clone().desugar();
     }
 }
 
