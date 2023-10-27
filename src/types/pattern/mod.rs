@@ -72,9 +72,9 @@ impl Pattern {
         }
     }
 
-    pub fn expect_value(self) -> Result<ValuePattern, ParserError> {
+    pub fn expect_value(self) -> Result<Expression, ParserError> {
         match self {
-            Pattern::Value(pattern) => Ok(pattern),
+            Pattern::Value(pattern) => Ok(*pattern.expression),
             _ => Err(ParserError::UnexpectedPattern {
                 expected: String::from("ValuePattern"),
                 found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),

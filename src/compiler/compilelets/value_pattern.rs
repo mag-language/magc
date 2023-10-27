@@ -24,9 +24,9 @@ impl Compilelet for ValuePatternCompilelet {
         let mut instructions = vec![];
 
         if let ExpressionKind::Pattern(pattern) = expression.kind {
-            let value_pattern = pattern.expect_value().unwrap();
+            let expression = pattern.expect_value().unwrap();
             instructions.append(&mut compiler.compile_expression(
-                *value_pattern.expression,
+                expression,
                 target_register,
             )?);
         }
