@@ -8,9 +8,10 @@ use crate::type_system::Typed;
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub struct Token {
 	// What type of token this object represents.
-	pub kind:   TokenKind,
-	pub start_pos:   usize,
+	pub kind:      TokenKind,
+	pub start_pos: usize,
 	pub end_pos:   usize,
+	pub line: 	   usize,
 }
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]

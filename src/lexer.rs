@@ -12,7 +12,7 @@ use unicode_segmentation::UnicodeSegmentation;
 pub struct Lexer {
     position: usize,
     /// Tracks which line the current token is in.
-    _current_line: usize,
+    current_line: usize,
     pub source: Vec<String>,
 }
 
@@ -20,7 +20,7 @@ impl Lexer {
     pub fn new() -> Self {
         Self {
             position: 0,
-            _current_line: 1,
+            current_line: 1,
             source: vec![],
         }
     }
@@ -74,8 +74,15 @@ impl Lexer {
                 },
 
                 // Skip meaningless whitespace
-                " " | "\t" | "\r" | "\n" => {
+                " " | "\t" => {
                     self.advance();
+                    continue
+                },
+
+                // Skip newlines and increment the line counter
+                "\r" | "\n" => {
+                    self.advance();
+                    self.current_line += 1;
                     continue
                 },
 
@@ -107,7 +114,7 @@ impl Lexer {
 
             tokens.push(Token {
                 kind,
-                
+                line: self.current_line,
                 start_pos,
                 end_pos
             });
@@ -348,6 +355,7 @@ mod tests {
                 kind: TokenKind::Comment,
                 start_pos: 0,
                 end_pos: 33,
+                line: 1,
             }]
         );
     }
@@ -363,6 +371,7 @@ mod tests {
                 kind: TokenKind::Literal(Literal::Int),
                 start_pos: 0,
                 end_pos: 4,
+                line: 1,
             }]
         );
     }
@@ -378,6 +387,7 @@ mod tests {
                 kind: TokenKind::Literal(Literal::Float),
                 start_pos: 0,
                 end_pos: 8,
+                line: 1,
             }]
         );
     }
@@ -393,6 +403,7 @@ mod tests {
                 kind: TokenKind::Type,
                 start_pos: 0,
                 end_pos: 5,
+                line: 1,
             }]
         );
     }
