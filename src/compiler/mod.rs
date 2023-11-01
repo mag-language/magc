@@ -103,13 +103,9 @@ impl Compiler {
         self.lexer.add_text(source.clone());
         let tokens = self.lexer.parse();
 
-        println!("{:#?}", tokens);
-
         self.parser.add_tokens(source, tokens);
         let expressions = self.parser.parse()?;
         let mut bytecode = vec![];
-
-        println!("{:#?}", expressions);
 
         for mut expr in expressions {
             expr.desugar();
