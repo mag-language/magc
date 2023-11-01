@@ -6,7 +6,7 @@ use crate::types::{
     ValuePattern,
 };
 use crate::type_system::Typed;
-use crate::parser::ParserError;
+use crate::types::ParserError;
 
 mod block;
 mod conditional;
