@@ -6,3 +6,9 @@ pub struct FieldPattern {
     pub name:  String,
     pub value: Box<Pattern>,
 }
+
+impl FieldPattern {
+    pub fn desugar(self) -> FieldPattern {
+        self
+    }
+}

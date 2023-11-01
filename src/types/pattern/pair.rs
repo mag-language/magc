@@ -8,3 +8,15 @@ pub struct PairPattern {
     pub left: Box<Pattern>,
     pub right: Box<Pattern>,
 }
+
+impl PairPattern {
+    pub fn desugar(mut self) -> PairPattern {
+        self.left.desugar();
+        self.right.desugar();
+
+        PairPattern {
+            left: self.left,
+            right: self.right,
+        }
+    }
+}

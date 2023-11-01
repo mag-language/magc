@@ -160,6 +160,16 @@ impl Pattern {
         }
     }
 
+    pub fn desugar(&mut self) -> Self {
+        match self {
+            Pattern::Field(pattern) => Pattern::Field(pattern.clone().desugar()),
+            Pattern::Tuple(pattern) => Pattern::Tuple(pattern.clone().desugar()),
+            Pattern::Value(pattern) => Pattern::Value(pattern.clone().desugar()),
+            Pattern::Variable(pattern) => Pattern::Variable(pattern.clone().desugar()),
+            Pattern::Pair(pattern) => Pattern::Pair(pattern.clone().desugar()),
+        }
+    }
+
     fn linearize_field(&self, parser: &mut Parser, reference: FieldPattern, other: Pattern) -> LinearizeResult {
         if let Pattern::Field(given) = other {
             if given.name != reference.name { return Err(ParserError::NoMatch) }

@@ -7,3 +7,9 @@ pub struct VariablePattern {
     pub name:    Option<String>,
     pub type_id: Option<String>,
 }
+
+impl VariablePattern {
+    pub fn desugar(mut self) -> VariablePattern {
+        self
+    }
+}

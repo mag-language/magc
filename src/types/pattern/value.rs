@@ -5,3 +5,13 @@ use crate::types::Expression;
 pub struct ValuePattern {
     pub expression: Box<Expression>,
 }
+
+impl ValuePattern {
+    pub fn desugar(mut self) -> ValuePattern {
+        self.expression.desugar();
+
+        ValuePattern {
+            expression: self.expression,
+        }
+    }
+}

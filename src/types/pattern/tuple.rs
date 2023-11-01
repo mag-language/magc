@@ -5,3 +5,13 @@ use crate::types::Pattern;
 pub struct TuplePattern {
     pub child: Box<Pattern>,
 }
+
+impl TuplePattern {
+    pub fn desugar(mut self) -> TuplePattern {
+        self.child.desugar();
+
+        TuplePattern {
+            child: self.child,
+        }
+    }
+}
