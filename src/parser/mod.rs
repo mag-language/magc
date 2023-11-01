@@ -6,7 +6,7 @@ use crate::types::{
     Token, 
     TokenKind,
     Expression,
-    ExpressionKind,
+    ParserError,
 };
 
 use parselets::{
@@ -68,7 +68,7 @@ pub struct Parser {
     /// The input sequence from which expressions are constructed.
     tokens: Vec<Token>,
     /// The original sequence of UTF-8 graphemes, or characters in how a human would understand it.
-    source: Vec<String>,
+    source: String,
 }
 
 fn infix_operator(precedence: usize) -> Rc<dyn InfixParselet> {
@@ -117,13 +117,13 @@ impl Parser {
             prefix_parselets,
             infix_parselets,
             tokens: vec![],
-            source: vec![],
+            source: String::new(),
         }
     }
 
     // Add tokens and their corresponding graphemes to the buffer.
-    pub fn add_tokens(&mut self, mut source: Vec<String>, mut tokens: Vec<Token>) {
-        self.source.append(&mut source);
+    pub fn add_tokens(&mut self, mut source: String, mut tokens: Vec<Token>) {
+        self.source.push_str(&mut source);
         self.tokens.append(&mut tokens);
     }
 
@@ -140,17 +140,10 @@ impl Parser {
 
     // Retrieve a string from the original source at the given position
     pub fn get_lexeme(&self, start: usize, end: usize) -> Result<String, ParserError> {
-        let mut string = String::new();
+        let source = self.source.clone();
 
-        if end < self.source.len() {
-            let mut i = start;
-
-            while i < end {
-                string = format!("{}{}", string, self.source[i].clone());
-                i += 1;
-            }
-
-            Ok(string)
+        if end < source.len() {
+            Ok(self.source[start .. end].to_string())
         } else {
             Err(ParserError::UnexpectedEOF)
         }
@@ -192,7 +185,6 @@ impl Parser {
                 // Hand control over to the infix parselet if there is one, and 
                 // insert the previously parsed expression into this structure.
                 if let Some(infix) = self.infix_parselets.get(&token.kind).cloned() {
-
                     left = infix.parse(self, Box::new(left.clone()), token)?;
                 }
             }
@@ -261,31 +253,6 @@ impl Parser {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum ParserError {
-    MissingPrefixParselet(TokenKind),
-    UnexpectedToken {
-        expected: TokenKind,
-        found:    Token,
-    },
-    UnexpectedEOF,
-    UnexpectedExpression {
-        expected: ExpressionKind,
-        found:    Expression,
-    },
-    UnexpectedType {
-        expected: String,
-        found:    Option<String>,
-    },
-    UnexpectedPattern {
-        expected: String,
-        found:    String,
-    },
-    ExpectedPattern,
-    /// The linearization of the two given patterns failed.
-    NoMatch,
-}
-
 #[cfg(test)]
 mod tests {
     use crate::lexer::Lexer;
@@ -299,7 +266,7 @@ mod tests {
         lexer.add_text("1 + 2".to_string());
 
         parser.add_tokens(
-            crate::helpers::convert_to_graphemes("1 + 2".to_string()),
+            "1 + 2".to_string(),
             lexer.parse(),
         );
 
@@ -317,7 +284,7 @@ mod tests {
                     }),
                     operator: Token {
                         kind: TokenKind::Plus,
-                        
+                        line: 1,
                         start_pos: 2,
                         end_pos: 3,
                     },
