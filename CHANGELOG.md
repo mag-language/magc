@@ -29,6 +29,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- A new compilelet for multimethods.
+- Desugaring for expressions contained in patterns.
+- Conversion methods for wrapping errors.
+
+### Changed
+
+- The `ParserError` enum now resides in the `types` module.
+
+### Fixed
+
+- A bug which would cause the parser to return an EOF error when parsing various expressions due to a problem with the `get_lexeme` method used to retrieve parts of the source string.
+
 ## [0.1.1] - October 27, 2023
 
 ### Added
