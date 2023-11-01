@@ -58,6 +58,7 @@ pub enum ExpressionKind {
 impl ExpressionKind {
     pub fn desugar(self) -> Self {
         match self {
+            // Convert any infix expressions to method calls.
             ExpressionKind::Infix(mut infix) => {
                 // Recursively desugar left and right expressions
                 infix.left.desugar();
@@ -78,6 +79,31 @@ impl ExpressionKind {
                         right: Box::new(Pattern::Value(ValuePattern { expression: infix.right })),
                     })),
                 })
+            },
+
+            ExpressionKind::Call(Call { ref name, ref signature }) => {
+                if let Some(pattern) = signature {
+                    match pattern {
+                        Pattern::Value(ValuePattern { expression}) => {
+                            let mut expr = expression.clone();
+                            expr.desugar();
+                            ExpressionKind::Call(Call {
+                                name: name.to_string(),
+                                signature: Some(Pattern::Value(ValuePattern {
+                                    expression: expr,
+                                })),
+                            })
+                        },
+                        _ => unimplemented!(),
+                    }
+                } else {
+                    self
+                }
+            },
+
+            ExpressionKind::Method (mut method) => {
+                method.body.desugar();
+                ExpressionKind::Method(method)
             },
             // Desugar other expression kinds if necessary
             _ => self,
