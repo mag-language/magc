@@ -47,6 +47,7 @@ impl Multimethod {
         for m in &self.methods {
             if m.signature == method.signature {
                 return Err(CompilerError::DuplicateMethodSignature {
+                    method_name: method.name,
                     signature: method.signature
                 });
             }

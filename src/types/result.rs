@@ -6,7 +6,7 @@ pub type CompilerResult<T> = Result<T, CompilerError>;
 pub enum CompilerError {
     Generic(String),
     /// The given method signature has already been defined for this multimethod.
-    DuplicateMethodSignature { signature: Option<Pattern> },
+    DuplicateMethodSignature { method_name: String, signature: Option<Pattern> },
     ParserError(ParserError),
 }
 
@@ -15,8 +15,8 @@ impl std::fmt::Display for CompilerError {
         let error_description: String = match self {
             Self::Generic(string) => string.clone(),
             Self::ParserError(error) => format!("{}", error),
-            Self::DuplicateMethodSignature { .. }
-                => format!("this method signature has already been defined for this multimethod"),
+            Self::DuplicateMethodSignature { method_name, .. }
+                => format!("this method signature has already been defined for the `{}` multimethod", format!("{}", method_name)),
         };
 
         write!(f, "{}", error_description)
