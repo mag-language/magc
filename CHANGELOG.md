@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A new compilelet for multimethods.
 - Desugaring for expressions contained in patterns.
-- Conversion methods for wrapping errors.
+- Improved error handling, printing the offending line to the console, along with conversion methods for wrapping errors.
 
 ### Changed
 
@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - A bug which would cause the parser to return an EOF error when parsing various expressions due to a problem with the `get_lexeme` method used to retrieve parts of the source string.
+- Handle arithmetic and other methods appropriately in the call parselet, with a temporary empty bytecode until the call stack is properly implemented.
 
 ## [0.1.1] - October 27, 2023
 
