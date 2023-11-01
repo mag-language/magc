@@ -1,6 +1,21 @@
-use strontium::machine::instruction::{Instruction, CalculationMethod, Interrupt, InterruptKind};
-use crate::types::{CompilerResult, Expression, ExpressionKind, Pattern, ValuePattern};
-use crate::compiler::{Compiler, Compilelet};
+use strontium::machine::instruction::{
+    Instruction,
+    CalculationMethod,
+    Interrupt,
+    InterruptKind,
+};
+use crate::types::{
+    CompilerResult,
+    CompilerError,
+    Expression,
+    ExpressionKind,
+    Pattern,
+    ValuePattern,
+};
+use crate::compiler::{
+    Compiler,
+    Compilelet,
+};
 
 pub struct CallCompilelet;
 
@@ -15,7 +30,7 @@ impl Compilelet for CallCompilelet {
 
         if let ExpressionKind::Call(call) = expression.kind {
             let method_name = call.name;
-            let signature = call.signature.unwrap();
+            let signature = call.signature.clone().unwrap();
 
             match method_name.as_str() {
                 // Built-in arithmetic operators
@@ -71,7 +86,12 @@ impl Compilelet for CallCompilelet {
 
                 // Any other method calls
                 _ => {
-
+                    if let Some(multimethod) = compiler.get_multimethod(&method_name) {
+                        let linearization_result = multimethod.linearize(&compiler.parser, call.signature)?;
+                        println!("Linearization result: {:?}", linearization_result);
+                    } else {
+                        return Err(CompilerError::MethodNotFound(method_name))
+                    }
                 }
             }
         }
