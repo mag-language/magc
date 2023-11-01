@@ -15,11 +15,12 @@ mod errors;
 mod type_system;
 mod multimethod;
 
-pub use self::compilelets::{
+pub use compilelets::{
     Compilelet,
     CallCompilelet,
     LiteralCompilelet,
     ValuePatternCompilelet,
+    MethodCompilelet,
 };
 pub use self::errors::ErrorReporter;
 pub use self::multimethod::Multimethod;
@@ -43,7 +44,7 @@ pub struct Compiler {
     /// The `Multimethod` type in this environment stores an arbitrary number of pairs
     /// of method signatures and bodies under a single name, provides methods to match
     /// its signatures with a given call signature and extracts any variables.
-    _multimethods: Environment<Multimethod>,
+    multimethods: Environment<Multimethod>,
     /// A structure which keeps track of defined types.
     _types:        TypeSystem,
     /// Reports errors to the user with helpful information.
@@ -56,6 +57,7 @@ impl Compiler {
         let mut compilelets = HashMap::new();
 
         compilelets.insert("CallExpression".to_string(), &CallCompilelet         as &dyn Compilelet);
+        compilelets.insert("MethodExpression".to_string(),&MethodCompilelet as &dyn Compilelet);
         compilelets.insert("Float".to_string(),          &LiteralCompilelet      as &dyn Compilelet);
         compilelets.insert("Int".to_string(),            &LiteralCompilelet      as &dyn Compilelet);
         compilelets.insert("ValuePattern".to_string(),   &ValuePatternCompilelet as &dyn Compilelet);
@@ -67,7 +69,7 @@ impl Compiler {
             lexer:         Lexer::new(),
             parser:        Parser::new(),
             context:       CompilationContext { recursion_depth: 0 },
-            _multimethods: HashMap::new(),
+            multimethods:  HashMap::new(),
             _types:        TypeSystem,
             _errors:       ErrorReporter,
         }
@@ -99,10 +101,15 @@ impl Compiler {
 
     pub fn compile(&mut self, source: String) -> CompilerResult<Vec<Instruction>> {
         self.lexer.add_text(source.clone());
-        self.parser.add_tokens(vec![source], self.lexer.parse());
+        let tokens = self.lexer.parse();
 
-        let expressions = self.parser.parse().unwrap();
+        println!("{:#?}", tokens);
+
+        self.parser.add_tokens(source, tokens);
+        let expressions = self.parser.parse()?;
         let mut bytecode = vec![];
+
+        println!("{:#?}", expressions);
 
         for mut expr in expressions {
             expr.desugar();
