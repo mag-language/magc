@@ -94,7 +94,7 @@ mod tests {
                 lexer.add_text(text);
 
                 parser.add_tokens(
-                    crate::helpers::convert_to_graphemes("person.favoriteColor".to_string()),
+                    "person.favoriteColor".to_string(),
                     lexer.parse(),
                 );
                 
