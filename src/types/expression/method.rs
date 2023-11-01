@@ -11,6 +11,7 @@ pub struct Method {
     pub name: String,
     /// The method signature which defines the arguments.
     pub signature: Option<Pattern>,
+    /// A value or piece of code which is evaluated when the method is called.
     pub body: Box<Expression>,
 }
 
