@@ -102,6 +102,7 @@ impl ExpressionKind {
             },
 
             ExpressionKind::Method (mut method) => {
+                method.body.desugar();
                 ExpressionKind::Method(method)
             },
             // Desugar other expression kinds if necessary
