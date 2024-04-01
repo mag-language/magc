@@ -12,3 +12,9 @@ impl FieldPattern {
         self
     }
 }
+
+impl std::fmt::Display for FieldPattern {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}: {}", self.name, self.value)
+    }
+}
