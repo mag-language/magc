@@ -136,7 +136,7 @@ impl Pattern {
     /// def fib(n Int) fib(n - 1) + fib(n - 2)
     /// #       ^- low specificity
     /// ```
-    pub fn linearize(&self, parser: &mut Parser, other: Pattern) -> LinearizeResult {
+    pub fn linearize(&self, parser: &Parser, other: Pattern) -> LinearizeResult {
         match self {
             Pattern::Field(reference)    => self.linearize_field(parser, reference.clone(), other),
             Pattern::Tuple(reference)    => self.linearize_tuple(parser, reference.clone(), other),
@@ -146,7 +146,7 @@ impl Pattern {
         }
     }
 
-    pub fn matches_with(&self, parser: &mut Parser, other: Pattern) -> bool {
+    pub fn matches_with(&self, parser: &Parser, other: Pattern) -> bool {
         match self.linearize(parser, other) {
             Ok(_)  => true,
             Err(_) => false,
@@ -170,7 +170,7 @@ impl Pattern {
         }
     }
 
-    fn linearize_field(&self, parser: &mut Parser, reference: FieldPattern, other: Pattern) -> LinearizeResult {
+    fn linearize_field(&self, parser: &Parser, reference: FieldPattern, other: Pattern) -> LinearizeResult {
         if let Pattern::Field(given) = other {
             if given.name != reference.name { return Err(ParserError::NoMatch) }
 
@@ -180,7 +180,7 @@ impl Pattern {
         }
     }
 
-    fn linearize_tuple(&self, parser: &mut Parser, reference: TuplePattern, other: Pattern) -> LinearizeResult {
+    fn linearize_tuple(&self, parser: &Parser, reference: TuplePattern, other: Pattern) -> LinearizeResult {
         if let Pattern::Tuple(TuplePattern { child: other_pattern }) = other {
             reference.child.linearize(parser, *other_pattern)
         } else {
@@ -188,7 +188,7 @@ impl Pattern {
         }
     }
 
-    fn linearize_value(&self, parser: &mut Parser, reference: ValuePattern, other: Pattern) -> LinearizeResult {
+    fn linearize_value(&self, parser: &Parser, reference: ValuePattern, other: Pattern) -> LinearizeResult {
         let reference_lexeme = parser.get_lexeme(
             reference.expression.start_pos,
             reference.expression.end_pos,
@@ -227,7 +227,7 @@ impl Pattern {
         Ok(variables)
     }
 
-    fn linearize_pair(&self, parser: &mut Parser, reference: PairPattern, other: Pattern) -> LinearizeResult {
+    fn linearize_pair(&self, parser: &Parser, reference: PairPattern, other: Pattern) -> LinearizeResult {
         if let Pattern::Pair(PairPattern { left, right }) = other {
             let mut left_map = reference.left.linearize(parser, *left)?;
             let right_map = reference.right.linearize(parser, *right)?;
@@ -237,6 +237,18 @@ impl Pattern {
             Ok(left_map)
         } else {
             Err(ParserError::NoMatch)
+        }
+    }
+}
+
+impl std::fmt::Display for Pattern {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Pattern::Field(pattern)    => write!(f, "{}", pattern),
+            Pattern::Tuple(pattern)    => write!(f, "{}", pattern),
+            Pattern::Value(pattern)    => write!(f, "{}", pattern),
+            Pattern::Variable(pattern) => write!(f, "{}", pattern),
+            Pattern::Pair(pattern)     => write!(f, "{}", pattern),
         }
     }
 }
