@@ -15,19 +15,21 @@ impl Compilelet for MethodCompilelet {
     ) -> CompilerResult<Vec<Instruction>> {
         match expression.kind.clone() {
             ExpressionKind::Method(method) => {
+                let method_c = method.clone();
+                let method_identifier = format!("{}__{}", &method_c.name, &method_c.signature.unwrap());
+                println!("method_identifier: {}", method_identifier);
                 if let Some(multimethod) = compiler.multimethods.get_mut(&method.name) {
-                    multimethod.add_method(method.clone())?;
-
-                    // Compile the method body
-                    compiler.compile_expression(*method.body.clone(), target_register)?;
+                    multimethod.add_method(&compiler.parser, method.clone())?;
                 } else {
                     let mut m = Multimethod::new(&method.name);
-                    m.add_method(method.clone())?;
+                    m.add_method(&compiler.parser, method.clone())?;
                     compiler.multimethods.insert(
                         method.name.clone(),
                         m,
                     );
                 }
+
+                let body = compiler.compile_expression(*method.body.clone(), target_register)?;
             },
 
             _ => (),
