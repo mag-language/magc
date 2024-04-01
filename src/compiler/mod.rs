@@ -114,4 +114,8 @@ impl Compiler {
 
         Ok(bytecode)
     }
+
+    pub fn get_multimethod(&self, name: &str) -> Option<&Multimethod> {
+        self.multimethods.get(name)
+    }
 }
