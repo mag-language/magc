@@ -15,3 +15,9 @@ impl ValuePattern {
         }
     }
 }
+
+impl std::fmt::Display for ValuePattern {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self.expression)
+    }
+}

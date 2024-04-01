@@ -15,3 +15,9 @@ impl TuplePattern {
         }
     }
 }
+
+impl std::fmt::Display for TuplePattern {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "({})", self.child)
+    }
+}
