@@ -20,3 +20,9 @@ impl PairPattern {
         }
     }
 }
+
+impl std::fmt::Display for PairPattern {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}, {}", self.left, self.right)
+    }
+}
