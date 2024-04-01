@@ -7,6 +7,8 @@ pub enum CompilerError {
     Generic(String),
     /// The given method signature has already been defined for this multimethod.
     DuplicateMethodSignature { method_name: String, signature: Option<Pattern> },
+    MethodNotFound(String),
+    MethodSignatureNotFound { method_name: String, pattern: Option<Pattern> },
     ParserError(ParserError),
 }
 
@@ -17,6 +19,10 @@ impl std::fmt::Display for CompilerError {
             Self::ParserError(error) => format!("{}", error),
             Self::DuplicateMethodSignature { method_name, .. }
                 => format!("this method signature has already been defined for the `{}` multimethod", format!("{}", method_name)),
+            Self::MethodNotFound(method_name)
+                => format!("cannot find multimethod named `{}`", format!("{}", method_name)),
+            Self::MethodSignatureNotFound { method_name, pattern }
+                => format!("cannot find method signature: `{:?}`", pattern),
         };
 
         write!(f, "{}", error_description)
@@ -73,7 +79,6 @@ impl std::fmt::Display for ParserError {
                 => format!("expected to find a pattern"),
             Self::NoMatch
                 => format!("the given patterns do not match"),
-            _ => format!("{:?}", self),
         };
 
         write!(f, "{}", error_description)
