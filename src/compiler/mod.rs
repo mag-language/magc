@@ -112,6 +112,8 @@ impl Compiler {
             bytecode.append(&mut self.compile_expression(expr, None)?);
         }
 
+        bytecode.push(Instruction::HALT);
+
         Ok(bytecode)
     }
 

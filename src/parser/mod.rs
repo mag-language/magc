@@ -142,7 +142,7 @@ impl Parser {
     pub fn get_lexeme(&self, start: usize, end: usize) -> Result<String, ParserError> {
         let source = self.source.clone();
 
-        if end < source.len() {
+        if end <= source.len() {
             Ok(self.source[start .. end].to_string())
         } else {
             Err(ParserError::UnexpectedEOF)
