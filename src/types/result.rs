@@ -22,7 +22,7 @@ impl std::fmt::Display for CompilerError {
             Self::MethodNotFound(method_name)
                 => format!("cannot find multimethod named `{}`", format!("{}", method_name)),
             Self::MethodSignatureNotFound { method_name, pattern }
-                => format!("cannot find method signature: `{:?}`", pattern),
+                => format!("cannot find method signature `{:?}` for `{}`", pattern, method_name),
         };
 
         write!(f, "{}", error_description)

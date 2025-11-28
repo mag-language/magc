@@ -29,7 +29,7 @@ impl Compilelet for MethodCompilelet {
                     );
                 }
 
-                let body = compiler.compile_expression(*method.body.clone(), target_register)?;
+                let _body = compiler.compile_expression(*method.body.clone(), target_register)?;
             },
 
             _ => (),
