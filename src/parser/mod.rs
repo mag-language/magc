@@ -243,6 +243,9 @@ impl Parser {
 
     /// Consume a token with the given TokenKind, or return an error.
     fn consume_expect(&mut self, kind: TokenKind) -> Result<Token, ParserError> {
+        if self.eof() {
+            return Err(ParserError::UnexpectedEOF);
+        }
         let token = self.tokens[self.position].clone();
 
         if token.kind == kind {
