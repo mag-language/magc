@@ -27,10 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Update outdated unreleased diff link.
 -->
 
-## Unreleased
+## [0.7.0] - May 9, 2026
 
 ### Added
 
+- Full multimethod compilation pipeline with proper bytecode linking — method bodies are compiled separately, addresses are resolved before execution, and registration metadata is emitted for the runtime.
+- `CompiledMethod`, `PendingCall`, and `MethodRegistration` types to track method bodies, pending address fixups, and dispatch registrations through the compilation process.
 - A new compilelet for multimethods.
 - Desugaring for expressions contained in patterns.
 - Improved error handling, printing the offending line to the console, along with conversion methods for wrapping errors.
@@ -41,8 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- A bug which would cause the parser to return an EOF error when parsing various expressions due to a problem with the `get_lexeme` method used to retrieve parts of the source string.
-- Handle arithmetic and other methods appropriately in the call parselet, with a temporary empty bytecode until the call stack is properly implemented.
+- UTF-8 lexeme extraction: the parser now stores source as a `Vec<String>` of grapheme clusters (matching the lexer) instead of a raw `String`, fixing incorrect byte-index slicing of multi-byte characters that caused subsequent REPL lines to be parsed from the wrong offset.
+- Recursive method calls were not compiled or linked correctly.
+- A bug which would cause the parser to return an EOF error when parsing various expressions due to a problem with the `get_lexeme` method.
 
 ## [0.1.1] - October 27, 2023
 
