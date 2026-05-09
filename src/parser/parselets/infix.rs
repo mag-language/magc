@@ -1,11 +1,6 @@
-use crate::parser::{Parser, ParserResult, InfixParselet};
+use crate::parser::{InfixParselet, Parser, ParserResult};
 
-use crate::types::{
-    Expression,
-    ExpressionKind,
-    Infix,
-    Token,
-};
+use crate::types::{Expression, ExpressionKind, Infix, Token};
 
 /// Parse a binary operator expression like `1 + 2`.
 #[derive(Debug, Clone)]
@@ -25,9 +20,9 @@ impl InfixParselet for InfixOperatorParselet {
                 operator: token.clone(),
                 right: Box::new(right),
             }),
-            
+
             start_pos: token.start_pos,
-            end_pos:   token.end_pos,
+            end_pos: token.end_pos,
         })
     }
 

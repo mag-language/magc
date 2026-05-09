@@ -10,9 +10,7 @@ impl TuplePattern {
     pub fn desugar(mut self) -> TuplePattern {
         self.child.desugar();
 
-        TuplePattern {
-            child: self.child,
-        }
+        TuplePattern { child: self.child }
     }
 }
 

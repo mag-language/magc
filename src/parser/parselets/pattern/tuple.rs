@@ -1,20 +1,8 @@
 //! Parse a single pattern enclosed in parentheses.
 
-use crate::parser::{
-    Parser,
-    ParserResult,
-    ParserError,
-    PrefixParselet,
-};
+use crate::parser::{Parser, ParserError, ParserResult, PrefixParselet};
 
-use crate::types::{
-    Token,
-    TokenKind,
-    Expression,
-    ExpressionKind,
-    Pattern,
-    TuplePattern,
-};
+use crate::types::{Expression, ExpressionKind, Pattern, Token, TokenKind, TuplePattern};
 
 /// Parse a single pattern enclosed in parentheses.
 pub struct TuplePatternParselet;
@@ -35,12 +23,10 @@ impl PrefixParselet for TuplePatternParselet {
         parser.consume_expect(TokenKind::RightParen)?;
 
         Ok(Expression {
-            kind: ExpressionKind::Pattern(
-                Pattern::Tuple(TuplePattern { child }),
-            ),
-            
+            kind: ExpressionKind::Pattern(Pattern::Tuple(TuplePattern { child })),
+
             start_pos: token.start_pos,
-            end_pos:   token.end_pos,
+            end_pos: token.end_pos,
         })
     }
 }

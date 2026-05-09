@@ -4,5 +4,5 @@ use crate::types::*;
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Prefix {
     pub operator: Token,
-    pub operand:  Box<Expression>,
+    pub operand: Box<Expression>,
 }

@@ -4,7 +4,7 @@
 /// the variable is considered nameless and no destructuring will take place.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct VariablePattern {
-    pub name:    Option<String>,
+    pub name: Option<String>,
     pub type_id: Option<String>,
 }
 

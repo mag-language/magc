@@ -1,4 +1,4 @@
-use super::{Expression, ExpressionKind, Token, TokenKind, Pattern};
+use super::{Expression, ExpressionKind, Pattern, Token, TokenKind};
 
 pub type CompilerResult<T> = Result<T, CompilerError>;
 
@@ -6,9 +6,15 @@ pub type CompilerResult<T> = Result<T, CompilerError>;
 pub enum CompilerError {
     Generic(String),
     /// The given method signature has already been defined for this multimethod.
-    DuplicateMethodSignature { method_name: String, signature: Option<Pattern> },
+    DuplicateMethodSignature {
+        method_name: String,
+        signature: Option<Pattern>,
+    },
     MethodNotFound(String),
-    MethodSignatureNotFound { method_name: String, pattern: Option<Pattern> },
+    MethodSignatureNotFound {
+        method_name: String,
+        pattern: Option<Pattern>,
+    },
     ParserError(ParserError),
 }
 
@@ -17,12 +23,21 @@ impl std::fmt::Display for CompilerError {
         let error_description: String = match self {
             Self::Generic(string) => string.clone(),
             Self::ParserError(error) => format!("{}", error),
-            Self::DuplicateMethodSignature { method_name, .. }
-                => format!("this method signature has already been defined for the `{}` multimethod", format!("{}", method_name)),
-            Self::MethodNotFound(method_name)
-                => format!("cannot find multimethod named `{}`", format!("{}", method_name)),
-            Self::MethodSignatureNotFound { method_name, pattern }
-                => format!("cannot find method signature `{:?}` for `{}`", pattern, method_name),
+            Self::DuplicateMethodSignature { method_name, .. } => format!(
+                "this method signature has already been defined for the `{}` multimethod",
+                format!("{}", method_name)
+            ),
+            Self::MethodNotFound(method_name) => format!(
+                "cannot find multimethod named `{}`",
+                format!("{}", method_name)
+            ),
+            Self::MethodSignatureNotFound {
+                method_name,
+                pattern,
+            } => format!(
+                "cannot find method signature `{:?}` for `{}`",
+                pattern, method_name
+            ),
         };
 
         write!(f, "{}", error_description)
@@ -40,20 +55,20 @@ pub enum ParserError {
     MissingPrefixParselet(TokenKind),
     UnexpectedToken {
         expected: TokenKind,
-        found:    Token,
+        found: Token,
     },
     UnexpectedEOF,
     UnexpectedExpression {
         expected: ExpressionKind,
-        found:    Expression,
+        found: Expression,
     },
     UnexpectedType {
         expected: String,
-        found:    Option<String>,
+        found: Option<String>,
     },
     UnexpectedPattern {
         expected: String,
-        found:    String,
+        found: String,
     },
     ExpectedPattern,
     /// The linearization of the two given patterns failed.
@@ -63,22 +78,24 @@ pub enum ParserError {
 impl std::fmt::Display for ParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let error_description = match self {
-            Self::MissingPrefixParselet(kind)
-                => format!("no prefix parselet found for token {:?}", kind),
-            Self::UnexpectedToken { expected, found }
-                => format!("expected token {:?}, found {:?}", expected, found),
-            Self::UnexpectedEOF
-                => format!("expected expression, found end of input"),
-            Self::UnexpectedExpression { expected, found }
-                => format!("expected expression {:?}, found {:?}", expected, found),
-            Self::UnexpectedType { expected, found }
-                => format!("expected type {:?}, found {:?}", expected, found),
-            Self::UnexpectedPattern { expected, found }
-                => format!("expected pattern {:?}, found {:?}", expected, found),
-            Self::ExpectedPattern
-                => format!("expected to find a pattern"),
-            Self::NoMatch
-                => format!("the given patterns do not match"),
+            Self::MissingPrefixParselet(kind) => {
+                format!("no prefix parselet found for token {:?}", kind)
+            }
+            Self::UnexpectedToken { expected, found } => {
+                format!("expected token {:?}, found {:?}", expected, found)
+            }
+            Self::UnexpectedEOF => format!("expected expression, found end of input"),
+            Self::UnexpectedExpression { expected, found } => {
+                format!("expected expression {:?}, found {:?}", expected, found)
+            }
+            Self::UnexpectedType { expected, found } => {
+                format!("expected type {:?}, found {:?}", expected, found)
+            }
+            Self::UnexpectedPattern { expected, found } => {
+                format!("expected pattern {:?}, found {:?}", expected, found)
+            }
+            Self::ExpectedPattern => format!("expected to find a pattern"),
+            Self::NoMatch => format!("the given patterns do not match"),
         };
 
         write!(f, "{}", error_description)

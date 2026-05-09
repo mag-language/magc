@@ -1,19 +1,8 @@
 //! Parse a variable identifier with an optional type annotation.
 
-use crate::parser::{
-    Parser,
-    PrefixParselet,
-    ParserResult,
-};
+use crate::parser::{Parser, ParserResult, PrefixParselet};
 
-use crate::types::{
-    Token,
-    TokenKind,
-    Expression,
-    ExpressionKind,
-    Pattern,
-    VariablePattern,
-};
+use crate::types::{Expression, ExpressionKind, Pattern, Token, TokenKind, VariablePattern};
 
 #[derive(Debug, Clone)]
 /// Parse a variable identifier with an optional type annotation.
@@ -23,10 +12,7 @@ impl PrefixParselet for VariablePatternParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult {
         let name;
 
-        let lexeme = parser.get_lexeme(
-            token.start_pos,
-            token.end_pos,
-        )?;
+        let lexeme = parser.get_lexeme(token.start_pos, token.end_pos)?;
 
         if lexeme == "_".to_string() {
             name = None;
@@ -36,7 +22,7 @@ impl PrefixParselet for VariablePatternParselet {
 
         if !parser.eof() {
             let next_token = parser.peek()?;
-            
+
             let pattern = match next_token.kind {
                 TokenKind::Type => {
                     parser.advance();
@@ -45,29 +31,29 @@ impl PrefixParselet for VariablePatternParselet {
                         name,
                         type_id: Some(lexeme),
                     })
-                },
+                }
 
                 _ => Pattern::Variable(VariablePattern {
                     name,
                     type_id: None,
-                })
+                }),
             };
 
             Ok(Expression {
-                kind:      ExpressionKind::Pattern(pattern),
-                
+                kind: ExpressionKind::Pattern(pattern),
+
                 start_pos: token.start_pos,
-                end_pos:   token.end_pos,
+                end_pos: token.end_pos,
             })
         } else {
             Ok(Expression {
-                kind:      ExpressionKind::Pattern(Pattern::Variable(VariablePattern {
+                kind: ExpressionKind::Pattern(Pattern::Variable(VariablePattern {
                     name,
                     type_id: None,
                 })),
-                
+
                 start_pos: token.start_pos,
-                end_pos:   token.end_pos,
+                end_pos: token.end_pos,
             })
         }
     }
@@ -90,7 +76,7 @@ mod tests {
                     name: Some("name".to_string()),
                     type_id: Some("String".to_string()),
                 }),
-                
+
                 start_pos: 0,
                 end_pos:   4,
             }),
@@ -110,7 +96,7 @@ mod tests {
                     name: None,
                     type_id: None,
                 }),
-                
+
                 start_pos: 0,
                 end_pos:   1,
             }),
@@ -130,7 +116,7 @@ mod tests {
                     name: None,
                     type_id: Some("Int".to_string()),
                 }),
-                
+
                 start_pos: 0,
                 end_pos:   1,
             }),
@@ -150,7 +136,7 @@ mod tests {
                     name: Some("lexer".to_string()),
                     type_id: None,
                 }),
-                
+
                 start_pos: 0,
                 end_pos:   5,
             }),

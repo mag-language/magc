@@ -1,19 +1,6 @@
-use crate::parser::{
-    Parser,
-    ParserResult,
-    ParserError,
-    InfixParselet,
-    PREC_CALL,
-};
+use crate::parser::{InfixParselet, Parser, ParserError, ParserResult, PREC_CALL};
 use crate::types::{
-    Expression,
-    ExpressionKind,
-    Call,
-    Token,
-    TokenKind,
-    Pattern,
-    ValuePattern,
-    VariablePattern,
+    Call, Expression, ExpressionKind, Pattern, Token, TokenKind, ValuePattern, VariablePattern,
 };
 
 #[derive(Debug, Clone)]
@@ -21,27 +8,33 @@ use crate::types::{
 pub struct CallParselet;
 
 impl CallParselet {
-    fn pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+    fn pattern_or_value_pattern(
+        &self,
+        expression: Box<Expression>,
+    ) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
 
-            _ => Ok(Pattern::Value(ValuePattern {
-                expression,
-            })),
+            _ => Ok(Pattern::Value(ValuePattern { expression })),
         }
     }
 
-    fn expect_typeless_variable_pattern(&self, expression: Box<Expression>) -> Result<String, ParserError> {
+    fn expect_typeless_variable_pattern(
+        &self,
+        expression: Box<Expression>,
+    ) -> Result<String, ParserError> {
         match expression.kind {
-            ExpressionKind::Pattern(
-                Pattern::Variable(pattern)
-            ) => {
-                if let VariablePattern { name: Some(name), type_id: None } = pattern {
+            ExpressionKind::Pattern(Pattern::Variable(pattern)) => {
+                if let VariablePattern {
+                    name: Some(name),
+                    type_id: None,
+                } = pattern
+                {
                     Ok(name)
                 } else {
                     Err(ParserError::ExpectedPattern)
                 }
-            },
+            }
 
             _ => Err(ParserError::ExpectedPattern),
         }
@@ -67,11 +60,11 @@ impl InfixParselet for CallParselet {
                         name,
                         signature: Some(self.pattern_or_value_pattern(Box::new(expr))?),
                     }),
-                    
+
                     start_pos: token.start_pos,
-                    end_pos:   token.end_pos,
-                })
-            },
+                    end_pos: token.end_pos,
+                });
+            }
         };
 
         Ok(Expression {
@@ -79,9 +72,9 @@ impl InfixParselet for CallParselet {
                 name,
                 signature: None,
             }),
-            
+
             start_pos: token.start_pos,
-            end_pos:   token.end_pos,
+            end_pos: token.end_pos,
         })
     }
 

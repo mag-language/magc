@@ -1,7 +1,4 @@
-use crate::types::{
-    Expression,
-    ExpressionKind,
-};
+use crate::types::{Expression, ExpressionKind};
 
 use crate::parser::Parser;
 
@@ -10,21 +7,21 @@ use crate::types::ParserError;
 use std::collections::HashMap;
 
 mod field;
+mod pair;
 mod tuple;
 mod value;
-mod pair;
 mod variable;
 
 pub use self::field::*;
+pub use self::pair::*;
 pub use self::tuple::*;
 pub use self::value::*;
-pub use self::pair::*;
 pub use self::variable::*;
 
 pub type LinearizeResult = Result<HashMap<VariablePattern, Box<Expression>>, ParserError>;
 
 /// A pattern that can be matched with an [`Expression`] to enable complex flow control
-/// and full destructuring pattern matching, which increases the flexibility and 
+/// and full destructuring pattern matching, which increases the flexibility and
 /// expressivity within the language by a great degree.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Pattern {
@@ -42,13 +39,14 @@ pub enum Pattern {
 
 impl Pattern {
     /// Convert an expression into a pattern, if possible.
-    fn _pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+    fn _pattern_or_value_pattern(
+        &self,
+        expression: Box<Expression>,
+    ) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
 
-            _ => Ok(Pattern::Value(ValuePattern {
-                expression,
-            })),
+            _ => Ok(Pattern::Value(ValuePattern { expression })),
         }
     }
 
@@ -57,7 +55,9 @@ impl Pattern {
             Pattern::Field(pattern) => Ok(pattern),
             _ => Err(ParserError::UnexpectedPattern {
                 expected: String::from("FieldPattern"),
-                found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),
+                found: self
+                    .get_type()
+                    .unwrap_or(String::from("<dynamically typed>")),
             }),
         }
     }
@@ -67,7 +67,9 @@ impl Pattern {
             Pattern::Tuple(pattern) => Ok(pattern),
             _ => Err(ParserError::UnexpectedPattern {
                 expected: String::from("TuplePattern"),
-                found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),
+                found: self
+                    .get_type()
+                    .unwrap_or(String::from("<dynamically typed>")),
             }),
         }
     }
@@ -77,7 +79,9 @@ impl Pattern {
             Pattern::Value(pattern) => Ok(*pattern.expression),
             _ => Err(ParserError::UnexpectedPattern {
                 expected: String::from("ValuePattern"),
-                found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),
+                found: self
+                    .get_type()
+                    .unwrap_or(String::from("<dynamically typed>")),
             }),
         }
     }
@@ -87,7 +91,9 @@ impl Pattern {
             Pattern::Variable(pattern) => Ok(pattern),
             _ => Err(ParserError::UnexpectedPattern {
                 expected: String::from("VariablePattern"),
-                found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),
+                found: self
+                    .get_type()
+                    .unwrap_or(String::from("<dynamically typed>")),
             }),
         }
     }
@@ -97,7 +103,9 @@ impl Pattern {
             Pattern::Pair(pattern) => Ok(pattern),
             _ => Err(ParserError::UnexpectedPattern {
                 expected: String::from("PairPattern"),
-                found:    self.get_type().unwrap_or(String::from("<dynamically typed>")),
+                found: self
+                    .get_type()
+                    .unwrap_or(String::from("<dynamically typed>")),
             }),
         }
     }
@@ -109,13 +117,8 @@ impl Typed for Pattern {
             Pattern::Field(_) => Some(String::from("FieldPattern")),
             Pattern::Tuple(_) => Some(String::from("TuplePattern")),
             Pattern::Value(_) => Some(String::from("ValuePattern")),
-            Pattern::Variable(
-                VariablePattern {
-                    name: _,
-                    type_id,
-                }
-            ) => type_id.clone(),
-            Pattern::Pair(_)     => Some(String::from("PairPattern")),
+            Pattern::Variable(_) => Some(String::from("VariablePattern")),
+            Pattern::Pair(_) => Some(String::from("PairPattern")),
         }
     }
 }
@@ -138,17 +141,17 @@ impl Pattern {
     /// ```
     pub fn linearize(&self, parser: &Parser, other: Pattern) -> LinearizeResult {
         match self {
-            Pattern::Field(reference)    => self.linearize_field(parser, reference.clone(), other),
-            Pattern::Tuple(reference)    => self.linearize_tuple(parser, reference.clone(), other),
-            Pattern::Value(reference)    => self.linearize_value(parser, reference.clone(), other),
+            Pattern::Field(reference) => self.linearize_field(parser, reference.clone(), other),
+            Pattern::Tuple(reference) => self.linearize_tuple(parser, reference.clone(), other),
+            Pattern::Value(reference) => self.linearize_value(parser, reference.clone(), other),
             Pattern::Variable(reference) => self.linearize_variable(reference.clone(), other),
-            Pattern::Pair(reference)     => self.linearize_pair(parser, reference.clone(), other),
+            Pattern::Pair(reference) => self.linearize_pair(parser, reference.clone(), other),
         }
     }
 
     pub fn matches_with(&self, parser: &Parser, other: Pattern) -> bool {
         match self.linearize(parser, other) {
-            Ok(_)  => true,
+            Ok(_) => true,
             Err(_) => false,
         }
     }
@@ -156,7 +159,7 @@ impl Pattern {
     pub fn get_precedence(&self) -> usize {
         match self {
             Pattern::Value(_) => 2,
-            _                 => 1,
+            _ => 1,
         }
     }
 
@@ -170,9 +173,16 @@ impl Pattern {
         }
     }
 
-    fn linearize_field(&self, parser: &Parser, reference: FieldPattern, other: Pattern) -> LinearizeResult {
+    fn linearize_field(
+        &self,
+        parser: &Parser,
+        reference: FieldPattern,
+        other: Pattern,
+    ) -> LinearizeResult {
         if let Pattern::Field(given) = other {
-            if given.name != reference.name { return Err(ParserError::NoMatch) }
+            if given.name != reference.name {
+                return Err(ParserError::NoMatch);
+            }
 
             given.value.linearize(parser, *reference.value)
         } else {
@@ -180,28 +190,35 @@ impl Pattern {
         }
     }
 
-    fn linearize_tuple(&self, parser: &Parser, reference: TuplePattern, other: Pattern) -> LinearizeResult {
-        if let Pattern::Tuple(TuplePattern { child: other_pattern }) = other {
+    fn linearize_tuple(
+        &self,
+        parser: &Parser,
+        reference: TuplePattern,
+        other: Pattern,
+    ) -> LinearizeResult {
+        if let Pattern::Tuple(TuplePattern {
+            child: other_pattern,
+        }) = other
+        {
             reference.child.linearize(parser, *other_pattern)
         } else {
             Err(ParserError::NoMatch)
         }
     }
 
-    fn linearize_value(&self, parser: &Parser, reference: ValuePattern, other: Pattern) -> LinearizeResult {
-        let reference_lexeme = parser.get_lexeme(
-            reference.expression.start_pos,
-            reference.expression.end_pos,
-        )?;
+    fn linearize_value(
+        &self,
+        parser: &Parser,
+        reference: ValuePattern,
+        other: Pattern,
+    ) -> LinearizeResult {
+        let reference_lexeme =
+            parser.get_lexeme(reference.expression.start_pos, reference.expression.end_pos)?;
 
         if let Pattern::Value(ValuePattern { expression }) = other {
-            let given_lexeme = parser.get_lexeme(
-                expression.start_pos,
-                expression.end_pos,
-            )?;
+            let given_lexeme = parser.get_lexeme(expression.start_pos, expression.end_pos)?;
 
-            if reference.expression.kind == expression.kind
-                    && reference_lexeme == given_lexeme {
+            if reference.expression.kind == expression.kind && reference_lexeme == given_lexeme {
                 Ok(HashMap::new())
             } else {
                 Err(ParserError::NoMatch)
@@ -217,17 +234,28 @@ impl Pattern {
         if let Some(name) = reference.name {
             // Extract value into environment and skip type checking for now.
             if let Pattern::Value(ValuePattern { expression }) = other {
-                variables.insert(VariablePattern { name: Some(name), type_id: None }, expression);
+                variables.insert(
+                    VariablePattern {
+                        name: Some(name),
+                        type_id: None,
+                    },
+                    expression,
+                );
             } else {
                 // TODO: add proper error handling here!
-                return Err(ParserError::NoMatch)
+                return Err(ParserError::NoMatch);
             }
         }
-        
+
         Ok(variables)
     }
 
-    fn linearize_pair(&self, parser: &Parser, reference: PairPattern, other: Pattern) -> LinearizeResult {
+    fn linearize_pair(
+        &self,
+        parser: &Parser,
+        reference: PairPattern,
+        other: Pattern,
+    ) -> LinearizeResult {
         if let Pattern::Pair(PairPattern { left, right }) = other {
             let mut left_map = reference.left.linearize(parser, *left)?;
             let right_map = reference.right.linearize(parser, *right)?;
@@ -244,11 +272,11 @@ impl Pattern {
 impl std::fmt::Display for Pattern {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Pattern::Field(pattern)    => write!(f, "{}", pattern),
-            Pattern::Tuple(pattern)    => write!(f, "{}", pattern),
-            Pattern::Value(pattern)    => write!(f, "{}", pattern),
+            Pattern::Field(pattern) => write!(f, "{}", pattern),
+            Pattern::Tuple(pattern) => write!(f, "{}", pattern),
+            Pattern::Value(pattern) => write!(f, "{}", pattern),
             Pattern::Variable(pattern) => write!(f, "{}", pattern),
-            Pattern::Pair(pattern)     => write!(f, "{}", pattern),
+            Pattern::Pair(pattern) => write!(f, "{}", pattern),
         }
     }
 }

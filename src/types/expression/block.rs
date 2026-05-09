@@ -6,5 +6,5 @@ use std::collections::BTreeMap;
 /// A first-class chunk of code that can be passed around as a value.
 pub struct Block {
     pub environment: BTreeMap<String, Expression>,
-    pub children:    Vec<Expression>,
+    pub children: Vec<Expression>,
 }

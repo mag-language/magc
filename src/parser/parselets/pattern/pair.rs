@@ -4,35 +4,23 @@
 //! lists. Since a value pattern simply contains an [`Expression`], the contents of this
 //! structure can be pretty much anything.
 
-use crate::parser::{
-    Parser,
-    ParserResult,
-    ParserError,
-    InfixParselet,
-    PREC_PAIR,
-};
+use crate::parser::{InfixParselet, Parser, ParserError, ParserResult, PREC_PAIR};
 
-use crate::types::{
-    Expression,
-    ExpressionKind,
-    Pattern,
-    PairPattern,
-    ValuePattern,
-    Token,
-};
+use crate::types::{Expression, ExpressionKind, PairPattern, Pattern, Token, ValuePattern};
 
 /// Parse a pair of patterns separated by a comma.
 #[derive(Debug, Clone)]
 pub struct PairParselet;
 
 impl PairParselet {
-    fn pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+    fn pattern_or_value_pattern(
+        &self,
+        expression: Box<Expression>,
+    ) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
 
-            _ => Ok(Pattern::Value(ValuePattern {
-                expression,
-            })),
+            _ => Ok(Pattern::Value(ValuePattern { expression })),
         }
     }
 
@@ -56,9 +44,9 @@ impl InfixParselet for PairParselet {
                 left: Box::new(self.pattern_or_value_pattern(left)?),
                 right: Box::new(self.pattern_or_value_pattern(Box::new(right))?),
             })),
-            
+
             start_pos: token.start_pos,
-            end_pos:   token.end_pos,
+            end_pos: token.end_pos,
         })
     }
 

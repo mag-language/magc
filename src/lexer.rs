@@ -4,7 +4,7 @@
 //! into UTF-8 characters and consumes them one at a time to create a list of
 //! tokens that exactly represent the code contained in the source string.
 
-use crate::types::{Token, TokenKind, Keyword, Literal};
+use crate::types::{Keyword, Literal, Token, TokenKind};
 
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -27,7 +27,10 @@ impl Lexer {
 
     pub fn add_text(&mut self, text: String) -> &mut Self {
         self.source.append(
-            &mut text.graphemes(true).map(String::from).collect::<Vec<String>>(),
+            &mut text
+                .graphemes(true)
+                .map(String::from)
+                .collect::<Vec<String>>(),
         );
         self
     }
@@ -37,7 +40,6 @@ impl Lexer {
         let mut tokens = vec![];
 
         while !self.eof() {
-
             // Fetch our character and set the starting point of the lexeme.
             let character = self.source[self.position].clone();
             let start_pos = self.position;
@@ -60,7 +62,7 @@ impl Lexer {
                 "=" => self.match_next("=", TokenKind::EqualEqual, TokenKind::Equal),
                 ">" => self.match_next("=", TokenKind::GreaterEqual, TokenKind::Greater),
                 "<" => self.match_next("=", TokenKind::SmallerEqual, TokenKind::Smaller),
-                
+
                 "/" => {
                     if self.peek() == "/" {
                         self.parse_comment()
@@ -71,42 +73,30 @@ impl Lexer {
                         self.advance();
                         TokenKind::Slash
                     }
-                },
+                }
 
                 // Skip meaningless whitespace
                 " " | "\t" => {
                     self.advance();
-                    continue
-                },
+                    continue;
+                }
 
                 // Skip newlines and increment the line counter
                 "\r" | "\n" => {
                     self.advance();
                     self.current_line += 1;
-                    continue
-                },
+                    continue;
+                }
 
-                "0" 
-                | "1"
-                | "2"
-                | "3"
-                | "4"
-                | "5"
-                | "6"
-                | "7"
-                | "8"
-                | "9" => self.parse_number(),
+                "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => self.parse_number(),
 
-                "A" | "B" | "C" | "D" | "E"
-                | "F" | "G" | "H" | "I" | "J" 
-                | "K" | "L" | "M" | "N" | "O"
-                | "P" | "Q" | "R" | "S" | "T"
-                | "U" | "V" | "W" | "X" | "Y" | "Z"
-                    => self.parse_type(),
+                "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
+                | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" => {
+                    self.parse_type()
+                }
 
                 "\"" => self.parse_string(),
-                
-                
+
                 _ => self.parse_identifier_or_keyword(character),
             };
 
@@ -116,14 +106,14 @@ impl Lexer {
                 kind,
                 line: self.current_line,
                 start_pos,
-                end_pos
+                end_pos,
             });
         }
 
         tokens
     }
 
-    // A utility function that allows us to call the advance 
+    // A utility function that allows us to call the advance
     // method when returning a single character token.
     fn single_token(&mut self, kind: TokenKind) -> TokenKind {
         self.advance();
@@ -134,49 +124,47 @@ impl Lexer {
         self.advance();
 
         while !self.eof() {
-            let c =  self.source[self.position].clone();
+            let c = self.source[self.position].clone();
 
             match c.as_str() {
-                "!" | ":" | "," | "." | "[" | "(" |
-                "%" | "?" | ")" | "]" | "*" | "/" |
-                "+" | "-" | "=" | "<" | ">" | "\"" | 
-                "'" | "\n" | "\r" | "\t" | " " | "{" |
-                "}" | "`" | "^" => break,
+                "!" | ":" | "," | "." | "[" | "(" | "%" | "?" | ")" | "]" | "*" | "/" | "+"
+                | "-" | "=" | "<" | ">" | "\"" | "'" | "\n" | "\r" | "\t" | " " | "{" | "}"
+                | "`" | "^" => break,
 
                 _ => {
                     self.advance();
                     character = format!("{}{}", character, c);
-                },
+                }
             }
         }
 
         match character.as_str() {
-            "and"       => TokenKind::Keyword(Keyword::And),
-            "as"        => TokenKind::Keyword(Keyword::As),
-            "catch"     => TokenKind::Keyword(Keyword::Catch),
-            "case"      => TokenKind::Keyword(Keyword::Case),
-            "const"     => TokenKind::Keyword(Keyword::Const),
-            "def"       => TokenKind::Keyword(Keyword::Def),
-            "do"        => TokenKind::Keyword(Keyword::Do),
-            "else"      => TokenKind::Keyword(Keyword::Else),
-            "end"       => TokenKind::Keyword(Keyword::End),
-            "enum"      => TokenKind::Keyword(Keyword::Enum),
-            "if"        => TokenKind::Keyword(Keyword::If),
-            "import"    => TokenKind::Keyword(Keyword::Import),
+            "and" => TokenKind::Keyword(Keyword::And),
+            "as" => TokenKind::Keyword(Keyword::As),
+            "catch" => TokenKind::Keyword(Keyword::Catch),
+            "case" => TokenKind::Keyword(Keyword::Case),
+            "const" => TokenKind::Keyword(Keyword::Const),
+            "def" => TokenKind::Keyword(Keyword::Def),
+            "do" => TokenKind::Keyword(Keyword::Do),
+            "else" => TokenKind::Keyword(Keyword::Else),
+            "end" => TokenKind::Keyword(Keyword::End),
+            "enum" => TokenKind::Keyword(Keyword::Enum),
+            "if" => TokenKind::Keyword(Keyword::If),
+            "import" => TokenKind::Keyword(Keyword::Import),
             "interface" => TokenKind::Keyword(Keyword::Interface),
-            "it"        => TokenKind::Keyword(Keyword::It),
-            "for"       => TokenKind::Keyword(Keyword::For),
-            "match"     => TokenKind::Keyword(Keyword::Match),
-            "or"        => TokenKind::Keyword(Keyword::Or),
-            "return"    => TokenKind::Keyword(Keyword::Return),
-            "then"      => TokenKind::Keyword(Keyword::Then),
-            "this"      => TokenKind::Keyword(Keyword::This),
-            "var"       => TokenKind::Keyword(Keyword::Var),
-            "with"      => TokenKind::Keyword(Keyword::With),
-            "while"     => TokenKind::Keyword(Keyword::While),
+            "it" => TokenKind::Keyword(Keyword::It),
+            "for" => TokenKind::Keyword(Keyword::For),
+            "match" => TokenKind::Keyword(Keyword::Match),
+            "or" => TokenKind::Keyword(Keyword::Or),
+            "return" => TokenKind::Keyword(Keyword::Return),
+            "then" => TokenKind::Keyword(Keyword::Then),
+            "this" => TokenKind::Keyword(Keyword::This),
+            "var" => TokenKind::Keyword(Keyword::Var),
+            "with" => TokenKind::Keyword(Keyword::With),
+            "while" => TokenKind::Keyword(Keyword::While),
 
-            "true"      => TokenKind::Literal(Literal::Boolean),
-            "false"     => TokenKind::Literal(Literal::Boolean),
+            "true" => TokenKind::Literal(Literal::Boolean),
+            "false" => TokenKind::Literal(Literal::Boolean),
 
             _ => TokenKind::Identifier,
         }
@@ -189,14 +177,14 @@ impl Lexer {
 
         // Start parsing the comment.
         while !self.eof() {
-            let character =  self.source[self.position].clone();
+            let character = self.source[self.position].clone();
 
             match character.as_str() {
                 "\n" => break,
                 _ => {
                     self.advance();
                     comment = format!("{}{}", comment, character);
-                },
+                }
             }
         }
 
@@ -210,25 +198,17 @@ impl Lexer {
 
         // Start parsing the comment.
         while !self.eof() {
-            let character =  self.source[self.position].clone();
+            let character = self.source[self.position].clone();
 
             match character.as_str() {
-                "A" | "B" | "C" | "D" | "E"
-                | "F" | "G" | "H" | "I" | "J" 
-                | "K" | "L" | "M" | "N" | "O"
-                | "P" | "Q" | "R" | "S" | "T" | "U"
-                | "V" | "W" | "X" | "Y" | "Z"
-                | "a" | "b" | "c" | "d" | "e"
-                | "f" | "g" | "h" | "i" | "j" 
-                | "k" | "l" | "m" | "n" | "o"
-                | "p" | "q" | "r" | "s" | "t"
-                | "v" | "w" | "x" | "y" | "z"
-                | "0" | "1" | "2" | "3" | "4"
-                | "5" | "6" | "7" | "8" | "9"
-                 => {
+                "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
+                | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+                | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+                | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "v" | "w" | "x" | "y" | "z" | "0"
+                | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => {
                     self.advance();
                     type_string = format!("{}{}", type_string, character);
-                },
+                }
 
                 _ => break,
             }
@@ -244,38 +224,22 @@ impl Lexer {
 
         // Start parsing the number.
         while !self.eof() {
-            let character =  self.source[self.position].clone();
+            let character = self.source[self.position].clone();
 
             match character.as_str() {
-                "0" 
-                | "1"
-                | "2"
-                | "3"
-                | "4"
-                | "5"
-                | "6"
-                | "7"
-                | "8"
-                | "9"
-                | "." => {
+                "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "." => {
                     self.advance();
                     number_string = format!("{}{}", number_string, character);
-                },
+                }
 
-                _ => {
-                    break
-                },
+                _ => break,
             }
         }
 
         if number_string.contains(".") {
-            TokenKind::Literal(
-                Literal::Float
-            )
+            TokenKind::Literal(Literal::Float)
         } else {
-            TokenKind::Literal(
-                Literal::Int
-            )
+            TokenKind::Literal(Literal::Int)
         }
     }
 
@@ -283,17 +247,17 @@ impl Lexer {
         self.advance();
 
         while !self.eof() {
-            let character =  self.source[self.position].clone();
+            let character = self.source[self.position].clone();
 
             match character.as_str() {
                 "\"" => {
                     self.advance();
-                    break
-                },
+                    break;
+                }
 
                 _ => {
                     self.advance();
-                },
+                }
             }
         }
 
@@ -307,7 +271,12 @@ impl Lexer {
         }
     }
 
-    fn match_next(&mut self, character: &'static str, then: TokenKind, otherwise: TokenKind) -> TokenKind {
+    fn match_next(
+        &mut self,
+        character: &'static str,
+        then: TokenKind,
+        otherwise: TokenKind,
+    ) -> TokenKind {
         self.advance();
 
         if self.current() == character {
@@ -330,7 +299,7 @@ impl Lexer {
     fn current(&self) -> String {
         self.source[self.position].clone()
     }
-    
+
     fn peek(&self) -> String {
         self.source[self.position + 1].clone()
     }
@@ -342,7 +311,7 @@ impl Lexer {
 
 #[cfg(test)]
 mod tests {
-    use super::{Lexer, Token, TokenKind, Literal};
+    use super::{Lexer, Literal, Token, TokenKind};
 
     #[test]
     fn scan_comment() {

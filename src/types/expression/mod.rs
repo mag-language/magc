@@ -1,12 +1,6 @@
-use crate::types::{
-    Literal,
-    Pattern,
-    PairPattern,
-    TokenKind,
-    ValuePattern,
-};
 use crate::type_system::Typed;
 use crate::types::ParserError;
+use crate::types::{Literal, PairPattern, Pattern, TokenKind, ValuePattern};
 
 mod block;
 mod conditional;
@@ -17,7 +11,7 @@ mod prefix;
 pub use self::block::Block;
 pub use self::conditional::Conditional;
 pub use self::infix::Infix;
-pub use self::method::{Method, Call};
+pub use self::method::{Call, Method};
 pub use self::prefix::Prefix;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -75,36 +69,41 @@ impl ExpressionKind {
                 ExpressionKind::Call(Call {
                     name: method_name,
                     signature: Some(Pattern::Pair(PairPattern {
-                        left: Box::new(Pattern::Value(ValuePattern { expression: infix.left })),
-                        right: Box::new(Pattern::Value(ValuePattern { expression: infix.right })),
+                        left: Box::new(Pattern::Value(ValuePattern {
+                            expression: infix.left,
+                        })),
+                        right: Box::new(Pattern::Value(ValuePattern {
+                            expression: infix.right,
+                        })),
                     })),
                 })
-            },
+            }
 
-            ExpressionKind::Call(Call { ref name, ref signature }) => {
+            ExpressionKind::Call(Call {
+                ref name,
+                ref signature,
+            }) => {
                 if let Some(pattern) = signature {
                     match pattern {
-                        Pattern::Value(ValuePattern { expression}) => {
+                        Pattern::Value(ValuePattern { expression }) => {
                             let mut expr = expression.clone();
                             expr.desugar();
                             ExpressionKind::Call(Call {
                                 name: name.to_string(),
-                                signature: Some(Pattern::Value(ValuePattern {
-                                    expression: expr,
-                                })),
+                                signature: Some(Pattern::Value(ValuePattern { expression: expr })),
                             })
-                        },
-                        _ => unimplemented!(),
+                        }
+                        _ => self,
                     }
                 } else {
                     self
                 }
-            },
+            }
 
-            ExpressionKind::Method (mut method) => {
+            ExpressionKind::Method(mut method) => {
                 method.body.desugar();
                 ExpressionKind::Method(method)
-            },
+            }
             // Desugar other expression kinds if necessary
             _ => self,
         }
@@ -140,17 +139,17 @@ impl Expression {
 impl Typed for Expression {
     fn get_type(&self) -> Option<String> {
         match &self.kind {
-            ExpressionKind::Conditional(_)   => Some(String::from("ConditionalExpression")),
-            ExpressionKind::List(_)          => Some(String::from("ListExpression")),
+            ExpressionKind::Conditional(_) => Some(String::from("ConditionalExpression")),
+            ExpressionKind::List(_) => Some(String::from("ListExpression")),
             ExpressionKind::Literal(literal) => literal.get_type(),
             ExpressionKind::Pattern(pattern) => pattern.get_type(),
-            ExpressionKind::Type(type_id)    => Some(type_id.clone()),
-            ExpressionKind::Prefix(_)        => Some(String::from("PrefixExpression")),
-            ExpressionKind::Infix(_)         => Some(String::from("InfixExpression")),
-            ExpressionKind::Call(_)          => Some(String::from("CallExpression")),
-            ExpressionKind::Method(_)        => Some(String::from("MethodExpression")),
-            ExpressionKind::Block(_)         => Some(String::from("BlockExpression")),
-            ExpressionKind::Identifier       => Some(String::from("Identifier")),
+            ExpressionKind::Type(type_id) => Some(type_id.clone()),
+            ExpressionKind::Prefix(_) => Some(String::from("PrefixExpression")),
+            ExpressionKind::Infix(_) => Some(String::from("InfixExpression")),
+            ExpressionKind::Call(_) => Some(String::from("CallExpression")),
+            ExpressionKind::Method(_) => Some(String::from("MethodExpression")),
+            ExpressionKind::Block(_) => Some(String::from("BlockExpression")),
+            ExpressionKind::Identifier => Some(String::from("Identifier")),
         }
     }
 }

@@ -1,6 +1,6 @@
-use crate::types::Method;
 use crate::parser::Parser;
-use crate::types::{CompilerResult, CompilerError, Pattern};
+use crate::types::Method;
+use crate::types::{CompilerError, CompilerResult, Pattern};
 
 /// A collection of methods with different function signatures which share a common name.
 #[derive(Debug, Clone)]
@@ -14,7 +14,7 @@ pub struct Multimethod {
 impl Multimethod {
     pub fn new(name: &str) -> Self {
         Self {
-            name:    String::from(name),
+            name: String::from(name),
             methods: vec![],
         }
     }
@@ -29,8 +29,8 @@ impl Multimethod {
                     if s.matches_with(parser, p.clone()) {
                         matching_methods.push((method, p.get_precedence()));
                     }
-                },
-                (Some(..), None) | (None, Some(..)) => {},
+                }
+                (Some(..), None) | (None, Some(..)) => {}
             }
         }
 
@@ -57,20 +57,20 @@ impl Multimethod {
                     if p1.matches_with(parser, p2.clone()) {
                         return Err(CompilerError::DuplicateMethodSignature {
                             method_name: method.name,
-                            signature: method.signature
+                            signature: method.signature,
                         });
                     }
-                },
+                }
                 // no match.
-                [Some(_), None] | [None, Some(_)] => {},
+                [Some(_), None] | [None, Some(_)] => {}
                 [None, None] => {
                     println!("MATCH!");
 
                     return Err(CompilerError::DuplicateMethodSignature {
                         method_name: method.name,
-                        signature: method.signature
-                    })
-                },
+                        signature: method.signature,
+                    });
+                }
             }
         }
         self.methods.push(method);

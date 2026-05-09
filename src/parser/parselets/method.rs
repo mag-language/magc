@@ -1,31 +1,19 @@
-use crate::parser::{
-    Parser,
-    ParserResult,
-    ParserError,
-    PrefixParselet,
-};
-use crate::types::{
-    Expression,
-    ExpressionKind,
-    Method,
-    Token,
-    TokenKind,
-    Pattern,
-    ValuePattern,
-};
+use crate::parser::{Parser, ParserError, ParserResult, PrefixParselet};
+use crate::types::{Expression, ExpressionKind, Method, Pattern, Token, TokenKind, ValuePattern};
 
 #[derive(Debug, Clone)]
 /// Parse a multimethod definition like `def fib(n Int) fib(n - 1) + fib(n - 2)`
 pub struct MethodParselet;
 
 impl MethodParselet {
-    fn pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+    fn pattern_or_value_pattern(
+        &self,
+        expression: Box<Expression>,
+    ) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
 
-            _ => Ok(Pattern::Value(ValuePattern {
-                expression,
-            })),
+            _ => Ok(Pattern::Value(ValuePattern { expression })),
         }
     }
 }
@@ -50,12 +38,11 @@ impl PrefixParselet for MethodParselet {
                     signature: None,
                     body,
                 })
-            },
+            }
 
             _ => {
-                let signature = Some(self.pattern_or_value_pattern(
-                    Box::new(parser.parse_expression(0)?)
-                )?);
+                let signature =
+                    Some(self.pattern_or_value_pattern(Box::new(parser.parse_expression(0)?))?);
 
                 parser.consume_expect(TokenKind::RightParen)?;
 
@@ -73,7 +60,6 @@ impl PrefixParselet for MethodParselet {
             kind,
             start_pos: 0,
             end_pos: 0,
-            
         })
     }
 }

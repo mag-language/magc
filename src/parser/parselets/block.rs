@@ -1,7 +1,7 @@
 //! A first-class chunk of code that can be passed around as a value.
 
 use crate::parser::{Parser, ParserResult, PrefixParselet};
-use crate::types::{Expression, ExpressionKind, Block, Token, TokenKind, Keyword};
+use crate::types::{Block, Expression, ExpressionKind, Keyword, Token, TokenKind};
 
 use std::collections::BTreeMap;
 
@@ -16,8 +16,8 @@ impl PrefixParselet for BlockParselet {
             match parser.peek()?.kind {
                 TokenKind::Keyword(Keyword::End) => {
                     parser.advance();
-                    break
-                },
+                    break;
+                }
 
                 _ => children.push(parser.parse_expression(0)?),
             };
@@ -30,7 +30,6 @@ impl PrefixParselet for BlockParselet {
             }),
             start_pos: 0,
             end_pos: 0,
-            
         })
     }
 }

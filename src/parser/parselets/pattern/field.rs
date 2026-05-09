@@ -1,22 +1,10 @@
 //! Parse a named pattern and return it as a single entry of a key-value association.
 
-use crate::parser::{
-    Parser,
-    ParserResult,
-    ParserError,
-    InfixParselet,
-    PREC_RECORD,
-};
+use crate::parser::{InfixParselet, Parser, ParserError, ParserResult, PREC_RECORD};
 
 use crate::types::{
-    Expression,
-    ExpressionKind,
-    Pattern,
+    Expression, ExpressionKind, FieldPattern, Pattern, Token, TokenKind, ValuePattern,
     VariablePattern,
-    ValuePattern,
-    FieldPattern,
-    Token,
-    TokenKind,
 };
 
 #[derive(Debug, Clone)]
@@ -24,23 +12,25 @@ use crate::types::{
 pub struct FieldPatternParselet;
 
 impl FieldPatternParselet {
-    fn expect_variable_pattern(&self, expression: Box<Expression>) -> Result<VariablePattern, ParserError> {
+    fn expect_variable_pattern(
+        &self,
+        expression: Box<Expression>,
+    ) -> Result<VariablePattern, ParserError> {
         match expression.kind {
-            ExpressionKind::Pattern(
-                Pattern::Variable(variable_pattern)
-            ) => Ok(variable_pattern),
+            ExpressionKind::Pattern(Pattern::Variable(variable_pattern)) => Ok(variable_pattern),
 
             _ => Err(ParserError::ExpectedPattern),
         }
     }
 
-    fn pattern_or_value_pattern(&self, expression: Box<Expression>) -> Result<Pattern, ParserError> {
+    fn pattern_or_value_pattern(
+        &self,
+        expression: Box<Expression>,
+    ) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
 
-            _ => Ok(Pattern::Value(ValuePattern {
-                expression,
-            })),
+            _ => Ok(Pattern::Value(ValuePattern { expression })),
         }
     }
 }
@@ -55,7 +45,7 @@ impl InfixParselet for FieldPatternParselet {
 
         let n = match name {
             Some(v) => v,
-            None    => "_".to_string(),
+            None => "_".to_string(),
         };
 
         Ok(Expression {
@@ -63,9 +53,9 @@ impl InfixParselet for FieldPatternParselet {
                 name: n,
                 value: Box::new(self.pattern_or_value_pattern(right)?),
             })),
-            
+
             start_pos: token.start_pos,
-            end_pos:   token.end_pos,
+            end_pos: token.end_pos,
         })
     }
 

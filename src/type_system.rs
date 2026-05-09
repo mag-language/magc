@@ -11,5 +11,8 @@ pub trait Typed {
 pub struct Type;
 
 pub enum TypeError {
-    UnexpectedType { expected: String, found: Option<String> },
+    UnexpectedType {
+        expected: String,
+        found: Option<String>,
+    },
 }

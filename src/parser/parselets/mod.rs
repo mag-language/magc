@@ -1,9 +1,6 @@
 use crate::parser::{Parser, ParserResult};
 
-use crate::types::{
-    Token,
-    Expression,
-};
+use crate::types::{Expression, Token};
 
 mod block;
 mod call;
@@ -22,10 +19,10 @@ pub use self::conditional::*;
 pub use self::infix::*;
 pub use self::list::*;
 pub use self::literal::*;
-pub use self::pattern::*;
-pub use self::prefix::*;
 pub use self::member::*;
 pub use self::method::*;
+pub use self::pattern::*;
+pub use self::prefix::*;
 
 pub trait PrefixParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult;

@@ -1,30 +1,12 @@
 //! Assemble a token sequence into a tree of expressions.
 
-use crate::types::{
-    Keyword,
-    Literal,
-    Token, 
-    TokenKind,
-    Expression,
-    ParserError,
-};
+use crate::types::{Expression, Keyword, Literal, ParserError, Token, TokenKind};
+use unicode_segmentation::UnicodeSegmentation;
 
 use parselets::{
-    PrefixParselet,
-    InfixParselet,
-    CallParselet,
-    BlockParselet,
-    PrefixOperatorParselet,
-    InfixOperatorParselet,
-    ListParselet,
-    LiteralParselet,
-    MemberParselet,
-    MethodParselet,
-    PairParselet,
-    FieldPatternParselet,
-    TuplePatternParselet,
-    VariablePatternParselet,
-    ConditionalParselet,
+    BlockParselet, CallParselet, ConditionalParselet, FieldPatternParselet, InfixOperatorParselet,
+    InfixParselet, ListParselet, LiteralParselet, MemberParselet, MethodParselet, PairParselet,
+    PrefixOperatorParselet, PrefixParselet, TuplePatternParselet, VariablePatternParselet,
 };
 
 use std::collections::HashMap;
@@ -37,7 +19,7 @@ pub type ParserResult = Result<Expression, ParserError>;
 /// The precedence `10` for assignment expressions like `var n = 0`
 pub static PREC_ASSIGNMENT: usize = 10;
 /// The precedence `15` for pair expressions like `a, b, c`
-pub static PREC_PAIR: usize       = 15;
+pub static PREC_PAIR: usize = 15;
 /// The precedence `20` for field expressions like `name: n String`
 pub static PREC_RECORD: usize = 20;
 /// The precedence `30` for logical unary operators like `and` or `or`
@@ -64,66 +46,113 @@ pub struct Parser {
     /// Maps [`TokenKind`]s to pieces of code able to parse a specific prefix expression.
     prefix_parselets: HashMap<TokenKind, &'static dyn PrefixParselet>,
     /// Maps [`TokenKind`]s to pieces of code able to parse a specific infix expression.
-    infix_parselets:  HashMap<TokenKind, Rc<dyn InfixParselet>>,
+    infix_parselets: HashMap<TokenKind, Rc<dyn InfixParselet>>,
     /// The input sequence from which expressions are constructed.
     tokens: Vec<Token>,
     /// The original sequence of UTF-8 graphemes, or characters in how a human would understand it.
-    source: String,
+    source: Vec<String>,
 }
 
 fn infix_operator(precedence: usize) -> Rc<dyn InfixParselet> {
-    Rc::new(InfixOperatorParselet {
-        precedence,
-    }) as Rc<dyn InfixParselet>
+    Rc::new(InfixOperatorParselet { precedence }) as Rc<dyn InfixParselet>
 }
 
 impl Parser {
     pub fn new() -> Self {
         let mut prefix_parselets = HashMap::new();
-        let mut infix_parselets  = HashMap::new();
+        let mut infix_parselets = HashMap::new();
 
-        prefix_parselets.insert(TokenKind::Identifier, &VariablePatternParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(
+            TokenKind::Identifier,
+            &VariablePatternParselet as &dyn PrefixParselet,
+        );
         //prefix_parselets.insert(TokenKind::LeftParen,  &TuplePatternParselet      as &dyn PrefixParselet);
 
-        prefix_parselets.insert(TokenKind::Literal(Literal::Int),     &LiteralParselet as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::Literal(Literal::Float),   &LiteralParselet as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::Literal(Literal::Boolean), &LiteralParselet as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::Literal(Literal::String),  &LiteralParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(
+            TokenKind::Literal(Literal::Int),
+            &LiteralParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
+            TokenKind::Literal(Literal::Float),
+            &LiteralParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
+            TokenKind::Literal(Literal::Boolean),
+            &LiteralParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
+            TokenKind::Literal(Literal::String),
+            &LiteralParselet as &dyn PrefixParselet,
+        );
 
-        prefix_parselets.insert(TokenKind::Keyword(Keyword::If),  &ConditionalParselet as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::Keyword(Keyword::Def), &MethodParselet      as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::Keyword(Keyword::Do),  &BlockParselet      as &dyn PrefixParselet);
+        prefix_parselets.insert(
+            TokenKind::Keyword(Keyword::If),
+            &ConditionalParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
+            TokenKind::Keyword(Keyword::Def),
+            &MethodParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
+            TokenKind::Keyword(Keyword::Do),
+            &BlockParselet as &dyn PrefixParselet,
+        );
 
-        prefix_parselets.insert(TokenKind::Bang,  &PrefixOperatorParselet as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::Plus,  &PrefixOperatorParselet as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::Minus, &PrefixOperatorParselet as &dyn PrefixParselet);
-        prefix_parselets.insert(TokenKind::LeftParen,   &TuplePatternParselet as &dyn PrefixParselet);
+        prefix_parselets.insert(
+            TokenKind::Bang,
+            &PrefixOperatorParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
+            TokenKind::Plus,
+            &PrefixOperatorParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
+            TokenKind::Minus,
+            &PrefixOperatorParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
+            TokenKind::LeftParen,
+            &TuplePatternParselet as &dyn PrefixParselet,
+        );
         prefix_parselets.insert(TokenKind::LeftBracket, &ListParselet as &dyn PrefixParselet);
 
-        infix_parselets.insert(TokenKind::Plus,       infix_operator(PREC_TERM));
-        infix_parselets.insert(TokenKind::Minus,      infix_operator(PREC_TERM));
-        infix_parselets.insert(TokenKind::Identifier, infix_operator(PREC_TERM));
-        infix_parselets.insert(TokenKind::Star,       infix_operator(PREC_PRODUCT));
-        infix_parselets.insert(TokenKind::Slash,      infix_operator(PREC_PRODUCT));
+        infix_parselets.insert(TokenKind::Plus, infix_operator(PREC_TERM));
+        infix_parselets.insert(TokenKind::Minus, infix_operator(PREC_TERM));
+        // Note: Identifier was removed as infix to fix multi-line parsing
+        infix_parselets.insert(TokenKind::Star, infix_operator(PREC_PRODUCT));
+        infix_parselets.insert(TokenKind::Slash, infix_operator(PREC_PRODUCT));
         infix_parselets.insert(TokenKind::EqualEqual, infix_operator(PREC_EQUALITY));
 
-        infix_parselets.insert(TokenKind::Comma,  Rc::new(PairParselet) as Rc<dyn InfixParselet>);
-        infix_parselets.insert(TokenKind::LeftParen,  Rc::new(CallParselet) as Rc<dyn InfixParselet>);
-        infix_parselets.insert(TokenKind::Colon,  Rc::new(FieldPatternParselet) as Rc<dyn InfixParselet>);
-        infix_parselets.insert(TokenKind::Dot,  Rc::new(MemberParselet) as Rc<dyn InfixParselet>);
+        infix_parselets.insert(
+            TokenKind::Comma,
+            Rc::new(PairParselet) as Rc<dyn InfixParselet>,
+        );
+        infix_parselets.insert(
+            TokenKind::LeftParen,
+            Rc::new(CallParselet) as Rc<dyn InfixParselet>,
+        );
+        infix_parselets.insert(
+            TokenKind::Colon,
+            Rc::new(FieldPatternParselet) as Rc<dyn InfixParselet>,
+        );
+        infix_parselets.insert(
+            TokenKind::Dot,
+            Rc::new(MemberParselet) as Rc<dyn InfixParselet>,
+        );
 
         Self {
             position: 0,
             prefix_parselets,
             infix_parselets,
             tokens: vec![],
-            source: String::new(),
+            source: vec![],
         }
     }
 
     // Add tokens and their corresponding graphemes to the buffer.
-    pub fn add_tokens(&mut self, mut source: String, mut tokens: Vec<Token>) {
-        self.source.push_str(&mut source);
+    pub fn add_tokens(&mut self, source: String, mut tokens: Vec<Token>) {
+        self.source
+            .extend(source.graphemes(true).map(String::from));
         self.tokens.append(&mut tokens);
     }
 
@@ -140,27 +169,22 @@ impl Parser {
 
     // Retrieve a string from the original source at the given position
     pub fn get_lexeme(&self, start: usize, end: usize) -> Result<String, ParserError> {
-        let source = self.source.clone();
-
-        if end <= source.len() {
-            Ok(self.source[start .. end].to_string())
+        if end <= self.source.len() {
+            Ok(self.source[start..end].concat())
         } else {
             Err(ParserError::UnexpectedEOF)
         }
     }
 
     /// Parse a single expression with the given precedence.
-    pub fn parse_expression(
-        &mut self,
-        precedence: usize,
-    ) -> Result<Expression, ParserError> {
-        let token           = self.consume();
-        let start_pos       = token.start_pos;
-        let mut end_pos     = token.end_pos;
+    pub fn parse_expression(&mut self, precedence: usize) -> Result<Expression, ParserError> {
+        let token = self.consume();
+        let start_pos = token.start_pos;
+        let mut end_pos = token.end_pos;
 
         // Let's see if we find a prefix parselet for the current token.
         if let Some(prefix) = self.prefix_parselets.get(&token.kind) {
-            // Hand control over to our prefix parselet. This takes care of converting 
+            // Hand control over to our prefix parselet. This takes care of converting
             // simple expressions like numbers, strings or variable identifiers.
             let mut left = prefix.parse(self, token.clone())?;
 
@@ -169,10 +193,10 @@ impl Parser {
 
                 return Ok(Expression {
                     kind: left.kind,
-                    
+
                     start_pos,
                     end_pos,
-                })
+                });
             }
 
             // This is the bit where real magic happens. This conditional check right here
@@ -182,7 +206,7 @@ impl Parser {
                 let token = self.peek()?;
                 end_pos = token.end_pos;
 
-                // Hand control over to the infix parselet if there is one, and 
+                // Hand control over to the infix parselet if there is one, and
                 // insert the previously parsed expression into this structure.
                 if let Some(infix) = self.infix_parselets.get(&token.kind).cloned() {
                     left = infix.parse(self, Box::new(left.clone()), token)?;
@@ -191,12 +215,12 @@ impl Parser {
 
             Ok(Expression {
                 kind: left.kind,
-                
+
                 start_pos,
                 end_pos,
             })
         } else {
-            return Err(ParserError::MissingPrefixParselet(token.clone().kind))
+            return Err(ParserError::MissingPrefixParselet(token.clone().kind));
         }
     }
 
@@ -265,20 +289,15 @@ mod tests {
         let mut lexer = Lexer::new();
         lexer.add_text("1 + 2".to_string());
 
-        parser.add_tokens(
-            "1 + 2".to_string(),
-            lexer.parse(),
-        );
+        parser.add_tokens("1 + 2".to_string(), lexer.parse());
 
         assert_eq!(
             parser.parse(),
             Ok(vec![Expression {
                 kind: ExpressionKind::Infix(Infix {
                     left: Box::new(Expression {
-                        kind: ExpressionKind::Literal(
-                            Literal::Int,
-                        ),
-                        
+                        kind: ExpressionKind::Literal(Literal::Int,),
+
                         start_pos: 0,
                         end_pos: 1,
                     }),
@@ -289,15 +308,13 @@ mod tests {
                         end_pos: 3,
                     },
                     right: Box::new(Expression {
-                        kind: ExpressionKind::Literal(
-                            Literal::Int,
-                        ),
-                        
+                        kind: ExpressionKind::Literal(Literal::Int,),
+
                         start_pos: 4,
                         end_pos: 5,
                     }),
                 }),
-                
+
                 start_pos: 2,
                 end_pos: 3,
             }])

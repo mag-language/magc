@@ -2,12 +2,8 @@ use std::string::String;
 
 use strontium::machine::instruction::Instruction;
 
-use crate::types::{
-    CompilerResult,
-    Expression,
-    ExpressionKind,
-};
 use crate::compiler::Compiler;
+use crate::types::{CompilerResult, Expression, ExpressionKind};
 
 use super::Compilelet;
 
@@ -17,7 +13,7 @@ pub struct ValuePatternCompilelet;
 impl Compilelet for ValuePatternCompilelet {
     fn compile(
         &self,
-        compiler:   &mut Compiler,
+        compiler: &mut Compiler,
         expression: Expression,
         target_register: Option<String>,
     ) -> CompilerResult<Vec<Instruction>> {
@@ -25,10 +21,7 @@ impl Compilelet for ValuePatternCompilelet {
 
         if let ExpressionKind::Pattern(pattern) = expression.kind {
             let expression = pattern.expect_value().unwrap();
-            instructions.append(&mut compiler.compile_expression(
-                expression,
-                target_register,
-            )?);
+            instructions.append(&mut compiler.compile_expression(expression, target_register)?);
         }
 
         Ok(instructions)
