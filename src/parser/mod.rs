@@ -122,6 +122,12 @@ impl Parser {
         infix_parselets.insert(TokenKind::Star, infix_operator(PREC_PRODUCT));
         infix_parselets.insert(TokenKind::Slash, infix_operator(PREC_PRODUCT));
         infix_parselets.insert(TokenKind::EqualEqual, infix_operator(PREC_EQUALITY));
+        infix_parselets.insert(TokenKind::BangEqual, infix_operator(PREC_EQUALITY));
+        infix_parselets.insert(TokenKind::Greater, infix_operator(PREC_COMPARISON));
+        infix_parselets.insert(TokenKind::GreaterEqual, infix_operator(PREC_COMPARISON));
+        infix_parselets.insert(TokenKind::Smaller, infix_operator(PREC_COMPARISON));
+        infix_parselets.insert(TokenKind::SmallerEqual, infix_operator(PREC_COMPARISON));
+        infix_parselets.insert(TokenKind::Percent, infix_operator(PREC_PRODUCT));
 
         infix_parselets.insert(
             TokenKind::Comma,

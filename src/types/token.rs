@@ -17,6 +17,7 @@ pub struct Token {
 #[derive(Debug, Clone, Hash, Eq, PartialEq)]
 pub enum TokenKind {
     Bang,
+    BangEqual,
     Colon,
     Comma,
     Dot,

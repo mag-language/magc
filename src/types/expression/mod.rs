@@ -64,6 +64,13 @@ impl ExpressionKind {
                     TokenKind::Minus => "-".to_string(),
                     TokenKind::Star => "*".to_string(),
                     TokenKind::Slash => "/".to_string(),
+                    TokenKind::Percent => "%".to_string(),
+                    TokenKind::EqualEqual => "==".to_string(),
+                    TokenKind::BangEqual => "!=".to_string(),
+                    TokenKind::Greater => ">".to_string(),
+                    TokenKind::GreaterEqual => ">=".to_string(),
+                    TokenKind::Smaller => "<".to_string(),
+                    TokenKind::SmallerEqual => "<=".to_string(),
                     _ => unimplemented!(),
                 };
                 ExpressionKind::Call(Call {

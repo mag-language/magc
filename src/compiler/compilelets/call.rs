@@ -2,7 +2,9 @@ use crate::compiler::{Compilelet, Compiler};
 use crate::types::{
     CompilerError, CompilerResult, Expression, ExpressionKind, Pattern, ValuePattern,
 };
-use strontium::machine::instruction::{CalculationMethod, Instruction, Interrupt, InterruptKind};
+use strontium::machine::instruction::{
+    CalculationMethod, ComparisonMethod, Instruction, Interrupt, InterruptKind,
+};
 use strontium::machine::register::RegisterValue;
 
 pub struct CallCompilelet;
@@ -101,7 +103,65 @@ impl Compilelet for CallCompilelet {
                             destination: destination_register.clone(),
                         });
 
-                        // Add the interrupt to print the result if this is at the top level.
+                        if compiler.context.recursion_depth == 1 {
+                            instructions.push(Instruction::Interrupt {
+                                interrupt: Interrupt {
+                                    address: destination_register,
+                                    kind: InterruptKind::Print,
+                                },
+                            });
+                        }
+                    }
+                }
+
+                // Built-in comparison operators
+                "==" | "!=" | "<" | "<=" | ">" | ">=" => {
+                    let method = match method_name.as_str() {
+                        "==" => ComparisonMethod::EQ,
+                        "!=" => ComparisonMethod::NEQ,
+                        "<" => ComparisonMethod::LT,
+                        "<=" => ComparisonMethod::LTE,
+                        ">" => ComparisonMethod::GT,
+                        ">=" => ComparisonMethod::GTE,
+                        _ => unreachable!(),
+                    };
+
+                    if let Some(Pattern::Pair(pair)) = signature {
+                        let left_expr =
+                            if let Pattern::Value(ValuePattern { expression }) = *pair.left {
+                                *expression
+                            } else {
+                                unreachable!()
+                            };
+
+                        let right_expr =
+                            if let Pattern::Value(ValuePattern { expression }) = *pair.right {
+                                *expression
+                            } else {
+                                unreachable!()
+                            };
+
+                        let left_register = compiler.registers.allocate_register();
+                        instructions.append(
+                            &mut compiler
+                                .compile_expression(left_expr, Some(left_register.clone()))?,
+                        );
+
+                        let right_register = compiler.registers.allocate_register();
+                        instructions.append(
+                            &mut compiler
+                                .compile_expression(right_expr, Some(right_register.clone()))?,
+                        );
+
+                        let destination_register = target_register
+                            .unwrap_or_else(|| compiler.registers.allocate_register());
+                        instructions.push(Instruction::Compare {
+                            method,
+                            operand1: left_register,
+                            operand2: right_register,
+                            destination: destination_register.clone(),
+                        });
+
                         if compiler.context.recursion_depth == 1 {
                             instructions.push(Instruction::Interrupt {
                                 interrupt: Interrupt {

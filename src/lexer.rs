@@ -45,7 +45,7 @@ impl Lexer {
             let start_pos = self.position;
 
             let kind = match character.as_str() {
-                "!" => self.single_token(TokenKind::Bang),
+                "!" => self.match_next("=", TokenKind::BangEqual, TokenKind::Bang),
                 ":" => self.single_token(TokenKind::Colon),
                 "," => self.single_token(TokenKind::Comma),
                 "." => self.single_token(TokenKind::Dot),
