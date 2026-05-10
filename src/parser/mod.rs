@@ -5,8 +5,8 @@ use unicode_segmentation::UnicodeSegmentation;
 
 use parselets::{
     BlockParselet, CallParselet, ConditionalParselet, FieldPatternParselet, InfixOperatorParselet,
-    InfixParselet, ListParselet, LiteralParselet, MemberParselet, MethodParselet, PairParselet,
-    PrefixOperatorParselet, PrefixParselet, ReturnParselet, TuplePatternParselet,
+    InfixParselet, ListParselet, LiteralParselet, MatchParselet, MemberParselet, MethodParselet,
+    PairParselet, PrefixOperatorParselet, PrefixParselet, ReturnParselet, TuplePatternParselet,
     VarParselet, VariablePatternParselet,
 };
 
@@ -103,6 +103,10 @@ impl Parser {
             &ReturnParselet as &dyn PrefixParselet,
         );
         prefix_parselets.insert(
+            TokenKind::Keyword(Keyword::Match),
+            &MatchParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
             TokenKind::Keyword(Keyword::Do),
             &BlockParselet as &dyn PrefixParselet,
         );
@@ -126,6 +130,7 @@ impl Parser {
         prefix_parselets.insert(TokenKind::LeftBracket, &ListParselet as &dyn PrefixParselet);
 
         infix_parselets.insert(TokenKind::Plus, infix_operator(PREC_TERM));
+        infix_parselets.insert(TokenKind::Tilde, infix_operator(PREC_TERM));
         infix_parselets.insert(TokenKind::Minus, infix_operator(PREC_TERM));
         // Note: Identifier was removed as infix to fix multi-line parsing
         infix_parselets.insert(TokenKind::Star, infix_operator(PREC_PRODUCT));

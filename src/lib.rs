@@ -76,6 +76,7 @@
 #![feature(type_ascription)]
 
 pub mod compiler;
+pub mod dispatch;
 pub mod helpers;
 pub mod lexer;
 pub mod parser;

@@ -46,6 +46,7 @@ pub enum TokenKind {
     SmallerEqual,
     Star,
     StarEqual,
+    Tilde,
     Type,
     Comment,
 }

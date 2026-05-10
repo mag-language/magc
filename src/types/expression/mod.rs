@@ -5,6 +5,7 @@ use crate::types::{Literal, PairPattern, Pattern, TokenKind, ValuePattern};
 mod block;
 mod conditional;
 mod infix;
+mod match_expr;
 mod method;
 mod prefix;
 mod return_expr;
@@ -13,6 +14,7 @@ mod var;
 pub use self::block::Block;
 pub use self::conditional::Conditional;
 pub use self::infix::Infix;
+pub use self::match_expr::{CaseArm, MatchExpression};
 pub use self::method::{Call, Method};
 pub use self::prefix::Prefix;
 pub use self::return_expr::ReturnExpression;
@@ -55,6 +57,8 @@ pub enum ExpressionKind {
     Var(VarDeclaration),
     /// An early return like `return expr`.
     Return(ReturnExpression),
+    /// A match expression like `match x case 0 then ... else ... end`.
+    Match(MatchExpression),
 }
 
 impl ExpressionKind {
@@ -69,6 +73,7 @@ impl ExpressionKind {
                 // Convert infix expressions to method calls
                 let method_name = match &infix.operator.kind {
                     TokenKind::Plus => "+".to_string(),
+                    TokenKind::Tilde => "~".to_string(),
                     TokenKind::Minus => "-".to_string(),
                     TokenKind::Star => "*".to_string(),
                     TokenKind::Slash => "/".to_string(),
@@ -120,7 +125,14 @@ impl ExpressionKind {
                 method.body.desugar();
                 ExpressionKind::Method(method)
             }
-            // Desugar other expression kinds if necessary
+            ExpressionKind::Match(mut m) => {
+                m.subject.desugar();
+                for arm in &mut m.arms {
+                    arm.body.desugar();
+                }
+                m.else_arm.desugar();
+                ExpressionKind::Match(m)
+            }
             _ => self,
         }
     }
@@ -168,6 +180,7 @@ impl Typed for Expression {
             ExpressionKind::Identifier => Some(String::from("Identifier")),
             ExpressionKind::Var(_) => Some(String::from("VarExpression")),
             ExpressionKind::Return(_) => Some(String::from("ReturnExpression")),
+            ExpressionKind::Match(_) => Some(String::from("MatchExpression")),
         }
     }
 }

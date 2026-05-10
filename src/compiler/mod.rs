@@ -6,7 +6,8 @@ use crate::CompilerError;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use strontium::machine::instruction::{DispatchPattern, Instruction};
+use crate::dispatch::DispatchPattern;
+use strontium::machine::instruction::{ComparisonMethod, Instruction};
 use strontium::machine::register::{RegisterType, RegisterValue, Registers};
 
 pub type Environment<T> = HashMap<String, T>;
@@ -18,29 +19,12 @@ pub struct CompiledMethod {
     pub id: String,
     /// The name of the multimethod this belongs to.
     pub method_name: String,
-    /// The dispatch pattern for runtime matching.
+    /// The dispatch pattern for shim generation.
     pub pattern: DispatchPattern,
     /// The compiled bytecode for this method body.
     pub instructions: Vec<Instruction>,
     /// Names of pattern variables that need to be bound at call time.
     pub parameter_names: Vec<String>,
-}
-
-/// Tracks a pending CALL that needs address resolution during linking.
-#[derive(Debug, Clone)]
-pub struct PendingCall {
-    /// Index in the instruction vector where the CALL is located.
-    pub instruction_index: usize,
-    /// The method ID this call targets.
-    pub target_method_id: String,
-}
-
-/// Information about a method for dispatch registration.
-#[derive(Debug, Clone)]
-pub struct MethodRegistration {
-    pub method_name: String,
-    pub pattern: DispatchPattern,
-    pub address: usize,
 }
 
 mod compilelets;
@@ -52,8 +36,9 @@ pub use self::errors::ErrorReporter;
 pub use self::multimethod::Multimethod;
 pub use self::type_system::TypeSystem;
 pub use compilelets::{
-    CallCompilelet, Compilelet, ConditionalCompilelet, LiteralCompilelet, MethodCompilelet,
-    ReturnCompilelet, ValuePatternCompilelet, VarCompilelet, VariablePatternCompilelet,
+    CallCompilelet, Compilelet, ConditionalCompilelet, LiteralCompilelet, MatchCompilelet,
+    MethodCompilelet, ReturnCompilelet, ValuePatternCompilelet, VarCompilelet,
+    VariablePatternCompilelet,
 };
 
 pub struct CompilationContext {
@@ -64,9 +49,9 @@ pub struct CompilationContext {
     /// Names of top-level variables bound with `var`.
     /// Stored in named registers (persist across REPL iterations).
     pub global_variables: HashSet<String>,
-    /// Tracks the total number of instructions emitted so far.
-    /// Used to calculate CALL instruction indices for linking.
-    pub instruction_count: usize,
+    /// Match arm bindings: variable name → register name.
+    /// Checked before local/global; scoped to the current arm body.
+    pub register_bindings: HashMap<String, String>,
     /// Counter for generating unique label IDs for conditional branches.
     pub next_label_id: usize,
     /// True when running inside the REPL; enables auto-print of top-level expressions.
@@ -84,18 +69,9 @@ pub struct Compiler {
     pub parser: Parser,
     pub context: CompilationContext,
     /// Contains all method instances defined at runtime.
-    ///
-    /// The `Multimethod` type in this environment stores an arbitrary number of pairs
-    /// of method signatures and bodies under a single name, provides methods to match
-    /// its signatures with a given call signature and extracts any variables.
     multimethods: Environment<Multimethod>,
     /// Stores compiled method bodies indexed by their unique ID.
-    /// The ID is formed from the method name and a hash of its signature.
     pub compiled_methods: HashMap<String, CompiledMethod>,
-    /// Tracks CALL instructions that need address resolution during linking.
-    pub pending_calls: Vec<PendingCall>,
-    /// Method registration info for the VM's dispatch table, populated during linking.
-    pub method_registrations: Vec<MethodRegistration>,
     /// A structure which keeps track of defined types.
     _types: TypeSystem,
     /// Reports errors to the user with helpful information.
@@ -139,6 +115,10 @@ impl Compiler {
             "ReturnExpression".to_string(),
             &ReturnCompilelet as &dyn Compilelet,
         );
+        compilelets.insert(
+            "MatchExpression".to_string(),
+            &MatchCompilelet as &dyn Compilelet,
+        );
 
         Self {
             _variables: HashMap::new(),
@@ -150,14 +130,12 @@ impl Compiler {
                 recursion_depth: 0,
                 local_variables: HashSet::new(),
                 global_variables: HashSet::new(),
-                instruction_count: 0,
+                register_bindings: HashMap::new(),
                 next_label_id: 0,
                 repl_mode: false,
             },
             multimethods: HashMap::new(),
             compiled_methods: HashMap::new(),
-            pending_calls: vec![],
-            method_registrations: vec![],
             _types: TypeSystem,
             _errors: ErrorReporter,
         }
@@ -187,7 +165,7 @@ impl Compiler {
         }
     }
 
-    /// Convert a Pattern to a DispatchPattern for runtime matching.
+    /// Convert a Pattern to a DispatchPattern for shim generation.
     pub fn pattern_to_dispatch_pattern(
         pattern: &Option<Pattern>,
         parser: &Parser,
@@ -205,10 +183,8 @@ impl Compiler {
             }
             Some(Pattern::Variable(_)) => DispatchPattern::Any,
             Some(Pattern::Value(value_pattern)) => {
-                // Try to extract a literal value
                 match &value_pattern.expression.kind {
                     ExpressionKind::Literal(Literal::Int) => {
-                        // Get the actual integer value from the source
                         if let Ok(lexeme) = parser.get_lexeme(
                             value_pattern.expression.start_pos,
                             value_pattern.expression.end_pos,
@@ -242,7 +218,6 @@ impl Compiler {
         expression: Expression,
         target_register: Option<String>,
     ) -> CompilerResult<Vec<Instruction>> {
-        // TODO: Add a limit to recursion depth
         self.context.recursion_depth += 1;
 
         let mut bytecode = vec![];
@@ -250,13 +225,8 @@ impl Compiler {
 
         if let Some(compilelet) = self.compilelets.get(&expression_type) {
             let mut compiled = compilelet.compile(self, expression, target_register)?;
-
-            // Update instruction count for call tracking
-            self.context.instruction_count += compiled.len();
-
             bytecode.append(&mut compiled);
             self.context.recursion_depth -= 1;
-
             Ok(bytecode)
         } else {
             self.context.recursion_depth -= 1;
@@ -281,100 +251,181 @@ impl Compiler {
         }
 
         main_bytecode.push(Instruction::Halt);
-
-        // Link the bytecode: resolve CALL addresses
-        let linked = self.link_bytecode(main_bytecode)?;
-
-        Ok(linked)
+        self.link_bytecode(main_bytecode)
     }
 
-    /// Link bytecode by resolving method call addresses.
+    /// Build the combined shim + body block for one method name.
     ///
-    /// Layout:
-    /// [JUMP to main start]
-    /// [method 1 body][RETURN]
-    /// [method 2 body][RETURN]
-    /// ...
-    /// [main bytecode][HALT]
+    /// Returns a flat Vec<Instruction> containing:
+    ///   [shim dispatch logic] [HALT if no match]
+    ///   [LabelTarget body_0] [body_0 instructions]
+    ///   [LabelTarget body_1] [body_1 instructions]
+    ///   ...
+    ///
+    /// All label IDs are globally unique (via alloc_label). The caller resolves
+    /// labels with the block's base offset so cross-shim-to-body jumps work.
+    fn build_method_block(&mut self, variant_ids: &[String]) -> Vec<Instruction> {
+        let mut instructions = vec![];
+        let mut body_labels: Vec<usize> = vec![];
+
+        for id in variant_ids {
+            let body_label = self.alloc_label();
+            body_labels.push(body_label);
+            let pattern = self.compiled_methods[id].pattern.clone();
+
+            match pattern {
+                DispatchPattern::Any => {
+                    instructions.push(Instruction::JumpToLabel { id: body_label });
+                }
+                DispatchPattern::Value(val) => {
+                    let skip_label = self.alloc_label();
+                    let val_reg = self.registers.allocate_register();
+                    let cmp_reg = self.registers.allocate_register();
+                    instructions.push(Instruction::Load {
+                        value: val,
+                        register: val_reg.clone(),
+                    });
+                    instructions.push(Instruction::Compare {
+                        method: ComparisonMethod::EQ,
+                        operand1: "arg".to_string(),
+                        operand2: val_reg,
+                        destination: cmp_reg.clone(),
+                    });
+                    instructions.push(Instruction::JumpCToLabel {
+                        id: skip_label,
+                        conditional_address: cmp_reg,
+                    });
+                    instructions.push(Instruction::JumpToLabel { id: body_label });
+                    instructions.push(Instruction::LabelTarget { id: skip_label });
+                }
+                DispatchPattern::Type(rt) => {
+                    let skip_label = self.alloc_label();
+                    let type_reg = self.registers.allocate_register();
+                    let expected_reg = self.registers.allocate_register();
+                    let cmp_reg = self.registers.allocate_register();
+                    instructions.push(Instruction::LoadType {
+                        source: "arg".to_string(),
+                        destination: type_reg.clone(),
+                    });
+                    instructions.push(Instruction::Load {
+                        value: RegisterValue::Int64(rt as i64),
+                        register: expected_reg.clone(),
+                    });
+                    instructions.push(Instruction::Compare {
+                        method: ComparisonMethod::EQ,
+                        operand1: type_reg,
+                        operand2: expected_reg,
+                        destination: cmp_reg.clone(),
+                    });
+                    instructions.push(Instruction::JumpCToLabel {
+                        id: skip_label,
+                        conditional_address: cmp_reg,
+                    });
+                    instructions.push(Instruction::JumpToLabel { id: body_label });
+                    instructions.push(Instruction::LabelTarget { id: skip_label });
+                }
+            }
+        }
+
+        // No variant matched
+        instructions.push(Instruction::Halt);
+
+        // Append each body preceded by its label target
+        for (i, id) in variant_ids.iter().enumerate() {
+            instructions.push(Instruction::LabelTarget { id: body_labels[i] });
+            let body = self.compiled_methods[id].instructions.clone();
+            instructions.extend(body);
+        }
+
+        instructions
+    }
+
+    /// Replace CallShim { method_name } with Call { address } using the shim address table.
+    fn patch_call_shims(
+        instructions: Vec<Instruction>,
+        shim_addresses: &HashMap<String, usize>,
+    ) -> CompilerResult<Vec<Instruction>> {
+        let mut result = Vec::with_capacity(instructions.len());
+        for instr in instructions {
+            match instr {
+                Instruction::CallShim { method_name } => {
+                    if let Some(&addr) = shim_addresses.get(&method_name) {
+                        result.push(Instruction::Call { address: addr });
+                    } else {
+                        return Err(CompilerError::MethodNotFound(method_name));
+                    }
+                }
+                other => result.push(other),
+            }
+        }
+        Ok(result)
+    }
+
+    /// Link bytecode: generate dispatch shims, resolve labels, patch CallShim references.
+    ///
+    /// Final layout:
+    ///   [JUMP to main_start]
+    ///   [method_A shim + bodies]
+    ///   [method_B shim + bodies]
+    ///   ...
+    ///   [main bytecode]
+    ///   [HALT]
     fn link_bytecode(
         &mut self,
         main_bytecode: Vec<Instruction>,
     ) -> CompilerResult<Vec<Instruction>> {
-        let mut linked = vec![];
-
-        // If no methods defined, just return main bytecode (with labels resolved)
         if self.compiled_methods.is_empty() {
             return Ok(self.resolve_labels(main_bytecode, 0));
         }
 
-        // Calculate method addresses (in bytes)
-        // First instruction is JUMP to skip methods
-        let jump_size = self.instruction_size(&Instruction::Jump { destination: 0 });
-        let mut method_addresses: HashMap<String, usize> = HashMap::new();
-        let mut current_offset = jump_size;
-
-        // Calculate byte offset for each method, record per-method base offsets in order
-        let mut method_base_offsets: Vec<(String, usize)> = vec![];
-        self.method_registrations.clear();
-        for (method_id, compiled_method) in &self.compiled_methods {
-            method_base_offsets.push((method_id.clone(), current_offset));
-            method_addresses.insert(method_id.clone(), current_offset);
-
-            // Record this method for dispatch registration
-            self.method_registrations.push(MethodRegistration {
-                method_name: compiled_method.method_name.clone(),
-                pattern: compiled_method.pattern.clone(),
-                address: current_offset,
+        // Group method IDs by name, sort each group highest precedence first.
+        let mut by_name: HashMap<String, Vec<String>> = HashMap::new();
+        for (id, method) in &self.compiled_methods {
+            by_name.entry(method.method_name.clone()).or_default().push(id.clone());
+        }
+        for ids in by_name.values_mut() {
+            ids.sort_by(|a, b| {
+                let pa = self.compiled_methods[a].pattern.precedence();
+                let pb = self.compiled_methods[b].pattern.precedence();
+                pb.cmp(&pa)
             });
+        }
 
-            for instr in &compiled_method.instructions {
+        // Stable ordering of method names for deterministic output.
+        let mut method_names: Vec<String> = by_name.keys().cloned().collect();
+        method_names.sort();
+
+        // Pass 1: calculate shim addresses by walking block sizes.
+        let jump_size = self.instruction_size(&Instruction::Jump { destination: 0 });
+        let mut current_offset = jump_size;
+        let mut block_infos: Vec<(String, Vec<Instruction>, usize)> = vec![];
+        let mut shim_addresses: HashMap<String, usize> = HashMap::new();
+
+        for name in &method_names {
+            let ids = by_name[name].clone();
+            let combined = self.build_method_block(&ids);
+            let base_offset = current_offset;
+            shim_addresses.insert(name.clone(), base_offset);
+            for instr in &combined {
                 current_offset += self.instruction_size(instr);
             }
+            block_infos.push((name.clone(), combined, base_offset));
         }
 
-        // Main bytecode starts after all methods
         let main_start = current_offset;
 
-        // Build final bytecode
-        // 1. Jump to main
-        linked.push(Instruction::Jump {
-            destination: main_start as u32,
-        });
-
-        // 2. All method bodies (resolve labels relative to each method's base offset)
-        for (method_id, base_offset) in &method_base_offsets {
-            let instructions = self.compiled_methods[method_id].instructions.clone();
-            let resolved = self.resolve_labels(instructions, *base_offset);
-            linked.extend(resolved);
+        // Pass 2: resolve labels and patch CallShim in each block.
+        let mut linked = vec![Instruction::Jump { destination: main_start as u32 }];
+        for (_, combined, base_offset) in block_infos {
+            let resolved = self.resolve_labels(combined, base_offset);
+            let patched = Self::patch_call_shims(resolved, &shim_addresses)?;
+            linked.extend(patched);
         }
 
-        // 3. Main bytecode: resolve labels then patch CALL addresses
+        // Resolve labels then patch CallShim in main bytecode.
         let resolved_main = self.resolve_labels(main_bytecode, main_start);
-        for (i, instr) in resolved_main.into_iter().enumerate() {
-            match instr {
-                Instruction::Call { address: 0 } => {
-                    // Find the pending call for this index
-                    let call_index = i;
-                    if let Some(pending) = self
-                        .pending_calls
-                        .iter()
-                        .find(|p| p.instruction_index == call_index)
-                    {
-                        // Look up the method's byte address
-                        if let Some(&byte_addr) = method_addresses.get(&pending.target_method_id) {
-                            linked.push(Instruction::Call { address: byte_addr });
-                        } else {
-                            // Method not found - keep placeholder for debugging
-                            linked.push(Instruction::Call { address: 0 });
-                        }
-                    } else {
-                        // No pending call record - keep placeholder
-                        linked.push(Instruction::Call { address: 0 });
-                    }
-                }
-                _ => linked.push(instr),
-            }
-        }
+        let patched_main = Self::patch_call_shims(resolved_main, &shim_addresses)?;
+        linked.extend(patched_main);
 
         Ok(linked)
     }
@@ -386,13 +437,15 @@ impl Compiler {
             Instruction::JumpToLabel { .. } => {
                 self.instruction_size(&Instruction::Jump { destination: 0 })
             }
-            Instruction::JumpCToLabel {
-                conditional_address,
-                ..
-            } => self.instruction_size(&Instruction::JumpC {
-                destination: 0,
-                conditional_address: conditional_address.clone(),
-            }),
+            Instruction::JumpCToLabel { conditional_address, .. } => {
+                self.instruction_size(&Instruction::JumpC {
+                    destination: 0,
+                    conditional_address: conditional_address.clone(),
+                })
+            }
+            Instruction::CallShim { .. } => {
+                self.instruction_size(&Instruction::Call { address: 0 })
+            }
             _ => {
                 let bytes: Vec<u8> = instr.clone().into();
                 bytes.len()
@@ -402,14 +455,6 @@ impl Compiler {
 
     pub fn get_multimethod(&self, name: &str) -> Option<&Multimethod> {
         self.multimethods.get(name)
-    }
-
-    /// Record a pending call that needs address resolution.
-    pub fn add_pending_call(&mut self, instruction_index: usize, target_method_id: String) {
-        self.pending_calls.push(PendingCall {
-            instruction_index,
-            target_method_id,
-        });
     }
 
     pub fn alloc_label(&mut self) -> usize {
@@ -441,10 +486,7 @@ impl Compiler {
                 Instruction::JumpToLabel { id } => Some(Instruction::Jump {
                     destination: (base_offset + label_offsets[&id]) as u32,
                 }),
-                Instruction::JumpCToLabel {
-                    id,
-                    conditional_address,
-                } => Some(Instruction::JumpC {
+                Instruction::JumpCToLabel { id, conditional_address } => Some(Instruction::JumpC {
                     destination: (base_offset + label_offsets[&id]) as u32,
                     conditional_address,
                 }),

@@ -85,7 +85,7 @@ impl Compilelet for CallCompilelet {
                 }
 
                 // Built-in arithmetic operators
-                "+" | "-" | "*" | "/" | "^" | "%" => {
+                "+" | "-" | "*" | "/" | "^" | "%" | "~" => {
                     let method = match method_name.as_str() {
                         "+" => CalculationMethod::ADD,
                         "-" => CalculationMethod::SUBTRACT,
@@ -93,6 +93,7 @@ impl Compilelet for CallCompilelet {
                         "/" => CalculationMethod::DIVIDE,
                         "^" => CalculationMethod::POWER,
                         "%" => CalculationMethod::MODULO,
+                        "~" => CalculationMethod::CONCAT,
                         _ => unreachable!(),
                     };
 
@@ -230,8 +231,7 @@ impl Compilelet for CallCompilelet {
                         }
                     }
 
-                    // Generate DISPATCH instruction - runtime will match arg against patterns
-                    instructions.push(Instruction::Dispatch {
+                    instructions.push(Instruction::CallShim {
                         method_name: method_name.clone(),
                     });
 

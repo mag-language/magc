@@ -21,7 +21,12 @@ impl Compilelet for VariablePatternCompilelet {
                 let dest_register =
                     target_register.unwrap_or_else(|| compiler.registers.allocate_register());
 
-                if compiler.context.local_variables.contains(&var_name) {
+                if let Some(src_reg) = compiler.context.register_bindings.get(&var_name).cloned() {
+                    instructions.push(Instruction::Copy {
+                        source: src_reg,
+                        destination: dest_register.clone(),
+                    });
+                } else if compiler.context.local_variables.contains(&var_name) {
                     instructions.push(Instruction::LoadLocal {
                         name: var_name,
                         register: dest_register.clone(),

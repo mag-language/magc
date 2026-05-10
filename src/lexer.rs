@@ -57,6 +57,7 @@ impl Lexer {
                 ")" => self.single_token(TokenKind::RightParen),
                 "]" => self.single_token(TokenKind::RightBracket),
 
+                "~" => self.single_token(TokenKind::Tilde),
                 "+" => self.match_next("=", TokenKind::PlusEqual, TokenKind::Plus),
                 "*" => self.match_next("=", TokenKind::StarEqual, TokenKind::Star),
                 "-" => self.match_next("=", TokenKind::MinusEqual, TokenKind::Minus),
