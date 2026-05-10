@@ -12,6 +12,8 @@ mod member;
 mod method;
 mod pattern;
 mod prefix;
+mod return_expr;
+mod var;
 
 pub use self::block::*;
 pub use self::call::*;
@@ -23,6 +25,8 @@ pub use self::member::*;
 pub use self::method::*;
 pub use self::pattern::*;
 pub use self::prefix::*;
+pub use self::return_expr::*;
+pub use self::var::*;
 
 pub trait PrefixParselet {
     fn parse(&self, parser: &mut Parser, token: Token) -> ParserResult;

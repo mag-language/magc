@@ -25,11 +25,12 @@ impl PrefixParselet for VariablePatternParselet {
 
             let pattern = match next_token.kind {
                 TokenKind::Type => {
-                    parser.advance();
+                    let type_token = parser.consume();
+                    let type_name = parser.get_lexeme(type_token.start_pos, type_token.end_pos)?;
 
                     Pattern::Variable(VariablePattern {
                         name,
-                        type_id: Some(lexeme),
+                        type_id: Some(type_name),
                     })
                 }
 

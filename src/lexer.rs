@@ -52,6 +52,7 @@ impl Lexer {
                 "[" => self.single_token(TokenKind::LeftBracket),
                 "(" => self.single_token(TokenKind::LeftParen),
                 "%" => self.single_token(TokenKind::Percent),
+                "^" => self.single_token(TokenKind::Caret),
                 "?" => self.single_token(TokenKind::QuestionMark),
                 ")" => self.single_token(TokenKind::RightParen),
                 "]" => self.single_token(TokenKind::RightBracket),

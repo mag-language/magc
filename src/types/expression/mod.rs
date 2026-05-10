@@ -7,12 +7,16 @@ mod conditional;
 mod infix;
 mod method;
 mod prefix;
+mod return_expr;
+mod var;
 
 pub use self::block::Block;
 pub use self::conditional::Conditional;
 pub use self::infix::Infix;
 pub use self::method::{Call, Method};
 pub use self::prefix::Prefix;
+pub use self::return_expr::ReturnExpression;
+pub use self::var::VarDeclaration;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Expression {
@@ -47,6 +51,10 @@ pub enum ExpressionKind {
     /// A first-class chunk of code that can be passed around as a value.
     Block(Block),
     Identifier,
+    /// A variable binding like `var x = expr`.
+    Var(VarDeclaration),
+    /// An early return like `return expr`.
+    Return(ReturnExpression),
 }
 
 impl ExpressionKind {
@@ -65,6 +73,7 @@ impl ExpressionKind {
                     TokenKind::Star => "*".to_string(),
                     TokenKind::Slash => "/".to_string(),
                     TokenKind::Percent => "%".to_string(),
+                    TokenKind::Caret => "^".to_string(),
                     TokenKind::EqualEqual => "==".to_string(),
                     TokenKind::BangEqual => "!=".to_string(),
                     TokenKind::Greater => ">".to_string(),
@@ -157,6 +166,8 @@ impl Typed for Expression {
             ExpressionKind::Method(_) => Some(String::from("MethodExpression")),
             ExpressionKind::Block(_) => Some(String::from("BlockExpression")),
             ExpressionKind::Identifier => Some(String::from("Identifier")),
+            ExpressionKind::Var(_) => Some(String::from("VarExpression")),
+            ExpressionKind::Return(_) => Some(String::from("ReturnExpression")),
         }
     }
 }

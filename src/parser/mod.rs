@@ -6,7 +6,8 @@ use unicode_segmentation::UnicodeSegmentation;
 use parselets::{
     BlockParselet, CallParselet, ConditionalParselet, FieldPatternParselet, InfixOperatorParselet,
     InfixParselet, ListParselet, LiteralParselet, MemberParselet, MethodParselet, PairParselet,
-    PrefixOperatorParselet, PrefixParselet, TuplePatternParselet, VariablePatternParselet,
+    PrefixOperatorParselet, PrefixParselet, ReturnParselet, TuplePatternParselet,
+    VarParselet, VariablePatternParselet,
 };
 
 use std::collections::HashMap;
@@ -94,6 +95,14 @@ impl Parser {
             &MethodParselet as &dyn PrefixParselet,
         );
         prefix_parselets.insert(
+            TokenKind::Keyword(Keyword::Var),
+            &VarParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
+            TokenKind::Keyword(Keyword::Return),
+            &ReturnParselet as &dyn PrefixParselet,
+        );
+        prefix_parselets.insert(
             TokenKind::Keyword(Keyword::Do),
             &BlockParselet as &dyn PrefixParselet,
         );
@@ -128,6 +137,7 @@ impl Parser {
         infix_parselets.insert(TokenKind::Smaller, infix_operator(PREC_COMPARISON));
         infix_parselets.insert(TokenKind::SmallerEqual, infix_operator(PREC_COMPARISON));
         infix_parselets.insert(TokenKind::Percent, infix_operator(PREC_PRODUCT));
+        infix_parselets.insert(TokenKind::Caret, infix_operator(PREC_EXPONENT));
 
         infix_parselets.insert(
             TokenKind::Comma,

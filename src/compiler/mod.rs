@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 use strontium::machine::instruction::{DispatchPattern, Instruction};
-use strontium::machine::register::{RegisterValue, Registers};
+use strontium::machine::register::{RegisterType, RegisterValue, Registers};
 
 pub type Environment<T> = HashMap<String, T>;
 
@@ -52,8 +52,8 @@ pub use self::errors::ErrorReporter;
 pub use self::multimethod::Multimethod;
 pub use self::type_system::TypeSystem;
 pub use compilelets::{
-    CallCompilelet, Compilelet, LiteralCompilelet, MethodCompilelet, ValuePatternCompilelet,
-    VariablePatternCompilelet,
+    CallCompilelet, Compilelet, ConditionalCompilelet, LiteralCompilelet, MethodCompilelet,
+    ReturnCompilelet, ValuePatternCompilelet, VarCompilelet, VariablePatternCompilelet,
 };
 
 pub struct CompilationContext {
@@ -61,9 +61,16 @@ pub struct CompilationContext {
     /// Names of pattern variables in the current method scope.
     /// Used to compile variable references as LoadLocal.
     pub local_variables: HashSet<String>,
+    /// Names of top-level variables bound with `var`.
+    /// Stored in named registers (persist across REPL iterations).
+    pub global_variables: HashSet<String>,
     /// Tracks the total number of instructions emitted so far.
     /// Used to calculate CALL instruction indices for linking.
     pub instruction_count: usize,
+    /// Counter for generating unique label IDs for conditional branches.
+    pub next_label_id: usize,
+    /// True when running inside the REPL; enables auto-print of top-level expressions.
+    pub repl_mode: bool,
 }
 
 pub struct Compiler {
@@ -120,6 +127,18 @@ impl Compiler {
             "VariablePattern".to_string(),
             &VariablePatternCompilelet as &dyn Compilelet,
         );
+        compilelets.insert(
+            "ConditionalExpression".to_string(),
+            &ConditionalCompilelet as &dyn Compilelet,
+        );
+        compilelets.insert(
+            "VarExpression".to_string(),
+            &VarCompilelet as &dyn Compilelet,
+        );
+        compilelets.insert(
+            "ReturnExpression".to_string(),
+            &ReturnCompilelet as &dyn Compilelet,
+        );
 
         Self {
             _variables: HashMap::new(),
@@ -130,7 +149,10 @@ impl Compiler {
             context: CompilationContext {
                 recursion_depth: 0,
                 local_variables: HashSet::new(),
+                global_variables: HashSet::new(),
                 instruction_count: 0,
+                next_label_id: 0,
+                repl_mode: false,
             },
             multimethods: HashMap::new(),
             compiled_methods: HashMap::new(),
@@ -172,6 +194,15 @@ impl Compiler {
     ) -> DispatchPattern {
         match pattern {
             None => DispatchPattern::Any,
+            Some(Pattern::Variable(VariablePattern { type_id: Some(t), .. })) => {
+                match t.as_str() {
+                    "Int" => DispatchPattern::Type(RegisterType::Int64),
+                    "Float" => DispatchPattern::Type(RegisterType::Float64),
+                    "String" => DispatchPattern::Type(RegisterType::String),
+                    "Bool" => DispatchPattern::Type(RegisterType::Boolean),
+                    _ => DispatchPattern::Any,
+                }
+            }
             Some(Pattern::Variable(_)) => DispatchPattern::Any,
             Some(Pattern::Value(value_pattern)) => {
                 // Try to extract a literal value
@@ -271,9 +302,9 @@ impl Compiler {
     ) -> CompilerResult<Vec<Instruction>> {
         let mut linked = vec![];
 
-        // If no methods defined, just return main bytecode
+        // If no methods defined, just return main bytecode (with labels resolved)
         if self.compiled_methods.is_empty() {
-            return Ok(main_bytecode);
+            return Ok(self.resolve_labels(main_bytecode, 0));
         }
 
         // Calculate method addresses (in bytes)
@@ -282,9 +313,11 @@ impl Compiler {
         let mut method_addresses: HashMap<String, usize> = HashMap::new();
         let mut current_offset = jump_size;
 
-        // Calculate byte offset for each method and build registration info
+        // Calculate byte offset for each method, record per-method base offsets in order
+        let mut method_base_offsets: Vec<(String, usize)> = vec![];
         self.method_registrations.clear();
         for (method_id, compiled_method) in &self.compiled_methods {
+            method_base_offsets.push((method_id.clone(), current_offset));
             method_addresses.insert(method_id.clone(), current_offset);
 
             // Record this method for dispatch registration
@@ -308,13 +341,16 @@ impl Compiler {
             destination: main_start as u32,
         });
 
-        // 2. All method bodies
-        for (_, compiled_method) in &self.compiled_methods {
-            linked.extend(compiled_method.instructions.clone());
+        // 2. All method bodies (resolve labels relative to each method's base offset)
+        for (method_id, base_offset) in &method_base_offsets {
+            let instructions = self.compiled_methods[method_id].instructions.clone();
+            let resolved = self.resolve_labels(instructions, *base_offset);
+            linked.extend(resolved);
         }
 
-        // 3. Main bytecode with patched CALL addresses
-        for (i, instr) in main_bytecode.into_iter().enumerate() {
+        // 3. Main bytecode: resolve labels then patch CALL addresses
+        let resolved_main = self.resolve_labels(main_bytecode, main_start);
+        for (i, instr) in resolved_main.into_iter().enumerate() {
             match instr {
                 Instruction::Call { address: 0 } => {
                     // Find the pending call for this index
@@ -345,9 +381,23 @@ impl Compiler {
 
     /// Calculate the byte size of an instruction when encoded.
     fn instruction_size(&self, instr: &Instruction) -> usize {
-        // Convert to bytes and measure length
-        let bytes: Vec<u8> = instr.clone().into();
-        bytes.len()
+        match instr {
+            Instruction::LabelTarget { .. } => 0,
+            Instruction::JumpToLabel { .. } => {
+                self.instruction_size(&Instruction::Jump { destination: 0 })
+            }
+            Instruction::JumpCToLabel {
+                conditional_address,
+                ..
+            } => self.instruction_size(&Instruction::JumpC {
+                destination: 0,
+                conditional_address: conditional_address.clone(),
+            }),
+            _ => {
+                let bytes: Vec<u8> = instr.clone().into();
+                bytes.len()
+            }
+        }
     }
 
     pub fn get_multimethod(&self, name: &str) -> Option<&Multimethod> {
@@ -360,5 +410,46 @@ impl Compiler {
             instruction_index,
             target_method_id,
         });
+    }
+
+    pub fn alloc_label(&mut self) -> usize {
+        let id = self.context.next_label_id;
+        self.context.next_label_id += 1;
+        id
+    }
+
+    /// Resolve LabelTarget / JumpToLabel / JumpCToLabel pseudo-instructions
+    /// into real Jump / JumpC instructions with absolute byte addresses.
+    fn resolve_labels(
+        &self,
+        instructions: Vec<Instruction>,
+        base_offset: usize,
+    ) -> Vec<Instruction> {
+        let mut label_offsets: HashMap<usize, usize> = HashMap::new();
+        let mut byte = 0usize;
+        for instr in &instructions {
+            if let Instruction::LabelTarget { id } = instr {
+                label_offsets.insert(*id, byte);
+            }
+            byte += self.instruction_size(instr);
+        }
+
+        instructions
+            .into_iter()
+            .filter_map(|instr| match instr {
+                Instruction::LabelTarget { .. } => None,
+                Instruction::JumpToLabel { id } => Some(Instruction::Jump {
+                    destination: (base_offset + label_offsets[&id]) as u32,
+                }),
+                Instruction::JumpCToLabel {
+                    id,
+                    conditional_address,
+                } => Some(Instruction::JumpC {
+                    destination: (base_offset + label_offsets[&id]) as u32,
+                    conditional_address,
+                }),
+                other => Some(other),
+            })
+            .collect()
     }
 }

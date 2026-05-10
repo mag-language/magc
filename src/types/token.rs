@@ -18,6 +18,7 @@ pub struct Token {
 pub enum TokenKind {
     Bang,
     BangEqual,
+    Caret,
     Colon,
     Comma,
     Dot,

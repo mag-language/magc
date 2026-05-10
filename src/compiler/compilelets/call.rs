@@ -55,6 +55,35 @@ impl Compilelet for CallCompilelet {
                     });
                 }
 
+                "sqrt" => {
+                    if let Some(pattern) = signature {
+                        let arg_register = compiler.registers.allocate_register();
+                        instructions.append(&mut self.compile_print_argument(
+                            compiler,
+                            pattern,
+                            arg_register.clone(),
+                        )?);
+
+                        let destination_register = target_register
+                            .unwrap_or_else(|| compiler.registers.allocate_register());
+                        instructions.push(Instruction::Calculate {
+                            method: CalculationMethod::SQRT,
+                            operand1: arg_register.clone(),
+                            operand2: arg_register,
+                            destination: destination_register.clone(),
+                        });
+
+                        if compiler.context.recursion_depth == 1 && compiler.context.repl_mode {
+                            instructions.push(Instruction::Interrupt {
+                                interrupt: Interrupt {
+                                    address: destination_register,
+                                    kind: InterruptKind::Print,
+                                },
+                            });
+                        }
+                    }
+                }
+
                 // Built-in arithmetic operators
                 "+" | "-" | "*" | "/" | "^" | "%" => {
                     let method = match method_name.as_str() {
@@ -103,7 +132,7 @@ impl Compilelet for CallCompilelet {
                             destination: destination_register.clone(),
                         });
 
-                        if compiler.context.recursion_depth == 1 {
+                        if compiler.context.recursion_depth == 1 && compiler.context.repl_mode {
                             instructions.push(Instruction::Interrupt {
                                 interrupt: Interrupt {
                                     address: destination_register,
@@ -162,7 +191,7 @@ impl Compilelet for CallCompilelet {
                             destination: destination_register.clone(),
                         });
 
-                        if compiler.context.recursion_depth == 1 {
+                        if compiler.context.recursion_depth == 1 && compiler.context.repl_mode {
                             instructions.push(Instruction::Interrupt {
                                 interrupt: Interrupt {
                                     address: destination_register,
@@ -216,7 +245,7 @@ impl Compilelet for CallCompilelet {
                     });
 
                     // Print result at top level
-                    if compiler.context.recursion_depth == 1 {
+                    if compiler.context.recursion_depth == 1 && compiler.context.repl_mode {
                         instructions.push(Instruction::Interrupt {
                             interrupt: Interrupt {
                                 address: destination_register,
