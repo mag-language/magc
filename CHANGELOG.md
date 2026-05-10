@@ -27,6 +27,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Update outdated unreleased diff link.
 -->
 
+## [0.8.0] - May 10, 2026
+
+### Added
+
+- `if/then/else` conditional expressions, compiled via `ConditionalCompilelet` using a label-based pseudo-instruction system (`LabelTarget`, `JumpToLabel`, `JumpCToLabel`) that is resolved to absolute byte addresses in `link_bytecode`.
+- `var` declarations — at the top level, values are stored in named VM registers (persisting across REPL iterations); inside method bodies, `StoreLocal`/`LoadLocal` is used instead.
+- `return` expressions inside method bodies, emitting a `Copy` to the `ret` register followed by `Return`.
+- `repl_mode` flag on `CompilationContext`: auto-printing of top-level expression results is now REPL-only and does not trigger when executing source files.
+- `global_variables` set on `CompilationContext` to track top-level `var` bindings.
+- Label allocation (`alloc_label`) and resolution (`resolve_labels`) for compiling control flow with forward references.
+- Type-based dispatch: `pattern_to_dispatch_pattern` now maps type-annotated variable patterns (e.g. `n Int`) to `DispatchPattern::Type(RegisterType::*)`, allowing multiple methods with the same name but different argument types to coexist in the dispatch table.
+
+### Fixed
+
+- Parser bug: `VariablePatternParselet` was storing the variable name in `type_id` instead of the type token's lexeme, causing all type annotations to be silently ignored during compilation.
+- Bare variable references at the top level of the REPL (e.g. `>>> x`) now auto-print their value.
+
 ## [0.7.0] - May 9, 2026
 
 ### Added

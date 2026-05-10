@@ -2,18 +2,24 @@
 
 # Introduction
 
-[`magc`](https://github.com/mag-language/magc) is a compiler library which translates Mag code into a series of executable instructions for the Strontium machine.
+[`magc`](https://github.com/mag-language/magc) is a compiler library that translates Mag source code into Strontium bytecode. It combines a lexer, a Pratt parser, and a modular code generation stage into a single pipeline.
 
-More specifically, the `Compiler` struct found in this library combines the `Lexer` and `Parser` modules along with its own code generation code into a pipeline. This processing pipeline then produces a sequence of bytecode instructions representing the semantics of the Mag source string and finally executes it on an instance of the `strontium` VM.
+## What works today
 
-Please refer to the `mag-lang` crate to find code examples for the Mag language.
+- **Arithmetic and comparison**: `+`, `-`, `*`, `/`, `^`, `%`, `==`, `!=`, `<`, `<=`, `>`, `>=`
+- **Multimethods**: define multiple implementations of the same method with different signatures; the runtime dispatches based on argument value or type
+- **Type-based dispatch**: `def foo(n Int)` and `def foo(n String)` coexist correctly — type annotations on parameters generate type-matching dispatch patterns
+- **Conditionals**: `if <cond> then <expr> else <expr> end`
+- **Variables**: `var x = <expr>` at the top level (stored in named registers) or inside method bodies (stored in stack-frame locals)
+- **Return**: `return <expr>` exits a method early
+- **Literals**: integers, floats, strings, booleans
 
-# How far along are we?
+## Architecture
 
-The current implementation has a fairly complete implementation of the lexer and parser stages of the compiler, so building an AST from a source string works quite well. The code generation modules are very new though, so the function set available in the REPL is limited for now. Simple arithmetic operators with two operators work already, such as `+`, `-`, `*` and `/`. More is in the works. Don't nest infix expressions for now. There are still many rough edges to this project.
+The compiler uses a compilelet pattern: a `HashMap<String, &dyn Compilelet>` routes each expression type to the piece of code that generates bytecode for it. Adding support for a new expression kind means adding a new `Compilelet` implementation and registering it — no large match arms to touch.
+
+Method bodies are compiled separately from the main program, then linked together in `link_bytecode`. Conditional branches use compile-time pseudo-instructions (`LabelTarget`, `JumpToLabel`, `JumpCToLabel`) that are resolved to absolute byte addresses during linking.
 
 ## Credits
 
-Mag is based on the Magpie language by [Robert Nystrom](http://stuffwithstuff.com/), who is a language engineer at Google with [a blog and a lot of amazing ideas](http://journal.stuffwithstuff.com/category/magpie/). His various blog posts are what started and inspired this project, and I plan on continuing his legacy even if the original codebase ceases further development.
-
-However, since there are a few syntactical differences to the original Magpie language, the two languages are *source-incompatible* and thus have different names. In particular, Bob's implementation substitutes the dot commonly used for calling methods on objects with a space (usually a meaningless character), which I find rather unintuitive, especially for new programmers.
+Mag is based on the Magpie language by [Robert Nystrom](http://stuffwithstuff.com/). His [blog posts](http://journal.stuffwithstuff.com/category/magpie/) are the foundational inspiration for this project.
