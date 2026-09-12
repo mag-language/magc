@@ -181,6 +181,12 @@ impl Parser {
         self.tokens.append(&mut tokens);
     }
 
+    pub fn reset_tokens(&mut self) {
+        self.tokens.clear();
+        self.source.clear();
+        self.position = 0;
+    }
+
     /// Parse a series of expressions.
     pub fn parse(&mut self) -> Result<Vec<Expression>, ParserError> {
         let mut expressions = vec![];

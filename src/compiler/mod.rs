@@ -84,7 +84,7 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn new() -> Self {
-        env_logger::init();
+        let _ = env_logger::try_init();
         let mut compilelets = HashMap::new();
 
         compilelets.insert(
@@ -367,7 +367,25 @@ impl Compiler {
         }
     }
 
+    /// Parse-only check with no codegen side effects. Returns false only for UnexpectedEOF
+    /// (incomplete input); returns true for complete input or any real parse error.
+    pub fn is_complete(&mut self, source: &str) -> bool {
+        use crate::types::ParserError;
+        self.lexer.reset();
+        self.parser.reset_tokens();
+        self.lexer.add_text(source.to_string());
+        let tokens = self.lexer.parse();
+        self.parser.add_tokens(source.to_string(), tokens);
+        let result = self.parser.parse();
+        self.lexer.reset();
+        self.parser.reset_tokens();
+        !matches!(result, Err(ParserError::UnexpectedEOF))
+    }
+
     pub fn compile(&mut self, source: String) -> CompilerResult<Vec<Instruction>> {
+        self.lexer.reset();
+        self.parser.reset_tokens();
+
         self.lexer.add_text(source.clone());
         let tokens = self.lexer.parse();
 

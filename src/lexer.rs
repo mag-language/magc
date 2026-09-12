@@ -35,6 +35,12 @@ impl Lexer {
         self
     }
 
+    pub fn reset(&mut self) {
+        self.position = 0;
+        self.current_line = 1;
+        self.source.clear();
+    }
+
     /// Convert the source string into a linear collection of tokens.
     pub fn parse(&mut self) -> Vec<Token> {
         let mut tokens = vec![];
