@@ -73,6 +73,7 @@ pub enum Keyword {
     Return,
     Then,
     This,
+    Nothing,
     Var,
     With,
     While,
@@ -84,6 +85,7 @@ pub enum Literal {
     Float,
     String,
     Boolean,
+    Nothing,
 }
 
 impl Typed for Literal {
@@ -93,6 +95,7 @@ impl Typed for Literal {
             Literal::Float => String::from("Float"),
             Literal::String => String::from("String"),
             Literal::Boolean => String::from("Boolean"),
+            Literal::Nothing => String::from("Nothing"),
         })
     }
 }

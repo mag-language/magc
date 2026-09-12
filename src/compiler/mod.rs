@@ -95,6 +95,7 @@ impl Compiler {
         compilelets.insert("Int".to_string(), &LiteralCompilelet as &dyn Compilelet);
         compilelets.insert("String".to_string(), &LiteralCompilelet as &dyn Compilelet);
         compilelets.insert("Boolean".to_string(), &LiteralCompilelet as &dyn Compilelet);
+        compilelets.insert("Nothing".to_string(), &LiteralCompilelet as &dyn Compilelet);
         compilelets.insert(
             "ValuePattern".to_string(),
             &ValuePatternCompilelet as &dyn Compilelet,

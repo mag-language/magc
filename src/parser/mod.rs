@@ -85,6 +85,10 @@ impl Parser {
             TokenKind::Literal(Literal::String),
             &LiteralParselet as &dyn PrefixParselet,
         );
+        prefix_parselets.insert(
+            TokenKind::Literal(Literal::Nothing),
+            &LiteralParselet as &dyn PrefixParselet,
+        );
 
         prefix_parselets.insert(
             TokenKind::Keyword(Keyword::If),

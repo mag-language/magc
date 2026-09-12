@@ -167,6 +167,7 @@ impl Lexer {
 
             "true" => TokenKind::Literal(Literal::Boolean),
             "false" => TokenKind::Literal(Literal::Boolean),
+            "nothing" => TokenKind::Literal(Literal::Nothing),
 
             _ => TokenKind::Identifier,
         }

@@ -33,6 +33,7 @@ impl Compilelet for LiteralCompilelet {
                 Literal::Float => Float64(literal_string.unwrap().parse::<f64>().unwrap()),
                 Literal::String => String(parse_string_literal(&literal_string.unwrap())),
                 Literal::Boolean => Boolean(literal_string.unwrap().parse::<bool>().unwrap()),
+                Literal::Nothing => Empty,
             };
 
             // Define a LOAD instruction to find an empty register and load the value into it.
