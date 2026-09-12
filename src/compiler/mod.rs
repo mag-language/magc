@@ -396,11 +396,41 @@ impl Compiler {
 
         for mut expr in expressions {
             expr.desugar();
-            main_bytecode.append(&mut self.compile_expression(expr, None)?);
+
+            if self.context.repl_mode && Self::echoes_in_repl(&expr) {
+                // Echo the value of every top-level expression, including `nothing`.
+                let echo_register = self.registers.allocate_register();
+                main_bytecode.push(Instruction::Load {
+                    value: RegisterValue::Empty,
+                    register: echo_register.clone(),
+                });
+                main_bytecode
+                    .append(&mut self.compile_expression(expr, Some(echo_register.clone()))?);
+                main_bytecode.push(Instruction::Interrupt {
+                    interrupt: strontium::machine::instruction::Interrupt {
+                        address: echo_register,
+                        kind: strontium::machine::instruction::InterruptKind::Print,
+                    },
+                });
+            } else {
+                main_bytecode.append(&mut self.compile_expression(expr, None)?);
+            }
         }
 
         main_bytecode.push(Instruction::Halt);
         self.link_bytecode(main_bytecode)
+    }
+
+    /// Whether the REPL echoes the value of this top-level expression.
+    ///
+    /// Method definitions, `var` bindings and `print` calls stay silent; `print` already
+    /// prints its argument.
+    fn echoes_in_repl(expression: &Expression) -> bool {
+        match &expression.kind {
+            ExpressionKind::Method(_) | ExpressionKind::Var(_) => false,
+            ExpressionKind::Call(call) => call.name != "print",
+            _ => true,
+        }
     }
 
     /// Build the combined shim + body block for one method name.

@@ -1,7 +1,7 @@
 use super::Compilelet;
 use crate::compiler::Compiler;
 use crate::types::{CompilerResult, Expression, ExpressionKind, Pattern};
-use strontium::machine::instruction::{Instruction, Interrupt, InterruptKind};
+use strontium::machine::instruction::Instruction;
 
 /// Compilelet for variable pattern references.
 /// In method bodies, emits LoadLocal. At top level, copies from the named register.
@@ -35,15 +35,6 @@ impl Compilelet for VariablePatternCompilelet {
                     instructions.push(Instruction::Copy {
                         source: var_name,
                         destination: dest_register.clone(),
-                    });
-                }
-
-                if compiler.context.recursion_depth == 1 && compiler.context.repl_mode {
-                    instructions.push(Instruction::Interrupt {
-                        interrupt: Interrupt {
-                            address: dest_register,
-                            kind: InterruptKind::Print,
-                        },
                     });
                 }
             }

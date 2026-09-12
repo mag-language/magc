@@ -72,17 +72,7 @@ impl Compilelet for CallCompilelet {
                             operand1: arg_register.clone(),
                             operand2: arg_register,
                             destination: destination_register.clone(),
-                        });
-
-                        if compiler.context.recursion_depth == 1 && compiler.context.repl_mode {
-                            instructions.push(Instruction::Interrupt {
-                                interrupt: Interrupt {
-                                    address: destination_register,
-                                    kind: InterruptKind::Print,
-                                },
-                            });
-                        }
-                    }
+                        });                    }
                 }
 
                 // Built-in arithmetic operators
@@ -132,17 +122,7 @@ impl Compilelet for CallCompilelet {
                             operand1: left_register,
                             operand2: right_register,
                             destination: destination_register.clone(),
-                        });
-
-                        if compiler.context.recursion_depth == 1 && compiler.context.repl_mode {
-                            instructions.push(Instruction::Interrupt {
-                                interrupt: Interrupt {
-                                    address: destination_register,
-                                    kind: InterruptKind::Print,
-                                },
-                            });
-                        }
-                    }
+                        });                    }
                 }
 
                 // Built-in comparison operators
@@ -191,17 +171,7 @@ impl Compilelet for CallCompilelet {
                             operand1: left_register,
                             operand2: right_register,
                             destination: destination_register.clone(),
-                        });
-
-                        if compiler.context.recursion_depth == 1 && compiler.context.repl_mode {
-                            instructions.push(Instruction::Interrupt {
-                                interrupt: Interrupt {
-                                    address: destination_register,
-                                    kind: InterruptKind::Print,
-                                },
-                            });
-                        }
-                    }
+                        });                    }
                 }
 
                 // Any other method calls (user-defined multimethods)
@@ -243,18 +213,8 @@ impl Compilelet for CallCompilelet {
 
                     instructions.push(Instruction::Copy {
                         source: "ret".to_string(),
-                        destination: destination_register.clone(),
+                        destination: destination_register,
                     });
-
-                    // Print result at top level
-                    if compiler.context.recursion_depth == 1 && compiler.context.repl_mode {
-                        instructions.push(Instruction::Interrupt {
-                            interrupt: Interrupt {
-                                address: destination_register,
-                                kind: InterruptKind::Print,
-                            },
-                        });
-                    }
                 }
             }
         }
