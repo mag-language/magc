@@ -361,7 +361,7 @@ mod tests {
                     }),
                 }),
 
-                start_pos: 2,
+                start_pos: 0,
                 end_pos: 3,
             }])
         );

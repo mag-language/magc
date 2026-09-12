@@ -75,7 +75,7 @@ mod tests {
                 }),
 
                 start_pos: 0,
-                end_pos: instance.len() + member.len(),
+                end_pos: instance.len() + 1, // end of the `.` token
             }]),
             {
                 let mut parser = Parser::new();

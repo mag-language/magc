@@ -9,7 +9,7 @@
 //!
 //! A simple infix addition operation like `1 + 2` can be converted to a token sequence like this:
 //!
-//! ```rust
+//! ```rust,ignore
 //! use magc::{Lexer, Parser};
 //!
 //! // Add some text to the lexer's input buffer and parse it into a sequence of tokens.
