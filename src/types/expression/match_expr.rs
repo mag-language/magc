@@ -11,8 +11,5 @@ pub struct CaseArm {
 pub struct MatchExpression {
     pub subject: Box<Expression>,
     pub arms: Vec<CaseArm>,
-    /// The mandatory else branch (required unless exhaustiveness can be statically proven).
-    // TODO: skip requiring else when exhaustiveness can be statically proven,
-    // e.g. all variants of an enum are covered.
-    pub else_arm: Box<Expression>,
+    pub else_arm: Option<Box<Expression>>,
 }

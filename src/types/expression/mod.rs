@@ -130,7 +130,7 @@ impl ExpressionKind {
                 for arm in &mut m.arms {
                     arm.body.desugar();
                 }
-                m.else_arm.desugar();
+                if let Some(arm) = &mut m.else_arm { arm.desugar(); }
                 ExpressionKind::Match(m)
             }
             _ => self,

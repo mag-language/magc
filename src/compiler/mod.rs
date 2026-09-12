@@ -37,7 +37,7 @@ pub use self::multimethod::Multimethod;
 pub use self::type_system::TypeSystem;
 pub use compilelets::{
     BlockCompilelet, CallCompilelet, Compilelet, ConditionalCompilelet, LiteralCompilelet,
-    MatchCompilelet, MethodCompilelet, PrefixCompilelet, ReturnCompilelet,
+    MatchCompilelet, MethodCompilelet, PrefixCompilelet, RecordCompilelet, ReturnCompilelet,
     ValuePatternCompilelet, VarCompilelet, VariablePatternCompilelet,
 };
 
@@ -52,6 +52,10 @@ pub struct CompilationContext {
     /// Match arm bindings: variable name → register name.
     /// Checked before local/global; scoped to the current arm body.
     pub register_bindings: HashMap<String, String>,
+    /// Record subject field registers: field key → register name.
+    /// Set by RecordCompilelet when compiling a record match subject.
+    /// Keys are "fieldname" for scalar fields and "fieldname.N" for tuple elements.
+    pub record_fields: HashMap<String, String>,
     /// Counter for generating unique label IDs for conditional branches.
     pub next_label_id: usize,
     /// True when running inside the REPL; enables auto-print of top-level expressions.
@@ -128,6 +132,14 @@ impl Compiler {
             "BlockExpression".to_string(),
             &BlockCompilelet as &dyn Compilelet,
         );
+        compilelets.insert(
+            "RecordPattern".to_string(),
+            &RecordCompilelet as &dyn Compilelet,
+        );
+        compilelets.insert(
+            "PairPattern".to_string(),
+            &RecordCompilelet as &dyn Compilelet,
+        );
 
         Self {
             _variables: HashMap::new(),
@@ -140,6 +152,7 @@ impl Compiler {
                 local_variables: HashSet::new(),
                 global_variables: HashSet::new(),
                 register_bindings: HashMap::new(),
+                record_fields: HashMap::new(),
                 next_label_id: 0,
                 repl_mode: false,
             },

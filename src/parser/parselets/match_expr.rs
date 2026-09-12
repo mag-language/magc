@@ -53,9 +53,10 @@ impl PrefixParselet for MatchParselet {
         let mut else_arm: Option<Box<Expression>> = None;
 
         loop {
-            let next = parser.peek()?.kind.clone();
-
-            match next {
+            if parser.eof() {
+                return Err(ParserError::UnexpectedEOF);
+            }
+            match parser.peek()?.kind.clone() {
                 TokenKind::Keyword(Keyword::Case) => {
                     parser.advance();
                     let pattern = parser.parse_expression(0)?.pattern_or_value_pattern()?;
@@ -70,21 +71,17 @@ impl PrefixParselet for MatchParselet {
                     break;
                 }
                 TokenKind::Keyword(Keyword::End) => {
-                    return Err(crate::types::ParserError::UnexpectedType {
-                        expected: "else branch".to_string(),
-                        found: Some("end".to_string()),
-                    });
+                    parser.advance();
+                    break;
                 }
-                _ => {
+                other => {
                     return Err(crate::types::ParserError::UnexpectedType {
-                        expected: "case or else".to_string(),
-                        found: Some(format!("{:?}", next)),
+                        expected: "case, else, or end".to_string(),
+                        found: Some(format!("{:?}", other)),
                     });
                 }
             }
         }
-
-        let else_arm = else_arm.unwrap();
 
         Ok(Expression {
             kind: ExpressionKind::Match(MatchExpression {
