@@ -394,7 +394,7 @@ impl Compiler {
     ///
     /// All label IDs are globally unique (via alloc_label). The caller resolves
     /// labels with the block's base offset so cross-shim-to-body jumps work.
-    fn build_method_block(&mut self, variant_ids: &[String]) -> Vec<Instruction> {
+    fn build_method_block(&mut self, method_name: &str, variant_ids: &[String]) -> Vec<Instruction> {
         let mut instructions = vec![];
         let mut body_labels: Vec<usize> = vec![];
 
@@ -470,7 +470,18 @@ impl Compiler {
             }
         }
 
-        // No variant matched
+        // No variant matched — report error and stop
+        let msg_reg = self.registers.allocate_register();
+        instructions.push(Instruction::Load {
+            value: RegisterValue::String(format!("no multimethod '{}' matches the given argument", method_name)),
+            register: msg_reg.clone(),
+        });
+        instructions.push(Instruction::Interrupt {
+            interrupt: strontium::machine::instruction::Interrupt {
+                address: msg_reg,
+                kind: strontium::machine::instruction::InterruptKind::Panic,
+            },
+        });
         instructions.push(Instruction::Halt);
 
         // Append each body preceded by its label target
@@ -600,7 +611,7 @@ impl Compiler {
 
         for name in &method_names {
             let ids = by_name[name].clone();
-            let combined = self.build_method_block(&ids);
+            let combined = self.build_method_block(name, &ids);
             let base_offset = current_offset;
             shim_addresses.insert(name.clone(), base_offset);
             for instr in &combined {
