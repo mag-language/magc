@@ -152,7 +152,7 @@ impl Compiler {
                 names
             }
             Pattern::Tuple(tuple) => Self::extract_variable_names(&tuple.child),
-            Pattern::Field(field) => Self::extract_variable_names(&field.value),
+            Pattern::Record(record) => Self::extract_variable_names(&record.value),
             Pattern::Value(_) => vec![],
         }
     }

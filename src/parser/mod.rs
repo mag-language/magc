@@ -4,10 +4,10 @@ use crate::types::{Expression, Keyword, Literal, ParserError, Token, TokenKind};
 use unicode_segmentation::UnicodeSegmentation;
 
 use parselets::{
-    BlockParselet, CallParselet, ConditionalParselet, FieldPatternParselet, InfixOperatorParselet,
-    InfixParselet, ListParselet, LiteralParselet, MatchParselet, MemberParselet, MethodParselet,
-    PairParselet, PrefixOperatorParselet, PrefixParselet, ReturnParselet, TuplePatternParselet,
-    VarParselet, VariablePatternParselet,
+    BlockParselet, CallParselet, ConditionalParselet, InfixOperatorParselet, InfixParselet,
+    ListParselet, LiteralParselet, MatchParselet, MemberParselet, MethodParselet, PairParselet,
+    PrefixOperatorParselet, PrefixParselet, RecordPatternParselet, ReturnParselet,
+    TuplePatternParselet, VarParselet, VariablePatternParselet,
 };
 
 use std::collections::HashMap;
@@ -154,7 +154,7 @@ impl Parser {
         );
         infix_parselets.insert(
             TokenKind::Colon,
-            Rc::new(FieldPatternParselet) as Rc<dyn InfixParselet>,
+            Rc::new(RecordPatternParselet) as Rc<dyn InfixParselet>,
         );
         infix_parselets.insert(
             TokenKind::Dot,

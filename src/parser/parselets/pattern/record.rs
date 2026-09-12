@@ -1,24 +1,22 @@
-//! Parse a named pattern and return it as a single entry of a key-value association.
+//! Parse a named record field pattern and return it as a key-value entry.
 
 use crate::parser::{InfixParselet, Parser, ParserError, ParserResult, PREC_RECORD};
 
 use crate::types::{
-    Expression, ExpressionKind, FieldPattern, Pattern, Token, TokenKind, ValuePattern,
+    Expression, ExpressionKind, Pattern, RecordPattern, Token, TokenKind, ValuePattern,
     VariablePattern,
 };
 
 #[derive(Debug, Clone)]
-/// A named pattern, like `repeats: 4` or `name: n String`.
-pub struct FieldPatternParselet;
+pub struct RecordPatternParselet;
 
-impl FieldPatternParselet {
+impl RecordPatternParselet {
     fn expect_variable_pattern(
         &self,
         expression: Box<Expression>,
     ) -> Result<VariablePattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(Pattern::Variable(variable_pattern)) => Ok(variable_pattern),
-
             _ => Err(ParserError::ExpectedPattern),
         }
     }
@@ -29,13 +27,12 @@ impl FieldPatternParselet {
     ) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
-
             _ => Ok(Pattern::Value(ValuePattern { expression })),
         }
     }
 }
 
-impl InfixParselet for FieldPatternParselet {
+impl InfixParselet for RecordPatternParselet {
     fn parse(&self, parser: &mut Parser, left: Box<Expression>, token: Token) -> ParserResult {
         parser.consume_expect(TokenKind::Colon)?;
 
@@ -49,7 +46,7 @@ impl InfixParselet for FieldPatternParselet {
         };
 
         Ok(Expression {
-            kind: ExpressionKind::Pattern(Pattern::Field(FieldPattern {
+            kind: ExpressionKind::Pattern(Pattern::Record(RecordPattern {
                 name: n,
                 value: Box::new(self.pattern_or_value_pattern(right)?),
             })),

@@ -6,14 +6,14 @@ use crate::type_system::Typed;
 use crate::types::ParserError;
 use std::collections::HashMap;
 
-mod field;
 mod pair;
+mod record;
 mod tuple;
 mod value;
 mod variable;
 
-pub use self::field::*;
 pub use self::pair::*;
+pub use self::record::*;
 pub use self::tuple::*;
 pub use self::value::*;
 pub use self::variable::*;
@@ -25,8 +25,8 @@ pub type LinearizeResult = Result<HashMap<VariablePattern, Box<Expression>>, Par
 /// expressivity within the language by a great degree.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Pattern {
-    /// A named pattern, like `repeats: 4` or `name: n String`.
-    Field(FieldPattern),
+    /// A named record field pattern, like `name: "Dave"` or `age: n Int`.
+    Record(RecordPattern),
     /// A pattern enclosed in parentheses, like `(1 + 2)`
     Tuple(TuplePattern),
     /// Any expression that evaluates to a value, like `1 + 2` or `get_address_book()`.
@@ -38,23 +38,21 @@ pub enum Pattern {
 }
 
 impl Pattern {
-    /// Convert an expression into a pattern, if possible.
     fn _pattern_or_value_pattern(
         &self,
         expression: Box<Expression>,
     ) -> Result<Pattern, ParserError> {
         match expression.kind {
             ExpressionKind::Pattern(pattern) => Ok(pattern),
-
             _ => Ok(Pattern::Value(ValuePattern { expression })),
         }
     }
 
-    pub fn expect_field(self) -> Result<FieldPattern, ParserError> {
+    pub fn expect_record(self) -> Result<RecordPattern, ParserError> {
         match self {
-            Pattern::Field(pattern) => Ok(pattern),
+            Pattern::Record(pattern) => Ok(pattern),
             _ => Err(ParserError::UnexpectedPattern {
-                expected: String::from("FieldPattern"),
+                expected: String::from("RecordPattern"),
                 found: self
                     .get_type()
                     .unwrap_or(String::from("<dynamically typed>")),
@@ -114,7 +112,7 @@ impl Pattern {
 impl Typed for Pattern {
     fn get_type(&self) -> Option<String> {
         match self {
-            Pattern::Field(_) => Some(String::from("FieldPattern")),
+            Pattern::Record(_) => Some(String::from("RecordPattern")),
             Pattern::Tuple(_) => Some(String::from("TuplePattern")),
             Pattern::Value(_) => Some(String::from("ValuePattern")),
             Pattern::Variable(_) => Some(String::from("VariablePattern")),
@@ -141,7 +139,7 @@ impl Pattern {
     /// ```
     pub fn linearize(&self, parser: &Parser, other: Pattern) -> LinearizeResult {
         match self {
-            Pattern::Field(reference) => self.linearize_field(parser, reference.clone(), other),
+            Pattern::Record(reference) => self.linearize_record(parser, reference.clone(), other),
             Pattern::Tuple(reference) => self.linearize_tuple(parser, reference.clone(), other),
             Pattern::Value(reference) => self.linearize_value(parser, reference.clone(), other),
             Pattern::Variable(reference) => self.linearize_variable(reference.clone(), other),
@@ -150,10 +148,7 @@ impl Pattern {
     }
 
     pub fn matches_with(&self, parser: &Parser, other: Pattern) -> bool {
-        match self.linearize(parser, other) {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        self.linearize(parser, other).is_ok()
     }
 
     pub fn get_precedence(&self) -> usize {
@@ -165,7 +160,7 @@ impl Pattern {
 
     pub fn desugar(&mut self) -> Self {
         match self {
-            Pattern::Field(pattern) => Pattern::Field(pattern.clone().desugar()),
+            Pattern::Record(pattern) => Pattern::Record(pattern.clone().desugar()),
             Pattern::Tuple(pattern) => Pattern::Tuple(pattern.clone().desugar()),
             Pattern::Value(pattern) => Pattern::Value(pattern.clone().desugar()),
             Pattern::Variable(pattern) => Pattern::Variable(pattern.clone().desugar()),
@@ -173,17 +168,16 @@ impl Pattern {
         }
     }
 
-    fn linearize_field(
+    fn linearize_record(
         &self,
         parser: &Parser,
-        reference: FieldPattern,
+        reference: RecordPattern,
         other: Pattern,
     ) -> LinearizeResult {
-        if let Pattern::Field(given) = other {
+        if let Pattern::Record(given) = other {
             if given.name != reference.name {
                 return Err(ParserError::NoMatch);
             }
-
             given.value.linearize(parser, *reference.value)
         } else {
             Err(ParserError::NoMatch)
@@ -232,7 +226,6 @@ impl Pattern {
         let mut variables = HashMap::new();
 
         if let Some(name) = reference.name {
-            // Extract value into environment and skip type checking for now.
             if let Pattern::Value(ValuePattern { expression }) = other {
                 variables.insert(
                     VariablePattern {
@@ -242,7 +235,6 @@ impl Pattern {
                     expression,
                 );
             } else {
-                // TODO: add proper error handling here!
                 return Err(ParserError::NoMatch);
             }
         }
@@ -259,9 +251,7 @@ impl Pattern {
         if let Pattern::Pair(PairPattern { left, right }) = other {
             let mut left_map = reference.left.linearize(parser, *left)?;
             let right_map = reference.right.linearize(parser, *right)?;
-
             left_map.extend(right_map);
-
             Ok(left_map)
         } else {
             Err(ParserError::NoMatch)
@@ -272,7 +262,7 @@ impl Pattern {
 impl std::fmt::Display for Pattern {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Pattern::Field(pattern) => write!(f, "{}", pattern),
+            Pattern::Record(pattern) => write!(f, "{}", pattern),
             Pattern::Tuple(pattern) => write!(f, "{}", pattern),
             Pattern::Value(pattern) => write!(f, "{}", pattern),
             Pattern::Variable(pattern) => write!(f, "{}", pattern),
