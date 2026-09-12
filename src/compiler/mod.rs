@@ -36,8 +36,8 @@ pub use self::errors::ErrorReporter;
 pub use self::multimethod::Multimethod;
 pub use self::type_system::TypeSystem;
 pub use compilelets::{
-    CallCompilelet, Compilelet, ConditionalCompilelet, LiteralCompilelet, MatchCompilelet,
-    MethodCompilelet, ReturnCompilelet, ValuePatternCompilelet, VarCompilelet,
+    BlockCompilelet, CallCompilelet, Compilelet, ConditionalCompilelet, LiteralCompilelet,
+    MatchCompilelet, MethodCompilelet, ReturnCompilelet, ValuePatternCompilelet, VarCompilelet,
     VariablePatternCompilelet,
 };
 
@@ -119,6 +119,10 @@ impl Compiler {
         compilelets.insert(
             "MatchExpression".to_string(),
             &MatchCompilelet as &dyn Compilelet,
+        );
+        compilelets.insert(
+            "BlockExpression".to_string(),
+            &BlockCompilelet as &dyn Compilelet,
         );
 
         Self {

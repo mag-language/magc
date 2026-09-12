@@ -186,6 +186,11 @@ impl Parser {
         let mut expressions = vec![];
 
         while !self.eof() {
+            // TODO: preserve comments for doc-comment support in the future
+            if matches!(self.peek()?.kind, TokenKind::Comment) {
+                self.advance();
+                continue;
+            }
             expressions.push(self.parse_expression(0)?);
         }
 
@@ -203,6 +208,13 @@ impl Parser {
 
     /// Parse a single expression with the given precedence.
     pub fn parse_expression(&mut self, precedence: usize) -> Result<Expression, ParserError> {
+        // TODO: preserve comments for doc-comment support in the future
+        while !self.eof() && matches!(self.peek()?.kind, TokenKind::Comment) {
+            self.advance();
+        }
+        if self.eof() {
+            return Err(ParserError::UnexpectedEOF);
+        }
         let token = self.consume();
         let start_pos = token.start_pos;
         let mut end_pos = token.end_pos;

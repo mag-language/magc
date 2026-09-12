@@ -3,6 +3,7 @@ use strontium::machine::instruction::Instruction;
 
 use super::Compiler;
 
+mod block;
 mod call;
 mod conditional;
 mod literal;
@@ -13,6 +14,7 @@ mod value_pattern;
 mod var;
 mod variable_pattern;
 
+pub use self::block::*;
 pub use self::call::*;
 pub use self::conditional::*;
 pub use self::literal::*;
