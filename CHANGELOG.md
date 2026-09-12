@@ -27,6 +27,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Update outdated unreleased diff link.
 -->
 
+## [0.9.0] - September 13, 2026
+
+### Added
+
+- `match`/`case` expressions with value, type, wildcard, and record patterns. Arm patterns can bind variables for use in the arm body.
+- Record patterns in `match` subjects and arms, including tuple-valued fields (e.g. `match name: "Dan", pals: ("Sam", "Ed")`).
+- Multimethod dispatch on named record fields via `DispatchPattern::Record`, so `def abs(num: x Int)` and `def abs(num: x Float)` coexist. Each field's presence is tracked in an `arg.<field>.__present` register so a call never matches a field left over from a previous call.
+- A `nothing` literal and a `Nothing` type annotation. Booleans, strings, and `nothing` can now be used as dispatch values.
+- Multi-line bodies for `def`, `if`, and `match` arms: a body starting on the line after `)` or `then` runs until `end`. Same-line bodies are still a single expression.
+- One-liner `match` expressions without `end`: a `match` whose first `case` is on the same line as `match` ends at the line break (e.g. `match x case 1 then "one" else "other"`). A trailing `end` on that line is still accepted.
+- Unary `+` and `-` via the new `PrefixCompilelet`.
+- The `~` operator for string concatenation.
+- Calling a multimethod with an argument that matches none of its variants now raises a runtime error naming the method and the argument.
+- In `repl_mode`, `Compiler::compile` echoes the value of every top-level expression, including literals, `if`, `match`, and `nothing`. Method definitions, `var` bindings, and `print` calls are not echoed. This replaces the auto-printing previously scattered across individual compilelets, which skipped most expression kinds.
+- `Lexer::reset`, `Parser::reset_tokens`, and `Compiler::is_complete` for detecting incomplete input.
+- An integration test suite covering prefix operators, conditionals, `match`, multi-line definitions, and multimethod dispatch.
+
+### Changed
+
+- Multimethod dispatch now happens entirely at compile time: `link_bytecode` generates one dispatch shim per multimethod and patches every `CallShim` into a direct `Call`. `DispatchPattern` moved from `strontium` into `magc::dispatch`.
+- `FieldPattern` is renamed to `RecordPattern` (`Pattern::Field` → `Pattern::Record`, `expect_field` → `expect_record`).
+- `Compiler::compile` resets the lexer and parser before each call, so every REPL line is parsed on its own.
+- `Multimethod::add_method` takes a precomputed `DispatchPattern` instead of a `&Parser`, and `Compiler::generate_method_id` derives method IDs from the dispatch pattern.
+- The `else` branch of `match` is now optional (`MatchExpression::else_arm` is an `Option`). A `match` without `else` evaluates to `nothing` when no arm matches, like `if` without `else`.
+- `Compiler::new` uses `env_logger::try_init`, so more than one compiler can be created per process.
+
+### Fixed
+
+- Defining value-pattern variants on separate REPL lines (e.g. `def fib(0) 0` followed by `def fib(1) 1`) no longer fails with "this method signature has already been defined". Such variants also no longer overwrite each other's compiled bodies.
+- The parser now skips comment tokens instead of failing on them.
+- `magc` builds on stable Rust again: the unused `#![feature(type_ascription)]` attribute, which required a nightly toolchain, was removed.
+
 ## [0.8.0] - May 10, 2026
 
 ### Added
