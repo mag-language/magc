@@ -1,6 +1,6 @@
 use super::Compilelet;
 use crate::compiler::{CompiledMethod, Compiler, Multimethod};
-use crate::types::{CompilerResult, Expression, ExpressionKind};
+use crate::types::{CompilerResult, Expression, ExpressionKind, Pattern, VariablePattern};
 use strontium::machine::instruction::Instruction;
 
 // Implement a compilelet which defines a method within the compiler using a Block as the body.
@@ -56,10 +56,15 @@ impl Compilelet for MethodCompilelet {
 
                 // Build method preamble: copy argument from 'arg' register to local variables
                 let mut body_instructions = vec![];
-                for param_name in &parameter_names {
+                let parameter_bindings = if let Some(ref sig) = method.signature {
+                    collect_parameter_bindings(sig)
+                } else {
+                    vec![]
+                };
+                for (param_name, source_register) in &parameter_bindings {
                     body_instructions.push(Instruction::StoreLocal {
                         name: param_name.clone(),
-                        register: "arg".to_string(),
+                        register: source_register.clone(),
                     });
                 }
 
@@ -85,5 +90,70 @@ impl Compilelet for MethodCompilelet {
         }
 
         Ok(vec![])
+    }
+}
+
+fn collect_parameter_bindings(pattern: &Pattern) -> Vec<(String, String)> {
+    let mut bindings = vec![];
+    collect_parameter_bindings_inner(pattern, "arg", &mut bindings);
+    bindings
+}
+
+fn collect_parameter_bindings_inner(
+    pattern: &Pattern,
+    source_register: &str,
+    out: &mut Vec<(String, String)>,
+) {
+    match pattern {
+        Pattern::Variable(VariablePattern { name: Some(name), .. }) if name != "_" => {
+            out.push((name.clone(), source_register.to_string()));
+        }
+        Pattern::Variable(_) => {}
+        Pattern::Record(record) => {
+            collect_record_parameter_bindings(
+                &record.value,
+                &format!("{}.{}", source_register, record.name),
+                out,
+            );
+        }
+        Pattern::Pair(pair) => {
+            collect_parameter_bindings_inner(&pair.left, source_register, out);
+            collect_parameter_bindings_inner(&pair.right, source_register, out);
+        }
+        Pattern::Tuple(tuple) => {
+            for (index, element) in crate::compiler::compilelets::flatten_pair(&tuple.child)
+                .iter()
+                .enumerate()
+            {
+                collect_parameter_bindings_inner(
+                    element,
+                    &format!("{}.{}", source_register, index),
+                    out,
+                );
+            }
+        }
+        Pattern::Value(_) => {}
+    }
+}
+
+fn collect_record_parameter_bindings(
+    pattern: &Pattern,
+    source_register: &str,
+    out: &mut Vec<(String, String)>,
+) {
+    match pattern {
+        Pattern::Tuple(tuple) => {
+            for (index, element) in crate::compiler::compilelets::flatten_pair(&tuple.child)
+                .iter()
+                .enumerate()
+            {
+                collect_parameter_bindings_inner(
+                    element,
+                    &format!("{}.{}", source_register, index),
+                    out,
+                );
+            }
+        }
+        other => collect_parameter_bindings_inner(other, source_register, out),
     }
 }

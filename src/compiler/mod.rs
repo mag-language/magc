@@ -6,7 +6,7 @@ use crate::CompilerError;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::dispatch::DispatchPattern;
+use crate::dispatch::{DispatchFieldPattern, DispatchPattern};
 use strontium::machine::instruction::{ComparisonMethod, Instruction};
 use strontium::machine::register::{RegisterType, RegisterValue, Registers};
 
@@ -194,52 +194,160 @@ impl Compiler {
     ) -> DispatchPattern {
         match pattern {
             None => DispatchPattern::Any,
-            Some(Pattern::Variable(VariablePattern { type_id: Some(t), .. })) => {
-                match t.as_str() {
-                    "Int" => DispatchPattern::Type(RegisterType::Int64),
-                    "Float" => DispatchPattern::Type(RegisterType::Float64),
-                    "String" => DispatchPattern::Type(RegisterType::String),
-                    "Bool" => DispatchPattern::Type(RegisterType::Boolean),
-                    _ => DispatchPattern::Any,
+            Some(pattern) => Self::pattern_to_dispatch_pattern_inner(pattern, parser),
+        }
+    }
+
+    fn pattern_to_dispatch_pattern_inner(pattern: &Pattern, parser: &Parser) -> DispatchPattern {
+        match pattern {
+            Pattern::Record(_) | Pattern::Pair(_) => {
+                let mut fields = vec![];
+                Self::collect_record_dispatch_fields(pattern, parser, "arg", &mut fields);
+                if fields.is_empty() {
+                    DispatchPattern::Any
+                } else {
+                    DispatchPattern::Record(fields)
                 }
             }
-            Some(Pattern::Variable(_)) => DispatchPattern::Any,
-            Some(Pattern::Value(value_pattern)) => {
-                match &value_pattern.expression.kind {
-                    ExpressionKind::Literal(Literal::Int) => {
-                        if let Ok(lexeme) = parser.get_lexeme(
-                            value_pattern.expression.start_pos,
-                            value_pattern.expression.end_pos,
-                        ) {
-                            if let Ok(n) = lexeme.parse::<i64>() {
-                                return DispatchPattern::Value(RegisterValue::Int64(n));
+            Pattern::Variable(VariablePattern { type_id: Some(t), .. }) => {
+                Self::type_name_to_dispatch_pattern(t)
+            }
+            Pattern::Variable(_) => DispatchPattern::Any,
+            Pattern::Value(value_pattern) => Self::literal_dispatch_value(
+                &value_pattern.expression,
+                parser,
+            )
+            .map(DispatchPattern::Value)
+            .unwrap_or(DispatchPattern::Any),
+            Pattern::Tuple(_) => DispatchPattern::Any,
+        }
+    }
+
+    fn collect_record_dispatch_fields(
+        pattern: &Pattern,
+        parser: &Parser,
+        prefix: &str,
+        out: &mut Vec<DispatchFieldPattern>,
+    ) {
+        match pattern {
+            Pattern::Record(record) => {
+                let field_register = format!("{}.{}", prefix, record.name);
+                out.push(DispatchFieldPattern {
+                    register: Self::presence_register(&field_register),
+                    pattern: DispatchPattern::Value(RegisterValue::Boolean(true)),
+                });
+
+                match record.value.as_ref() {
+                    Pattern::Tuple(tuple) => {
+                        for (index, element) in compilelets::flatten_pair(&tuple.child)
+                            .iter()
+                            .enumerate()
+                        {
+                            let element_register = format!("{}.{}", field_register, index);
+                            out.push(DispatchFieldPattern {
+                                register: Self::presence_register(&element_register),
+                                pattern: DispatchPattern::Value(RegisterValue::Boolean(true)),
+                            });
+
+                            let field_pattern =
+                                Self::pattern_to_field_dispatch_pattern(element, parser);
+                            if field_pattern != DispatchPattern::Any {
+                                out.push(DispatchFieldPattern {
+                                    register: element_register,
+                                    pattern: field_pattern,
+                                });
                             }
                         }
-                        DispatchPattern::Any
                     }
-                    ExpressionKind::Literal(Literal::Float) => {
-                        if let Ok(lexeme) = parser.get_lexeme(
-                            value_pattern.expression.start_pos,
-                            value_pattern.expression.end_pos,
-                        ) {
-                            if let Ok(n) = lexeme.parse::<f64>() {
-                                return DispatchPattern::Value(RegisterValue::Float64(n));
-                            }
+                    other => {
+                        let field_pattern = Self::pattern_to_field_dispatch_pattern(other, parser);
+                        if field_pattern != DispatchPattern::Any {
+                            out.push(DispatchFieldPattern {
+                                register: field_register,
+                                pattern: field_pattern,
+                            });
                         }
-                        DispatchPattern::Any
                     }
-                    _ => DispatchPattern::Any,
                 }
             }
+            Pattern::Pair(pair) => {
+                Self::collect_record_dispatch_fields(&pair.left, parser, prefix, out);
+                Self::collect_record_dispatch_fields(&pair.right, parser, prefix, out);
+            }
+            _ => {}
+        }
+    }
+
+    fn pattern_to_field_dispatch_pattern(pattern: &Pattern, parser: &Parser) -> DispatchPattern {
+        match pattern {
+            Pattern::Variable(VariablePattern { type_id: Some(t), .. }) => {
+                Self::type_name_to_dispatch_pattern(t)
+            }
+            Pattern::Value(value_pattern) => Self::literal_dispatch_value(
+                &value_pattern.expression,
+                parser,
+            )
+            .map(DispatchPattern::Value)
+            .unwrap_or(DispatchPattern::Any),
             _ => DispatchPattern::Any,
         }
     }
 
+    fn type_name_to_dispatch_pattern(type_name: &str) -> DispatchPattern {
+        match type_name {
+            "Int" => DispatchPattern::Type(RegisterType::Int64),
+            "Float" => DispatchPattern::Type(RegisterType::Float64),
+            "String" => DispatchPattern::Type(RegisterType::String),
+            "Bool" | "Boolean" => DispatchPattern::Type(RegisterType::Boolean),
+            "Nothing" => DispatchPattern::Type(RegisterType::Empty),
+            _ => DispatchPattern::Any,
+        }
+    }
+
+    fn literal_dispatch_value(expression: &Expression, parser: &Parser) -> Option<RegisterValue> {
+        match &expression.kind {
+            ExpressionKind::Literal(Literal::Int) => parser
+                .get_lexeme(expression.start_pos, expression.end_pos)
+                .ok()
+                .and_then(|lexeme| lexeme.parse::<i64>().ok())
+                .map(RegisterValue::Int64),
+            ExpressionKind::Literal(Literal::Float) => parser
+                .get_lexeme(expression.start_pos, expression.end_pos)
+                .ok()
+                .and_then(|lexeme| lexeme.parse::<f64>().ok())
+                .map(RegisterValue::Float64),
+            ExpressionKind::Literal(Literal::Boolean) => parser
+                .get_lexeme(expression.start_pos, expression.end_pos)
+                .ok()
+                .and_then(|lexeme| lexeme.parse::<bool>().ok())
+                .map(RegisterValue::Boolean),
+            ExpressionKind::Literal(Literal::String) => parser
+                .get_lexeme(expression.start_pos, expression.end_pos)
+                .ok()
+                .map(|lexeme| {
+                    RegisterValue::String(
+                        lexeme
+                            .strip_prefix('"')
+                            .and_then(|value| value.strip_suffix('"'))
+                            .unwrap_or(&lexeme)
+                            .to_string(),
+                    )
+                }),
+            ExpressionKind::Literal(Literal::Nothing) => Some(RegisterValue::Empty),
+            _ => None,
+        }
+    }
+
+    pub fn presence_register(register: &str) -> String {
+        format!("{}.__present", register)
+    }
+
     pub fn compile_expression(
         &mut self,
-        expression: Expression,
+        mut expression: Expression,
         target_register: Option<String>,
     ) -> CompilerResult<Vec<Instruction>> {
+        expression.desugar();
         self.context.recursion_depth += 1;
 
         let mut bytecode = vec![];
@@ -298,6 +406,19 @@ impl Compiler {
             match pattern {
                 DispatchPattern::Any => {
                     instructions.push(Instruction::JumpToLabel { id: body_label });
+                }
+                DispatchPattern::Record(fields) => {
+                    let skip_label = self.alloc_label();
+                    for field in fields {
+                        self.emit_dispatch_check(
+                            field.pattern,
+                            field.register,
+                            skip_label,
+                            &mut instructions,
+                        );
+                    }
+                    instructions.push(Instruction::JumpToLabel { id: body_label });
+                    instructions.push(Instruction::LabelTarget { id: skip_label });
                 }
                 DispatchPattern::Value(val) => {
                     let skip_label = self.alloc_label();
@@ -360,6 +481,60 @@ impl Compiler {
         }
 
         instructions
+    }
+
+    fn emit_dispatch_check(
+        &mut self,
+        pattern: DispatchPattern,
+        source_register: String,
+        skip_label: usize,
+        instructions: &mut Vec<Instruction>,
+    ) {
+        match pattern {
+            DispatchPattern::Any => {}
+            DispatchPattern::Record(_) => {}
+            DispatchPattern::Value(val) => {
+                let val_reg = self.registers.allocate_register();
+                let cmp_reg = self.registers.allocate_register();
+                instructions.push(Instruction::Load {
+                    value: val,
+                    register: val_reg.clone(),
+                });
+                instructions.push(Instruction::Compare {
+                    method: ComparisonMethod::EQ,
+                    operand1: source_register,
+                    operand2: val_reg,
+                    destination: cmp_reg.clone(),
+                });
+                instructions.push(Instruction::JumpCToLabel {
+                    id: skip_label,
+                    conditional_address: cmp_reg,
+                });
+            }
+            DispatchPattern::Type(rt) => {
+                let type_reg = self.registers.allocate_register();
+                let expected_reg = self.registers.allocate_register();
+                let cmp_reg = self.registers.allocate_register();
+                instructions.push(Instruction::LoadType {
+                    source: source_register,
+                    destination: type_reg.clone(),
+                });
+                instructions.push(Instruction::Load {
+                    value: RegisterValue::Int64(rt as i64),
+                    register: expected_reg.clone(),
+                });
+                instructions.push(Instruction::Compare {
+                    method: ComparisonMethod::EQ,
+                    operand1: type_reg,
+                    operand2: expected_reg,
+                    destination: cmp_reg.clone(),
+                });
+                instructions.push(Instruction::JumpCToLabel {
+                    id: skip_label,
+                    conditional_address: cmp_reg,
+                });
+            }
+        }
     }
 
     /// Replace CallShim { method_name } with Call { address } using the shim address table.

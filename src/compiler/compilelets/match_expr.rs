@@ -55,6 +55,9 @@ impl Compilelet for MatchCompilelet {
             } else {
                 let dp = pattern_to_dispatch_pattern(&arm.pattern, compiler);
                 match dp {
+                    DispatchPattern::Record(_) => {
+                        instructions.push(Instruction::JumpToLabel { id: *body_label });
+                    }
                     DispatchPattern::Any => {
                         instructions.push(Instruction::JumpToLabel { id: *body_label });
                     }
