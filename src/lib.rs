@@ -73,8 +73,6 @@
 //!
 //! However, since there are a few syntactical differences to the original Magpie language, the two languages are *source-incompatible* and thus have different names. In particular, Bob's implementation substitutes the dot commonly used for calling methods on objects with a space (usually a meaningless character), which I find rather unintuitive, especially for new programmers.
 
-#![feature(type_ascription)]
-
 pub mod compiler;
 pub mod dispatch;
 pub mod helpers;
