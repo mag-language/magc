@@ -1,3 +1,4 @@
+use crate::dispatch::DispatchPattern;
 use crate::parser::Parser;
 use crate::types::Method;
 use crate::types::{CompilerError, CompilerResult, Pattern};
@@ -9,6 +10,8 @@ pub struct Multimethod {
     pub name: String,
     /// Contains pairs of method signatures and bodies.
     pub methods: Vec<Method>,
+    /// Dispatch patterns of `methods`, in the same order.
+    pub dispatch_patterns: Vec<DispatchPattern>,
 }
 
 impl Multimethod {
@@ -16,6 +19,7 @@ impl Multimethod {
         Self {
             name: String::from(name),
             methods: vec![],
+            dispatch_patterns: vec![],
         }
     }
 
@@ -49,32 +53,24 @@ impl Multimethod {
         }
     }
 
-    pub fn add_method(&mut self, parser: &Parser, method: Method) -> CompilerResult<()> {
-        // Break out early if the method already exists.
-        for m in &self.methods {
-            match [m.signature.clone(), method.signature.clone()] {
-                [Some(p1), Some(p2)] => {
-                    if p1.matches_with(parser, p2.clone()) {
-                        return Err(CompilerError::DuplicateMethodSignature {
-                            method_name: method.name,
-                            signature: method.signature,
-                        });
-                    }
-                }
-                // no match.
-                [Some(_), None] | [None, Some(_)] => {}
-                [None, None] => {
-                    println!("MATCH!");
-
-                    return Err(CompilerError::DuplicateMethodSignature {
-                        method_name: method.name,
-                        signature: method.signature,
-                    });
-                }
-            }
+    /// Register a method with its dispatch pattern.
+    ///
+    /// The dispatch pattern must be computed when the method is defined: patterns
+    /// refer to source positions, and the parser's source is replaced on every
+    /// `compile` call (e.g. each REPL line), so it cannot be recomputed later.
+    pub fn add_method(
+        &mut self,
+        method: Method,
+        dispatch_pattern: DispatchPattern,
+    ) -> CompilerResult<()> {
+        if self.dispatch_patterns.contains(&dispatch_pattern) {
+            return Err(CompilerError::DuplicateMethodSignature {
+                method_name: method.name,
+                signature: method.signature,
+            });
         }
         self.methods.push(method);
-
+        self.dispatch_patterns.push(dispatch_pattern);
         Ok(())
     }
 }

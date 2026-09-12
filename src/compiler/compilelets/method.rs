@@ -15,14 +15,18 @@ impl Compilelet for MethodCompilelet {
     ) -> CompilerResult<Vec<Instruction>> {
         match expression.kind.clone() {
             ExpressionKind::Method(method) => {
-                let method_id = Compiler::generate_method_id(&method.name, &method.signature);
+                // Convert the signature to a dispatch pattern for runtime matching.
+                // This must happen now, while the parser still holds this method's source.
+                let dispatch_pattern =
+                    Compiler::pattern_to_dispatch_pattern(&method.signature, &compiler.parser);
+                let method_id = Compiler::generate_method_id(&method.name, &dispatch_pattern);
 
                 // Register with multimethod dispatch table
                 if let Some(multimethod) = compiler.multimethods.get_mut(&method.name) {
-                    multimethod.add_method(&compiler.parser, method.clone())?;
+                    multimethod.add_method(method.clone(), dispatch_pattern.clone())?;
                 } else {
                     let mut m = Multimethod::new(&method.name);
-                    m.add_method(&compiler.parser, method.clone())?;
+                    m.add_method(method.clone(), dispatch_pattern.clone())?;
                     compiler.multimethods.insert(method.name.clone(), m);
                 }
 
@@ -32,10 +36,6 @@ impl Compilelet for MethodCompilelet {
                 } else {
                     vec![]
                 };
-
-                // Convert the signature to a dispatch pattern for runtime matching
-                let dispatch_pattern =
-                    Compiler::pattern_to_dispatch_pattern(&method.signature, &compiler.parser);
 
                 // Store a placeholder entry BEFORE compiling the body
                 // This allows recursive methods to reference themselves

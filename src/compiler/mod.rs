@@ -179,12 +179,13 @@ impl Compiler {
         }
     }
 
-    /// Generate a unique ID for a method variant based on its name and signature.
-    pub fn generate_method_id(name: &str, signature: &Option<Pattern>) -> String {
-        match signature {
-            Some(pattern) => format!("{}_{:?}", name, pattern),
-            None => name.to_string(),
-        }
+    /// Generate a unique ID for a method variant based on its name and dispatch pattern.
+    ///
+    /// Uses the dispatch pattern rather than the AST signature, since the latter only
+    /// stores source positions and would collide for e.g. `fib(0)` and `fib(1)` defined
+    /// on separate REPL lines. Uniqueness is guaranteed by `Multimethod::add_method`.
+    pub fn generate_method_id(name: &str, dispatch_pattern: &DispatchPattern) -> String {
+        format!("{}_{:?}", name, dispatch_pattern)
     }
 
     /// Convert a Pattern to a DispatchPattern for shim generation.
