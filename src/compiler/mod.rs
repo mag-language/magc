@@ -37,8 +37,8 @@ pub use self::multimethod::Multimethod;
 pub use self::type_system::TypeSystem;
 pub use compilelets::{
     BlockCompilelet, CallCompilelet, Compilelet, ConditionalCompilelet, LiteralCompilelet,
-    MatchCompilelet, MethodCompilelet, ReturnCompilelet, ValuePatternCompilelet, VarCompilelet,
-    VariablePatternCompilelet,
+    MatchCompilelet, MethodCompilelet, PrefixCompilelet, ReturnCompilelet,
+    ValuePatternCompilelet, VarCompilelet, VariablePatternCompilelet,
 };
 
 pub struct CompilationContext {
@@ -119,6 +119,10 @@ impl Compiler {
         compilelets.insert(
             "MatchExpression".to_string(),
             &MatchCompilelet as &dyn Compilelet,
+        );
+        compilelets.insert(
+            "PrefixExpression".to_string(),
+            &PrefixCompilelet as &dyn Compilelet,
         );
         compilelets.insert(
             "BlockExpression".to_string(),
