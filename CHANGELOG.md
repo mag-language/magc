@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Update outdated unreleased diff link.
 -->
 
+## [Unreleased]
+
+### Removed
+
+- `Multimethod::linearize`, `Pattern::linearize`, `Pattern::matches_with`, `Pattern::get_precedence`, and the `LinearizeResult` type alias. They were no longer called anywhere: multimethod dispatch and precedence are resolved at compile time via `DispatchPattern`.
+
 ## [0.9.0] - September 13, 2026
 
 ### Added

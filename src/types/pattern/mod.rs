@@ -1,10 +1,7 @@
 use crate::types::{Expression, ExpressionKind};
 
-use crate::parser::Parser;
-
 use crate::type_system::Typed;
 use crate::types::ParserError;
-use std::collections::HashMap;
 
 mod pair;
 mod record;
@@ -17,8 +14,6 @@ pub use self::record::*;
 pub use self::tuple::*;
 pub use self::value::*;
 pub use self::variable::*;
-
-pub type LinearizeResult = Result<HashMap<VariablePattern, Box<Expression>>, ParserError>;
 
 /// A pattern that can be matched with an [`Expression`] to enable complex flow control
 /// and full destructuring pattern matching, which increases the flexibility and
@@ -122,42 +117,6 @@ impl Typed for Pattern {
 }
 
 impl Pattern {
-    /// Compare this pattern with another and destructure any variables if it matches.
-    ///
-    /// This function is used to determine which multimethod implementation matches the
-    /// arguments of a given call, applying precedence rules to ensure that the most specific
-    /// patterns are chosen. In the ubiquitous Fibonacci example, it decides which of the
-    /// multimethods actually get executed based on the input parameters:
-    ///
-    /// ```text
-    /// def fib(0) 0
-    /// #       |- high specificity
-    /// def fib(1) 1
-    ///
-    /// def fib(n Int) fib(n - 1) + fib(n - 2)
-    /// #       ^- low specificity
-    /// ```
-    pub fn linearize(&self, parser: &Parser, other: Pattern) -> LinearizeResult {
-        match self {
-            Pattern::Record(reference) => self.linearize_record(parser, reference.clone(), other),
-            Pattern::Tuple(reference) => self.linearize_tuple(parser, reference.clone(), other),
-            Pattern::Value(reference) => self.linearize_value(parser, reference.clone(), other),
-            Pattern::Variable(reference) => self.linearize_variable(reference.clone(), other),
-            Pattern::Pair(reference) => self.linearize_pair(parser, reference.clone(), other),
-        }
-    }
-
-    pub fn matches_with(&self, parser: &Parser, other: Pattern) -> bool {
-        self.linearize(parser, other).is_ok()
-    }
-
-    pub fn get_precedence(&self) -> usize {
-        match self {
-            Pattern::Value(_) => 2,
-            _ => 1,
-        }
-    }
-
     pub fn desugar(&mut self) -> Self {
         match self {
             Pattern::Record(pattern) => Pattern::Record(pattern.clone().desugar()),
@@ -165,96 +124,6 @@ impl Pattern {
             Pattern::Value(pattern) => Pattern::Value(pattern.clone().desugar()),
             Pattern::Variable(pattern) => Pattern::Variable(pattern.clone().desugar()),
             Pattern::Pair(pattern) => Pattern::Pair(pattern.clone().desugar()),
-        }
-    }
-
-    fn linearize_record(
-        &self,
-        parser: &Parser,
-        reference: RecordPattern,
-        other: Pattern,
-    ) -> LinearizeResult {
-        if let Pattern::Record(given) = other {
-            if given.name != reference.name {
-                return Err(ParserError::NoMatch);
-            }
-            given.value.linearize(parser, *reference.value)
-        } else {
-            Err(ParserError::NoMatch)
-        }
-    }
-
-    fn linearize_tuple(
-        &self,
-        parser: &Parser,
-        reference: TuplePattern,
-        other: Pattern,
-    ) -> LinearizeResult {
-        if let Pattern::Tuple(TuplePattern {
-            child: other_pattern,
-        }) = other
-        {
-            reference.child.linearize(parser, *other_pattern)
-        } else {
-            Err(ParserError::NoMatch)
-        }
-    }
-
-    fn linearize_value(
-        &self,
-        parser: &Parser,
-        reference: ValuePattern,
-        other: Pattern,
-    ) -> LinearizeResult {
-        let reference_lexeme =
-            parser.get_lexeme(reference.expression.start_pos, reference.expression.end_pos)?;
-
-        if let Pattern::Value(ValuePattern { expression }) = other {
-            let given_lexeme = parser.get_lexeme(expression.start_pos, expression.end_pos)?;
-
-            if reference.expression.kind == expression.kind && reference_lexeme == given_lexeme {
-                Ok(HashMap::new())
-            } else {
-                Err(ParserError::NoMatch)
-            }
-        } else {
-            Err(ParserError::NoMatch)
-        }
-    }
-
-    fn linearize_variable(&self, reference: VariablePattern, other: Pattern) -> LinearizeResult {
-        let mut variables = HashMap::new();
-
-        if let Some(name) = reference.name {
-            if let Pattern::Value(ValuePattern { expression }) = other {
-                variables.insert(
-                    VariablePattern {
-                        name: Some(name),
-                        type_id: None,
-                    },
-                    expression,
-                );
-            } else {
-                return Err(ParserError::NoMatch);
-            }
-        }
-
-        Ok(variables)
-    }
-
-    fn linearize_pair(
-        &self,
-        parser: &Parser,
-        reference: PairPattern,
-        other: Pattern,
-    ) -> LinearizeResult {
-        if let Pattern::Pair(PairPattern { left, right }) = other {
-            let mut left_map = reference.left.linearize(parser, *left)?;
-            let right_map = reference.right.linearize(parser, *right)?;
-            left_map.extend(right_map);
-            Ok(left_map)
-        } else {
-            Err(ParserError::NoMatch)
         }
     }
 }

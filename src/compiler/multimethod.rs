@@ -1,7 +1,6 @@
 use crate::dispatch::DispatchPattern;
-use crate::parser::Parser;
 use crate::types::Method;
-use crate::types::{CompilerError, CompilerResult, Pattern};
+use crate::types::{CompilerError, CompilerResult};
 
 /// A collection of methods with different function signatures which share a common name.
 #[derive(Debug, Clone)]
@@ -20,36 +19,6 @@ impl Multimethod {
             name: String::from(name),
             methods: vec![],
             dispatch_patterns: vec![],
-        }
-    }
-
-    pub fn linearize(&self, parser: &Parser, pattern: Option<Pattern>) -> CompilerResult<Method> {
-        let mut matching_methods = vec![];
-
-        for method in &self.methods {
-            match (pattern.clone(), method.signature.clone()) {
-                (None, None) => matching_methods.push((method, 0)),
-                (Some(p), Some(s)) => {
-                    if s.matches_with(parser, p.clone()) {
-                        matching_methods.push((method, p.get_precedence()));
-                    }
-                }
-                (Some(..), None) | (None, Some(..)) => {}
-            }
-        }
-
-        // Sort the resulting method signatures by their pattern's precedence.
-        matching_methods.sort_by(|m1, m2| m1.1.cmp(&m2.1));
-
-        if matching_methods.len() > 0 {
-            let (linearized_method, _precedence) = matching_methods[0];
-
-            Ok(linearized_method.clone())
-        } else {
-            Err(CompilerError::MethodSignatureNotFound {
-                method_name: self.name.clone(),
-                pattern,
-            })
         }
     }
 
