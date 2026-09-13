@@ -360,3 +360,181 @@ fn repl_does_not_echo_def_var_or_print() {
         vec![RegisterValue::String("hi".to_string())]
     );
 }
+
+// ---------------------------------------------------------------------------
+// Pattern matching semantics
+// ---------------------------------------------------------------------------
+
+/// Evaluate `match <subject> case <pattern> then 1 else 2` and report whether the arm matched.
+fn arm_matches(subject: &str, pattern: &str) -> Result<bool, String> {
+    let source = format!("var result = match {} case {} then 1 else 2", subject, pattern);
+
+    let mut compiler = Compiler::new();
+    let instructions = compiler
+        .compile(source)
+        .map_err(|e| format!("fails to compile: {}", e))?;
+
+    let mut machine = Strontium::new(false);
+    for instr in instructions {
+        machine.push_instruction(instr);
+    }
+    machine
+        .execute_until_eof()
+        .map_err(|e| format!("fails at runtime: {:?}", e))?;
+
+    match machine.registers.get("result") {
+        Some(RegisterValue::Int64(1)) => Ok(true),
+        Some(RegisterValue::Int64(2)) => Ok(false),
+        other => Err(format!("evaluates to unexpected {:?}", other)),
+    }
+}
+
+/// Assert every `(subject, pattern, expected)` case, reporting all mismatches at once.
+fn assert_arm_matches(cases: &[(&str, &str, bool)]) {
+    let failures: Vec<String> = cases
+        .iter()
+        .filter_map(|(subject, pattern, expected)| {
+            let behavior = if *expected { "matches" } else { "does not match" };
+            match arm_matches(subject, pattern) {
+                Ok(actual) if actual == *expected => None,
+                Ok(_) => Some(format!("  match {} case {} {}", subject, pattern, behavior)),
+                Err(error) => Some(format!(
+                    "  match {} case {} {} ({})",
+                    subject, pattern, behavior, error
+                )),
+            }
+        })
+        .collect();
+    assert!(
+        failures.is_empty(),
+        "expected behavior not met:\n{}",
+        failures.join("\n")
+    );
+}
+
+#[test]
+fn match_literal_patterns() {
+    assert_arm_matches(&[
+        ("7", "7", true),
+        ("3", "7", false),
+        ("3.5", "3.5", true),
+        ("3.5", "2.5", false),
+        ("\"hi\"", "\"hi\"", true),
+        ("\"hi\"", "\"ho\"", false),
+        ("true", "true", true),
+        ("true", "false", false),
+        ("nothing", "nothing", true),
+        ("7", "nothing", false),
+    ]);
+}
+
+#[test]
+fn match_value_expression_patterns() {
+    assert_arm_matches(&[
+        ("4", "2 + 2", true),
+        ("4", "1 + 2", false),
+    ]);
+}
+
+#[test]
+fn match_type_patterns() {
+    assert_arm_matches(&[
+        ("42", "_ Int", true),
+        ("3.14", "_ Int", false),
+        ("3.14", "_ Float", true),
+        ("\"hi\"", "_ String", true),
+        ("7", "_ String", false),
+        ("true", "_ Bool", true),
+        ("7", "_ Bool", false),
+    ]);
+}
+
+#[test]
+fn match_record_patterns() {
+    assert_arm_matches(&[
+        ("num: 3", "num: 3", true),
+        ("num: 3", "num: 4", false),
+        ("num: 3", "num: x Int", true),
+        ("num: 3.5", "num: x Int", false),
+        ("name: \"Dan\", pals: (\"Sam\", \"Ed\")", "name: n, pals: (a, b)", true),
+        ("name: \"Dan\", pals: (\"Sam\", \"Ed\")", "name: n, pals: (\"Sam\", b)", true),
+        ("name: \"Dan\", pals: (\"Sam\", \"Ed\")", "name: n, pals: (\"Ed\", b)", false),
+        ("name: \"Dan\", pals: (\"Sam\", \"Ed\")", "name: n, pals: nothing", false),
+        ("name: \"Dan\", pals: nothing", "name: n, pals: nothing", true),
+        ("num: 3", "nothing", false),
+    ]);
+}
+
+#[test]
+fn match_nested_record_patterns() {
+    assert_arm_matches(&[
+        ("p: (x: 1)", "p: (x: 1)", true),
+        ("p: (x: 1)", "p: (x: 2)", false),
+    ]);
+}
+
+#[test]
+fn match_tuple_patterns() {
+    assert_arm_matches(&[
+        ("(1, 2)", "(1, 2)", true),
+        ("(1, 2)", "(1, 3)", false),
+    ]);
+}
+
+#[test]
+fn match_case_value_can_contain_calls() {
+    let m = run("def one(n Int) 1\nvar result = match num: 1 case num: one(0) then 1 else 2");
+    assert_eq!(reg(&m, "result"), RegisterValue::Int64(1));
+}
+
+#[test]
+fn record_call_argument_can_contain_calls() {
+    let m = run("def inc(n Int) n + 1\ndef get(num: x Int) x\nvar result = get(num: inc(1))");
+    assert_eq!(reg(&m, "result"), RegisterValue::Int64(2));
+
+    // The inner call uses the same record field as the outer one.
+    let m = run("def get(num: x Int) x\nvar result = get(num: get(num: 1))");
+    assert_eq!(reg(&m, "result"), RegisterValue::Int64(1));
+}
+
+#[test]
+fn method_signature_rejects_expression_patterns() {
+    let mut compiler = Compiler::new();
+    assert!(
+        compiler.compile("def f(1 + 2) 0".to_string()).is_err(),
+        "def f(1 + 2) compiles, but value patterns in signatures must be literals"
+    );
+}
+
+#[test]
+fn multimethod_equal_precedence_keeps_definition_order() {
+    let m = run("def f(a: x) 1\ndef f(b: y) 2\nvar result = f(a: 1, b: 2)");
+    assert_eq!(reg(&m, "result"), RegisterValue::Int64(1));
+
+    let m = run("def f(b: y) 2\ndef f(a: x) 1\nvar result = f(a: 1, b: 2)");
+    assert_eq!(reg(&m, "result"), RegisterValue::Int64(2));
+}
+
+#[test]
+fn method_signature_allows_negative_literals() {
+    let m = run("def sign(-1) \"negative\"\ndef sign(n Int) \"other\"\nvar r1 = sign(-1)\nvar r2 = sign(1)");
+    assert_eq!(reg(&m, "r1"), RegisterValue::String("negative".to_string()));
+    assert_eq!(reg(&m, "r2"), RegisterValue::String("other".to_string()));
+}
+
+#[test]
+fn parentheses_cannot_mix_record_fields_and_tuple_elements() {
+    let mut compiler = Compiler::new();
+    assert!(
+        compiler
+            .compile("var result = match (x: 1, 2) case (x: 1, 2) then 1 else 2".to_string())
+            .is_err(),
+        "a parenthesized mix of record fields and tuple elements compiles"
+    );
+}
+
+#[test]
+fn multimethod_value_beats_type_regardless_of_definition_order() {
+    let m = run("def label(0) 1\ndef label(n Int) 0\nvar result = label(0)");
+    assert_eq!(reg(&m, "result"), RegisterValue::Int64(1));
+}

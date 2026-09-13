@@ -1,6 +1,8 @@
 use super::Compilelet;
+use crate::compiler::linearizable::Linearizable;
+use crate::compiler::multimethod::{Variant, ARGUMENT_REGISTER};
 use crate::compiler::{CompiledMethod, Compiler, Multimethod};
-use crate::types::{CompilerResult, Expression, ExpressionKind, Pattern, VariablePattern};
+use crate::types::{CompilerResult, Expression, ExpressionKind};
 use strontium::machine::instruction::Instruction;
 
 // Implement a compilelet which defines a method within the compiler using a Block as the body.
@@ -15,27 +17,27 @@ impl Compilelet for MethodCompilelet {
     ) -> CompilerResult<Vec<Instruction>> {
         match expression.kind.clone() {
             ExpressionKind::Method(method) => {
-                // Convert the signature to a dispatch pattern for runtime matching.
-                // This must happen now, while the parser still holds this method's source.
-                let dispatch_pattern =
-                    Compiler::pattern_to_dispatch_pattern(&method.signature, &compiler.parser);
-                let method_id = Compiler::generate_method_id(&method.name, &dispatch_pattern);
+                // Linearize the signature now, while the parser still holds this method's source.
+                let variant = Variant::new(method.clone(), compiler)?;
+                let method_id = variant.id.clone();
+
+                // Parameters bound by the signature, with the argument register holding each value
+                let parameter_bindings = method
+                    .signature
+                    .as_ref()
+                    .map(|signature| signature.bindings(ARGUMENT_REGISTER))
+                    .unwrap_or_default();
+                let parameter_names: Vec<String> = parameter_bindings
+                    .iter()
+                    .map(|(name, _)| name.clone())
+                    .collect();
 
                 // Register with multimethod dispatch table
-                if let Some(multimethod) = compiler.multimethods.get_mut(&method.name) {
-                    multimethod.add_method(method.clone(), dispatch_pattern.clone())?;
-                } else {
-                    let mut m = Multimethod::new(&method.name);
-                    m.add_method(method.clone(), dispatch_pattern.clone())?;
-                    compiler.multimethods.insert(method.name.clone(), m);
-                }
-
-                // Extract parameter names from the signature
-                let parameter_names = if let Some(ref sig) = method.signature {
-                    Compiler::extract_variable_names(sig)
-                } else {
-                    vec![]
-                };
+                compiler
+                    .multimethods
+                    .entry(method.name.clone())
+                    .or_insert_with(|| Multimethod::new(&method.name))
+                    .add_variant(variant)?;
 
                 // Store a placeholder entry BEFORE compiling the body
                 // This allows recursive methods to reference themselves
@@ -44,7 +46,6 @@ impl Compilelet for MethodCompilelet {
                     CompiledMethod {
                         id: method_id.clone(),
                         method_name: method.name.clone(),
-                        pattern: dispatch_pattern,
                         instructions: vec![], // Placeholder - will be filled in
                         parameter_names: parameter_names.clone(),
                     },
@@ -54,13 +55,8 @@ impl Compilelet for MethodCompilelet {
                 let old_locals = compiler.context.local_variables.clone();
                 compiler.context.local_variables = parameter_names.iter().cloned().collect();
 
-                // Build method preamble: copy argument from 'arg' register to local variables
+                // Build method preamble: copy each parameter from its argument register to a local
                 let mut body_instructions = vec![];
-                let parameter_bindings = if let Some(ref sig) = method.signature {
-                    collect_parameter_bindings(sig)
-                } else {
-                    vec![]
-                };
                 for (param_name, source_register) in &parameter_bindings {
                     body_instructions.push(Instruction::StoreLocal {
                         name: param_name.clone(),
@@ -90,70 +86,5 @@ impl Compilelet for MethodCompilelet {
         }
 
         Ok(vec![])
-    }
-}
-
-fn collect_parameter_bindings(pattern: &Pattern) -> Vec<(String, String)> {
-    let mut bindings = vec![];
-    collect_parameter_bindings_inner(pattern, "arg", &mut bindings);
-    bindings
-}
-
-fn collect_parameter_bindings_inner(
-    pattern: &Pattern,
-    source_register: &str,
-    out: &mut Vec<(String, String)>,
-) {
-    match pattern {
-        Pattern::Variable(VariablePattern { name: Some(name), .. }) if name != "_" => {
-            out.push((name.clone(), source_register.to_string()));
-        }
-        Pattern::Variable(_) => {}
-        Pattern::Record(record) => {
-            collect_record_parameter_bindings(
-                &record.value,
-                &format!("{}.{}", source_register, record.name),
-                out,
-            );
-        }
-        Pattern::Pair(pair) => {
-            collect_parameter_bindings_inner(&pair.left, source_register, out);
-            collect_parameter_bindings_inner(&pair.right, source_register, out);
-        }
-        Pattern::Tuple(tuple) => {
-            for (index, element) in crate::compiler::compilelets::flatten_pair(&tuple.child)
-                .iter()
-                .enumerate()
-            {
-                collect_parameter_bindings_inner(
-                    element,
-                    &format!("{}.{}", source_register, index),
-                    out,
-                );
-            }
-        }
-        Pattern::Value(_) => {}
-    }
-}
-
-fn collect_record_parameter_bindings(
-    pattern: &Pattern,
-    source_register: &str,
-    out: &mut Vec<(String, String)>,
-) {
-    match pattern {
-        Pattern::Tuple(tuple) => {
-            for (index, element) in crate::compiler::compilelets::flatten_pair(&tuple.child)
-                .iter()
-                .enumerate()
-            {
-                collect_parameter_bindings_inner(
-                    element,
-                    &format!("{}.{}", source_register, index),
-                    out,
-                );
-            }
-        }
-        other => collect_parameter_bindings_inner(other, source_register, out),
     }
 }

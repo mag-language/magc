@@ -29,9 +29,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Pattern matching for multimethod dispatch and `match` is implemented once, by the `Linearizable` trait on the pattern types (`compiler::linearizable`). It provides `get_precedence` (higher wins), `signature`, `linearize`, `bindings` and `registers`. `Multimethod` now stores linearized `Variant`s, and `Multimethod::linearize` returns them in dispatch order.
+- Value patterns in method signatures must be literals, including negative numbers; expression patterns like `def f(1 + 2)` are a compile error.
+- Parentheses containing only record fields, like `p: (x: 1)`, are nested records; mixing record fields and tuple elements in parentheses is a compile error.
+
+### Fixed
+
+- `match` arms now correctly compare string, boolean and `nothing` literals, value expressions like `1 + 2`, typed record fields, nested records and tuples. Previously such arms matched any value, and tuple subjects failed to compile.
+- `nothing` patterns no longer match records or tuples.
+- Multimethod variants with equal precedence are tried in definition order instead of an arbitrary order.
+- The compiler no longer hands out the reserved `arg` and `ret` registers as scratch registers.
+
 ### Removed
 
-- `Multimethod::linearize`, `Pattern::linearize`, `Pattern::matches_with`, `Pattern::get_precedence`, and the `LinearizeResult` type alias. They were no longer called anywhere: multimethod dispatch and precedence are resolved at compile time via `DispatchPattern`.
+- `Multimethod::linearize`, `Pattern::linearize`, `Pattern::matches_with`, `Pattern::get_precedence`, and the `LinearizeResult` type alias. They were no longer called anywhere.
+- `DispatchPattern`, `DispatchFieldPattern` and the `dispatch` module, `Compiler::pattern_to_dispatch_pattern`, `Compiler::extract_variable_names`, `Compiler::generate_method_id`, `Compiler::presence_register`, and `CompilationContext::record_fields`, all replaced by `Linearizable`.
 
 ## [0.9.0] - September 13, 2026
 

@@ -1,14 +1,13 @@
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::type_system::Typed;
-use crate::types::{CompilerResult, Expression, ExpressionKind, Literal, Pattern, VariablePattern};
+use crate::types::{CompilerResult, Expression, ExpressionKind};
 use crate::CompilerError;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::dispatch::{DispatchFieldPattern, DispatchPattern};
-use strontium::machine::instruction::{ComparisonMethod, Instruction};
-use strontium::machine::register::{RegisterType, RegisterValue, Registers};
+use strontium::machine::instruction::Instruction;
+use strontium::machine::register::{RegisterValue, Registers};
 
 pub type Environment<T> = HashMap<String, T>;
 
@@ -19,8 +18,6 @@ pub struct CompiledMethod {
     pub id: String,
     /// The name of the multimethod this belongs to.
     pub method_name: String,
-    /// The dispatch pattern for shim generation.
-    pub pattern: DispatchPattern,
     /// The compiled bytecode for this method body.
     pub instructions: Vec<Instruction>,
     /// Names of pattern variables that need to be bound at call time.
@@ -29,11 +26,13 @@ pub struct CompiledMethod {
 
 mod compilelets;
 mod errors;
+pub mod linearizable;
 mod multimethod;
 mod type_system;
 
 pub use self::errors::ErrorReporter;
-pub use self::multimethod::Multimethod;
+pub use self::linearizable::Linearizable;
+pub use self::multimethod::{Multimethod, Variant};
 pub use self::type_system::TypeSystem;
 pub use compilelets::{
     BlockCompilelet, CallCompilelet, Compilelet, ConditionalCompilelet, LiteralCompilelet,
@@ -52,10 +51,6 @@ pub struct CompilationContext {
     /// Match arm bindings: variable name → register name.
     /// Checked before local/global; scoped to the current arm body.
     pub register_bindings: HashMap<String, String>,
-    /// Record subject field registers: field key → register name.
-    /// Set by RecordCompilelet when compiling a record match subject.
-    /// Keys are "fieldname" for scalar fields and "fieldname.N" for tuple elements.
-    pub record_fields: HashMap<String, String>,
     /// Counter for generating unique label IDs for conditional branches.
     pub next_label_id: usize,
     /// True when running inside the REPL; enables auto-print of top-level expressions.
@@ -140,10 +135,20 @@ impl Compiler {
             "PairPattern".to_string(),
             &RecordCompilelet as &dyn Compilelet,
         );
+        compilelets.insert(
+            "TuplePattern".to_string(),
+            &RecordCompilelet as &dyn Compilelet,
+        );
+
+        // The allocator hands out any empty register, so reserve the ones with a fixed role.
+        let mut registers = Registers::new();
+        for reserved in ["arg", "ret"] {
+            registers.set(reserved, RegisterValue::UInt64(0));
+        }
 
         Self {
             _variables: HashMap::new(),
-            registers: Registers::new(),
+            registers,
             compilelets,
             lexer: Lexer::new(),
             parser: Parser::new(),
@@ -152,7 +157,6 @@ impl Compiler {
                 local_variables: HashSet::new(),
                 global_variables: HashSet::new(),
                 register_bindings: HashMap::new(),
-                record_fields: HashMap::new(),
                 next_label_id: 0,
                 repl_mode: false,
             },
@@ -161,186 +165,6 @@ impl Compiler {
             _types: TypeSystem,
             _errors: ErrorReporter,
         }
-    }
-
-    /// Extract variable names from a pattern signature.
-    pub fn extract_variable_names(pattern: &Pattern) -> Vec<String> {
-        match pattern {
-            Pattern::Variable(VariablePattern { name: Some(n), .. }) => vec![n.clone()],
-            Pattern::Variable(VariablePattern { name: None, .. }) => vec![],
-            Pattern::Pair(pair) => {
-                let mut names = Self::extract_variable_names(&pair.left);
-                names.extend(Self::extract_variable_names(&pair.right));
-                names
-            }
-            Pattern::Tuple(tuple) => Self::extract_variable_names(&tuple.child),
-            Pattern::Record(record) => Self::extract_variable_names(&record.value),
-            Pattern::Value(_) => vec![],
-        }
-    }
-
-    /// Generate a unique ID for a method variant based on its name and dispatch pattern.
-    ///
-    /// Uses the dispatch pattern rather than the AST signature, since the latter only
-    /// stores source positions and would collide for e.g. `fib(0)` and `fib(1)` defined
-    /// on separate REPL lines. Uniqueness is guaranteed by `Multimethod::add_method`.
-    pub fn generate_method_id(name: &str, dispatch_pattern: &DispatchPattern) -> String {
-        format!("{}_{:?}", name, dispatch_pattern)
-    }
-
-    /// Convert a Pattern to a DispatchPattern for shim generation.
-    pub fn pattern_to_dispatch_pattern(
-        pattern: &Option<Pattern>,
-        parser: &Parser,
-    ) -> DispatchPattern {
-        match pattern {
-            None => DispatchPattern::Any,
-            Some(pattern) => Self::pattern_to_dispatch_pattern_inner(pattern, parser),
-        }
-    }
-
-    fn pattern_to_dispatch_pattern_inner(pattern: &Pattern, parser: &Parser) -> DispatchPattern {
-        match pattern {
-            Pattern::Record(_) | Pattern::Pair(_) => {
-                let mut fields = vec![];
-                Self::collect_record_dispatch_fields(pattern, parser, "arg", &mut fields);
-                if fields.is_empty() {
-                    DispatchPattern::Any
-                } else {
-                    DispatchPattern::Record(fields)
-                }
-            }
-            Pattern::Variable(VariablePattern { type_id: Some(t), .. }) => {
-                Self::type_name_to_dispatch_pattern(t)
-            }
-            Pattern::Variable(_) => DispatchPattern::Any,
-            Pattern::Value(value_pattern) => Self::literal_dispatch_value(
-                &value_pattern.expression,
-                parser,
-            )
-            .map(DispatchPattern::Value)
-            .unwrap_or(DispatchPattern::Any),
-            Pattern::Tuple(_) => DispatchPattern::Any,
-        }
-    }
-
-    fn collect_record_dispatch_fields(
-        pattern: &Pattern,
-        parser: &Parser,
-        prefix: &str,
-        out: &mut Vec<DispatchFieldPattern>,
-    ) {
-        match pattern {
-            Pattern::Record(record) => {
-                let field_register = format!("{}.{}", prefix, record.name);
-                out.push(DispatchFieldPattern {
-                    register: Self::presence_register(&field_register),
-                    pattern: DispatchPattern::Value(RegisterValue::Boolean(true)),
-                });
-
-                match record.value.as_ref() {
-                    Pattern::Tuple(tuple) => {
-                        for (index, element) in compilelets::flatten_pair(&tuple.child)
-                            .iter()
-                            .enumerate()
-                        {
-                            let element_register = format!("{}.{}", field_register, index);
-                            out.push(DispatchFieldPattern {
-                                register: Self::presence_register(&element_register),
-                                pattern: DispatchPattern::Value(RegisterValue::Boolean(true)),
-                            });
-
-                            let field_pattern =
-                                Self::pattern_to_field_dispatch_pattern(element, parser);
-                            if field_pattern != DispatchPattern::Any {
-                                out.push(DispatchFieldPattern {
-                                    register: element_register,
-                                    pattern: field_pattern,
-                                });
-                            }
-                        }
-                    }
-                    other => {
-                        let field_pattern = Self::pattern_to_field_dispatch_pattern(other, parser);
-                        if field_pattern != DispatchPattern::Any {
-                            out.push(DispatchFieldPattern {
-                                register: field_register,
-                                pattern: field_pattern,
-                            });
-                        }
-                    }
-                }
-            }
-            Pattern::Pair(pair) => {
-                Self::collect_record_dispatch_fields(&pair.left, parser, prefix, out);
-                Self::collect_record_dispatch_fields(&pair.right, parser, prefix, out);
-            }
-            _ => {}
-        }
-    }
-
-    fn pattern_to_field_dispatch_pattern(pattern: &Pattern, parser: &Parser) -> DispatchPattern {
-        match pattern {
-            Pattern::Variable(VariablePattern { type_id: Some(t), .. }) => {
-                Self::type_name_to_dispatch_pattern(t)
-            }
-            Pattern::Value(value_pattern) => Self::literal_dispatch_value(
-                &value_pattern.expression,
-                parser,
-            )
-            .map(DispatchPattern::Value)
-            .unwrap_or(DispatchPattern::Any),
-            _ => DispatchPattern::Any,
-        }
-    }
-
-    fn type_name_to_dispatch_pattern(type_name: &str) -> DispatchPattern {
-        match type_name {
-            "Int" => DispatchPattern::Type(RegisterType::Int64),
-            "Float" => DispatchPattern::Type(RegisterType::Float64),
-            "String" => DispatchPattern::Type(RegisterType::String),
-            "Bool" | "Boolean" => DispatchPattern::Type(RegisterType::Boolean),
-            "Nothing" => DispatchPattern::Type(RegisterType::Empty),
-            _ => DispatchPattern::Any,
-        }
-    }
-
-    fn literal_dispatch_value(expression: &Expression, parser: &Parser) -> Option<RegisterValue> {
-        match &expression.kind {
-            ExpressionKind::Literal(Literal::Int) => parser
-                .get_lexeme(expression.start_pos, expression.end_pos)
-                .ok()
-                .and_then(|lexeme| lexeme.parse::<i64>().ok())
-                .map(RegisterValue::Int64),
-            ExpressionKind::Literal(Literal::Float) => parser
-                .get_lexeme(expression.start_pos, expression.end_pos)
-                .ok()
-                .and_then(|lexeme| lexeme.parse::<f64>().ok())
-                .map(RegisterValue::Float64),
-            ExpressionKind::Literal(Literal::Boolean) => parser
-                .get_lexeme(expression.start_pos, expression.end_pos)
-                .ok()
-                .and_then(|lexeme| lexeme.parse::<bool>().ok())
-                .map(RegisterValue::Boolean),
-            ExpressionKind::Literal(Literal::String) => parser
-                .get_lexeme(expression.start_pos, expression.end_pos)
-                .ok()
-                .map(|lexeme| {
-                    RegisterValue::String(
-                        lexeme
-                            .strip_prefix('"')
-                            .and_then(|value| value.strip_suffix('"'))
-                            .unwrap_or(&lexeme)
-                            .to_string(),
-                    )
-                }),
-            ExpressionKind::Literal(Literal::Nothing) => Some(RegisterValue::Empty),
-            _ => None,
-        }
-    }
-
-    pub fn presence_register(register: &str) -> String {
-        format!("{}.__present", register)
     }
 
     pub fn compile_expression(
@@ -443,80 +267,23 @@ impl Compiler {
     ///
     /// All label IDs are globally unique (via alloc_label). The caller resolves
     /// labels with the block's base offset so cross-shim-to-body jumps work.
-    fn build_method_block(&mut self, method_name: &str, variant_ids: &[String]) -> Vec<Instruction> {
+    fn build_method_block(&mut self, method_name: &str) -> Vec<Instruction> {
+        // Variants in dispatch order, each with its stored checks and failure label.
+        let variants: Vec<(String, Vec<Instruction>, usize)> = self.multimethods[method_name]
+            .linearize()
+            .into_iter()
+            .map(|variant| (variant.id.clone(), variant.checks.clone(), variant.on_fail))
+            .collect();
+
         let mut instructions = vec![];
         let mut body_labels: Vec<usize> = vec![];
 
-        for id in variant_ids {
+        for (_, checks, on_fail) in &variants {
             let body_label = self.alloc_label();
             body_labels.push(body_label);
-            let pattern = self.compiled_methods[id].pattern.clone();
-
-            match pattern {
-                DispatchPattern::Any => {
-                    instructions.push(Instruction::JumpToLabel { id: body_label });
-                }
-                DispatchPattern::Record(fields) => {
-                    let skip_label = self.alloc_label();
-                    for field in fields {
-                        self.emit_dispatch_check(
-                            field.pattern,
-                            field.register,
-                            skip_label,
-                            &mut instructions,
-                        );
-                    }
-                    instructions.push(Instruction::JumpToLabel { id: body_label });
-                    instructions.push(Instruction::LabelTarget { id: skip_label });
-                }
-                DispatchPattern::Value(val) => {
-                    let skip_label = self.alloc_label();
-                    let val_reg = self.registers.allocate_register();
-                    let cmp_reg = self.registers.allocate_register();
-                    instructions.push(Instruction::Load {
-                        value: val,
-                        register: val_reg.clone(),
-                    });
-                    instructions.push(Instruction::Compare {
-                        method: ComparisonMethod::EQ,
-                        operand1: "arg".to_string(),
-                        operand2: val_reg,
-                        destination: cmp_reg.clone(),
-                    });
-                    instructions.push(Instruction::JumpCToLabel {
-                        id: skip_label,
-                        conditional_address: cmp_reg,
-                    });
-                    instructions.push(Instruction::JumpToLabel { id: body_label });
-                    instructions.push(Instruction::LabelTarget { id: skip_label });
-                }
-                DispatchPattern::Type(rt) => {
-                    let skip_label = self.alloc_label();
-                    let type_reg = self.registers.allocate_register();
-                    let expected_reg = self.registers.allocate_register();
-                    let cmp_reg = self.registers.allocate_register();
-                    instructions.push(Instruction::LoadType {
-                        source: "arg".to_string(),
-                        destination: type_reg.clone(),
-                    });
-                    instructions.push(Instruction::Load {
-                        value: RegisterValue::Int64(rt as i64),
-                        register: expected_reg.clone(),
-                    });
-                    instructions.push(Instruction::Compare {
-                        method: ComparisonMethod::EQ,
-                        operand1: type_reg,
-                        operand2: expected_reg,
-                        destination: cmp_reg.clone(),
-                    });
-                    instructions.push(Instruction::JumpCToLabel {
-                        id: skip_label,
-                        conditional_address: cmp_reg,
-                    });
-                    instructions.push(Instruction::JumpToLabel { id: body_label });
-                    instructions.push(Instruction::LabelTarget { id: skip_label });
-                }
-            }
+            instructions.extend(checks.iter().cloned());
+            instructions.push(Instruction::JumpToLabel { id: body_label });
+            instructions.push(Instruction::LabelTarget { id: *on_fail });
         }
 
         // No variant matched — report error and stop
@@ -534,67 +301,13 @@ impl Compiler {
         instructions.push(Instruction::Halt);
 
         // Append each body preceded by its label target
-        for (i, id) in variant_ids.iter().enumerate() {
-            instructions.push(Instruction::LabelTarget { id: body_labels[i] });
+        for ((id, _, _), body_label) in variants.iter().zip(&body_labels) {
+            instructions.push(Instruction::LabelTarget { id: *body_label });
             let body = self.compiled_methods[id].instructions.clone();
             instructions.extend(body);
         }
 
         instructions
-    }
-
-    fn emit_dispatch_check(
-        &mut self,
-        pattern: DispatchPattern,
-        source_register: String,
-        skip_label: usize,
-        instructions: &mut Vec<Instruction>,
-    ) {
-        match pattern {
-            DispatchPattern::Any => {}
-            DispatchPattern::Record(_) => {}
-            DispatchPattern::Value(val) => {
-                let val_reg = self.registers.allocate_register();
-                let cmp_reg = self.registers.allocate_register();
-                instructions.push(Instruction::Load {
-                    value: val,
-                    register: val_reg.clone(),
-                });
-                instructions.push(Instruction::Compare {
-                    method: ComparisonMethod::EQ,
-                    operand1: source_register,
-                    operand2: val_reg,
-                    destination: cmp_reg.clone(),
-                });
-                instructions.push(Instruction::JumpCToLabel {
-                    id: skip_label,
-                    conditional_address: cmp_reg,
-                });
-            }
-            DispatchPattern::Type(rt) => {
-                let type_reg = self.registers.allocate_register();
-                let expected_reg = self.registers.allocate_register();
-                let cmp_reg = self.registers.allocate_register();
-                instructions.push(Instruction::LoadType {
-                    source: source_register,
-                    destination: type_reg.clone(),
-                });
-                instructions.push(Instruction::Load {
-                    value: RegisterValue::Int64(rt as i64),
-                    register: expected_reg.clone(),
-                });
-                instructions.push(Instruction::Compare {
-                    method: ComparisonMethod::EQ,
-                    operand1: type_reg,
-                    operand2: expected_reg,
-                    destination: cmp_reg.clone(),
-                });
-                instructions.push(Instruction::JumpCToLabel {
-                    id: skip_label,
-                    conditional_address: cmp_reg,
-                });
-            }
-        }
     }
 
     /// Replace CallShim { method_name } with Call { address } using the shim address table.
@@ -635,21 +348,8 @@ impl Compiler {
             return Ok(self.resolve_labels(main_bytecode, 0));
         }
 
-        // Group method IDs by name, sort each group highest precedence first.
-        let mut by_name: HashMap<String, Vec<String>> = HashMap::new();
-        for (id, method) in &self.compiled_methods {
-            by_name.entry(method.method_name.clone()).or_default().push(id.clone());
-        }
-        for ids in by_name.values_mut() {
-            ids.sort_by(|a, b| {
-                let pa = self.compiled_methods[a].pattern.precedence();
-                let pb = self.compiled_methods[b].pattern.precedence();
-                pb.cmp(&pa)
-            });
-        }
-
         // Stable ordering of method names for deterministic output.
-        let mut method_names: Vec<String> = by_name.keys().cloned().collect();
+        let mut method_names: Vec<String> = self.multimethods.keys().cloned().collect();
         method_names.sort();
 
         // Pass 1: calculate shim addresses by walking block sizes.
@@ -659,8 +359,7 @@ impl Compiler {
         let mut shim_addresses: HashMap<String, usize> = HashMap::new();
 
         for name in &method_names {
-            let ids = by_name[name].clone();
-            let combined = self.build_method_block(name, &ids);
+            let combined = self.build_method_block(name);
             let base_offset = current_offset;
             shim_addresses.insert(name.clone(), base_offset);
             for instr in &combined {

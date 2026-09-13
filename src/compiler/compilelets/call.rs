@@ -2,7 +2,7 @@ use crate::compiler::{Compilelet, Compiler};
 use crate::types::{
     CompilerError, CompilerResult, Expression, ExpressionKind, Pattern, ValuePattern,
 };
-use std::collections::HashSet;
+use crate::compiler::linearizable::{emit_reset, store_value};
 use strontium::machine::instruction::{
     CalculationMethod, ComparisonMethod, Instruction, Interrupt, InterruptKind,
 };
@@ -181,26 +181,25 @@ impl Compilelet for CallCompilelet {
                         return Err(CompilerError::MethodNotFound(method_name.clone()));
                     }
 
-                    // Compile the argument expression into the 'arg' register
-                    // The argument is what will be matched against patterns at runtime
-                    clear_call_argument_registers(compiler, &method_name, &mut instructions);
-                    if let Some(call_sig) = signature {
-                        match call_sig {
-                            Pattern::Value(ValuePattern { expression }) => {
-                                instructions.append(
-                                    &mut compiler
-                                        .compile_expression(*expression, Some("arg".to_string()))?,
-                                );
-                            }
-                            Pattern::Record(_) | Pattern::Pair(_) => {
-                                compile_record_call_arg(compiler, &call_sig, &mut instructions)?;
-                            }
-                            _ => {
-                                return Err(CompilerError::Generic(
-                                    "Only value and record patterns supported in calls currently".to_string(),
-                                ));
-                            }
+                    // Store the argument in the 'arg' register, resetting every argument
+                    // register a variant reads, so dispatch only sees this call's values
+                    let reset = compiler
+                        .get_multimethod(&method_name)
+                        .map(|multimethod| multimethod.registers())
+                        .unwrap_or_default();
+                    match signature {
+                        Some(call_sig) => {
+                            let argument = match call_sig {
+                                Pattern::Value(ValuePattern { expression }) => *expression,
+                                other => Expression {
+                                    kind: ExpressionKind::Pattern(other),
+                                    start_pos: 0,
+                                    end_pos: 0,
+                                },
+                            };
+                            instructions.extend(store_value(&argument, "arg", &reset, compiler)?);
                         }
+                        None => instructions.extend(emit_reset(&reset)),
                     }
 
                     instructions.push(Instruction::CallShim {
@@ -247,131 +246,4 @@ impl CallCompilelet {
             )),
         }
     }
-}
-
-fn clear_call_argument_registers(
-    compiler: &Compiler,
-    method_name: &str,
-    instructions: &mut Vec<Instruction>,
-) {
-    instructions.push(Instruction::Load {
-        value: RegisterValue::Empty,
-        register: "arg".to_string(),
-    });
-
-    let mut registers = HashSet::new();
-    if let Some(multimethod) = compiler.get_multimethod(method_name) {
-        for method in &multimethod.methods {
-            if let Some(signature) = &method.signature {
-                collect_record_call_registers(signature, "arg", &mut registers);
-            }
-        }
-    }
-
-    for register in registers {
-        instructions.push(Instruction::Load {
-            value: RegisterValue::Empty,
-            register: register.clone(),
-        });
-        instructions.push(Instruction::Load {
-            value: RegisterValue::Boolean(false),
-            register: Compiler::presence_register(&register),
-        });
-    }
-}
-
-fn collect_record_call_registers(pattern: &Pattern, prefix: &str, out: &mut HashSet<String>) {
-    match pattern {
-        Pattern::Record(record) => {
-            let field_register = format!("{}.{}", prefix, record.name);
-            out.insert(field_register.clone());
-            if let Pattern::Tuple(tuple) = record.value.as_ref() {
-                for (index, _) in crate::compiler::compilelets::flatten_pair(&tuple.child)
-                    .iter()
-                    .enumerate()
-                {
-                    out.insert(format!("{}.{}", field_register, index));
-                }
-            }
-        }
-        Pattern::Pair(pair) => {
-            collect_record_call_registers(&pair.left, prefix, out);
-            collect_record_call_registers(&pair.right, prefix, out);
-        }
-        _ => {}
-    }
-}
-
-fn compile_record_call_arg(
-    compiler: &mut Compiler,
-    pattern: &Pattern,
-    instructions: &mut Vec<Instruction>,
-) -> CompilerResult<()> {
-    match pattern {
-        Pattern::Record(record) => {
-            compile_record_call_field(
-                compiler,
-                &format!("arg.{}", record.name),
-                &record.value,
-                instructions,
-            )?;
-        }
-        Pattern::Pair(pair) => {
-            compile_record_call_arg(compiler, &pair.left, instructions)?;
-            compile_record_call_arg(compiler, &pair.right, instructions)?;
-        }
-        _ => {}
-    }
-
-    Ok(())
-}
-
-fn compile_record_call_field(
-    compiler: &mut Compiler,
-    register: &str,
-    pattern: &Pattern,
-    instructions: &mut Vec<Instruction>,
-) -> CompilerResult<()> {
-    mark_present(register, instructions);
-
-    match pattern {
-        Pattern::Value(value) => {
-            instructions.append(
-                &mut compiler.compile_expression(*value.expression.clone(), Some(register.to_string()))?,
-            );
-        }
-        Pattern::Variable(variable) => {
-            instructions.append(&mut compiler.compile_expression(
-                Expression {
-                    kind: ExpressionKind::Pattern(Pattern::Variable(variable.clone())),
-                    start_pos: 0,
-                    end_pos: 0,
-                },
-                Some(register.to_string()),
-            )?);
-        }
-        Pattern::Tuple(tuple) => {
-            for (index, element) in crate::compiler::compilelets::flatten_pair(&tuple.child)
-                .iter()
-                .enumerate()
-            {
-                compile_record_call_field(
-                    compiler,
-                    &format!("{}.{}", register, index),
-                    element,
-                    instructions,
-                )?;
-            }
-        }
-        _ => {}
-    }
-
-    Ok(())
-}
-
-fn mark_present(register: &str, instructions: &mut Vec<Instruction>) {
-    instructions.push(Instruction::Load {
-        value: RegisterValue::Boolean(true),
-        register: Compiler::presence_register(register),
-    });
 }
