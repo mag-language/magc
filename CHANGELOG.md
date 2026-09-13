@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Update outdated unreleased diff link.
 -->
 
-## [Unreleased]
+## [0.9.1] - September 13, 2026
 
 ### Changed
 
